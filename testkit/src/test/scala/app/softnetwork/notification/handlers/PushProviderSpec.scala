@@ -2,16 +2,15 @@ package app.softnetwork.notification.handlers
 
 import _root_.akka.actor.typed.ActorSystem
 import _root_.akka.actor.typed.scaladsl.Behaviors
-import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.matchers.should.Matchers
-
-import org.softnetwork.notification.model.{BasicDevice, Platform, Push}
-
+import app.softnetwork.notification.spi.MockNotificationProvider
 import app.softnetwork.persistence._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.softnetwork.notification.model.{BasicDevice, Platform, Push}
 
 /** Created by smanciot on 28/01/2021.
   */
-class PushProviderSpec extends AnyWordSpec with Matchers with MockPushProvider {
+class PushProviderSpec extends AnyWordSpec with Matchers with MockNotificationProvider {
 
   val devices = Seq(
     BasicDevice(

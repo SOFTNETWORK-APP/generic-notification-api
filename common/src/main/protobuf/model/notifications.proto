@@ -132,4 +132,14 @@ message Push{
     required string id = 21 [default = ""];
     required int32 badge = 22 [default = 0];
     optional string sound = 23;
+    optional string app = 24;
+}
+
+message PushPayload{
+    option (scalapb.message).extends = "ProtobufDomainObject";
+    required string app = 1;
+    required string title = 2;
+    required string body = 3;
+    required int32 badge = 4 [default = 0];
+    optional string sound = 5;
 }

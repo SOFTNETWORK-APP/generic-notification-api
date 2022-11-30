@@ -1,4 +1,4 @@
-package app.softnetwork.notification.peristence.query
+package app.softnetwork.notification.persistence.query
 
 import akka.Done
 import akka.actor.typed.eventstream.EventStream.Publish

@@ -1,17 +1,18 @@
 package app.softnetwork.notification.handlers
 
-import java.io.{File, FileOutputStream}
-
-import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.Behaviors
+import app.softnetwork.notification.config.Settings
+import app.softnetwork.notification.spi.MockNotificationProvider
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import app.softnetwork.notification.config.Settings
 import org.softnetwork.notification.model._
+
+import java.io.{File, FileOutputStream}
 
 /** Created by smanciot on 25/08/2018.
   */
-class MailProviderSpec extends AnyFlatSpec with Matchers with MockMailProvider {
+class MailProviderSpec extends AnyFlatSpec with Matchers with MockNotificationProvider {
 
   var ack: NotificationAck = _
 

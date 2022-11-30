@@ -4,11 +4,11 @@ import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.handlers.NotificationHandler
 import app.softnetwork.notification.launch.NotificationApplication
 import app.softnetwork.notification.model.Notification
-import app.softnetwork.notification.peristence.query.{
+import app.softnetwork.notification.persistence.query.{
   NotificationCommandProcessorStream,
   Scheduler2NotificationProcessorStream
 }
-import app.softnetwork.notification.peristence.typed.{
+import app.softnetwork.notification.persistence.typed.{
   AllNotificationsBehavior,
   NotificationBehavior
 }

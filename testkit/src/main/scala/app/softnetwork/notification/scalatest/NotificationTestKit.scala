@@ -5,14 +5,12 @@ import app.softnetwork.notification.config.Settings.NotificationConfig
 import app.softnetwork.notification.handlers.MockNotificationHandler
 import app.softnetwork.notification.launch.NotificationGuardian
 import app.softnetwork.notification.model.Notification
-import app.softnetwork.notification.peristence.query.{
+import app.softnetwork.notification.persistence.query.{
   NotificationCommandProcessorStream,
   Scheduler2NotificationProcessorStream
 }
-import app.softnetwork.notification.peristence.typed.{
-  MockAllNotificationsBehavior,
-  NotificationBehavior
-}
+import app.softnetwork.notification.persistence.typed.NotificationBehavior
+import app.softnetwork.notification.persistence.typed.MockAllNotificationsBehavior
 import app.softnetwork.persistence.query.InMemoryJournalProvider
 import app.softnetwork.scheduler.scalatest.SchedulerTestKit
 import org.scalatest.Suite

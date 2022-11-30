@@ -1,28 +1,26 @@
-package app.softnetwork.notification.handlers
+package app.softnetwork.notification.spi
 
 /** Created by smanciot on 07/04/2018.
   */
 
-import java.util.Date
-import javax.activation.FileDataSource
-
 import akka.actor.typed.ActorSystem
+import app.softnetwork.notification.config.{MailConfig, Settings}
 import com.typesafe.scalalogging.StrictLogging
-import app.softnetwork.notification.config.Settings
-import app.softnetwork.notification.config.MailConfig
+import org.apache.commons.mail._
 import org.softnetwork.notification.model.MailType._
 import org.softnetwork.notification.model._
 
+import java.util.Date
+import javax.activation.FileDataSource
 import scala.util.{Failure, Success, Try}
 
 /** From https://gist.github.com/mariussoutier/3436111
   */
-trait MailProvider extends NotificationProvider[Mail] with StrictLogging {
+trait SimpleMailProvider extends MailProvider with StrictLogging {
 
   lazy val mailConfig: MailConfig = Settings.NotificationConfig.mail
 
-  def send(notification: Mail)(implicit system: ActorSystem[_]): NotificationAck = {
-    import org.apache.commons.mail._
+  def sendMail(notification: Mail)(implicit system: ActorSystem[_]): NotificationAck = {
 
     val format =
       if (notification.attachment.nonEmpty || notification.attachments.nonEmpty) MultiPart
@@ -101,9 +99,3 @@ trait MailProvider extends NotificationProvider[Mail] with StrictLogging {
   }
 
 }
-
-trait MockMailProvider extends MailProvider with MockNotificationProvider[Mail]
-
-object MailProvider extends MailProvider
-
-object MockMailProvider extends MockMailProvider
