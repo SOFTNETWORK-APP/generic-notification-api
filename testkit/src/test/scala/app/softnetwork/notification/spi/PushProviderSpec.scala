@@ -1,8 +1,7 @@
-package app.softnetwork.notification.handlers
+package app.softnetwork.notification.spi
 
 import _root_.akka.actor.typed.ActorSystem
 import _root_.akka.actor.typed.scaladsl.Behaviors
-import app.softnetwork.notification.spi.MockNotificationProvider
 import app.softnetwork.persistence._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

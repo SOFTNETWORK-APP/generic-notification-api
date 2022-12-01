@@ -4,7 +4,7 @@ package app.softnetwork.notification.spi
   */
 
 import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.config.{MailConfig, Settings}
+import app.softnetwork.notification.config.{MailConfig, MailSettings}
 import com.typesafe.scalalogging.StrictLogging
 import org.apache.commons.mail._
 import org.softnetwork.notification.model.MailType._
@@ -18,7 +18,7 @@ import scala.util.{Failure, Success, Try}
   */
 trait SimpleMailProvider extends MailProvider with StrictLogging {
 
-  lazy val mailConfig: MailConfig = Settings.NotificationConfig.mail
+  lazy val mailConfig: MailConfig = MailSettings.MailConfig
 
   def sendMail(notification: Mail)(implicit system: ActorSystem[_]): NotificationAck = {
 

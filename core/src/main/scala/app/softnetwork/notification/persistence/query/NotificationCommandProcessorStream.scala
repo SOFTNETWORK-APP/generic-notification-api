@@ -3,7 +3,7 @@ package app.softnetwork.notification.persistence.query
 import akka.Done
 import akka.actor.typed.eventstream.EventStream.Publish
 import akka.persistence.typed.PersistenceId
-import app.softnetwork.notification.config.Settings
+import app.softnetwork.notification.config.NotificationSettings
 import app.softnetwork.notification.handlers.NotificationHandler
 import app.softnetwork.notification.message.{
   AddNotification,
@@ -25,7 +25,7 @@ import scala.util.{Failure, Success}
 trait NotificationCommandProcessorStream extends EventProcessorStream[NotificationCommandEvent] {
   _: JournalProvider with NotificationHandler =>
 
-  override lazy val tag: String = Settings.NotificationConfig.eventStreams.externalToNotificationTag
+  override lazy val tag: String = NotificationSettings.NotificationConfig.eventStreams.externalToNotificationTag
 
   /** @return
     *   whether or not the events processed by this processor stream would be published to the main

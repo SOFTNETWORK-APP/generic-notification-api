@@ -4,7 +4,7 @@ import java.util.Date
 import akka.actor.typed.scaladsl.{ActorContext, TimerScheduler}
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.persistence.typed.scaladsl.Effect
-import app.softnetwork.notification.config.Settings
+import app.softnetwork.notification.config.NotificationSettings
 import org.slf4j.Logger
 import org.softnetwork.akka.message.SchedulerEvents.SchedulerEventWithCommand
 import app.softnetwork.scheduler.message.{AddSchedule, RemoveSchedule}
@@ -33,7 +33,7 @@ sealed trait NotificationBehavior[T <: Notification]
   /** @return
     *   node role required to start this actor
     */
-  override def role: String = Settings.NotificationConfig.akkaNodeRole
+  override def role: String = NotificationSettings.NotificationConfig.akkaNodeRole
 
   private[this] val notificationTimerKey: String = "NotificationTimerKey"
 

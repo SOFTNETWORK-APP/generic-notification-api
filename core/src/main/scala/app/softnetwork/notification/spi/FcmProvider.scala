@@ -1,23 +1,13 @@
 package app.softnetwork.notification.spi
 
-import java.io.{File => JFile, FileInputStream}
+import java.io.{FileInputStream, File => JFile}
 import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.config.{FcmConfig, Settings}
+import app.softnetwork.notification.config.{FcmConfig, PushSettings}
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.messaging.{
-  AndroidConfig,
-  AndroidNotification,
-  BatchResponse,
-  FirebaseMessaging,
-  MulticastMessage
-}
+import com.google.firebase.messaging.{AndroidConfig, AndroidNotification, BatchResponse, FirebaseMessaging, MulticastMessage}
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.typesafe.scalalogging.StrictLogging
-import org.softnetwork.notification.model.{
-  NotificationStatus,
-  NotificationStatusResult,
-  PushPayload
-}
+import org.softnetwork.notification.model.{NotificationStatus, NotificationStatusResult, PushPayload}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
@@ -107,7 +97,7 @@ object FcmProvider {
   }
 
   private[notification] def config(key: String): FcmConfig = {
-    Settings.PushConfigs.get(key).map(_.fcm).getOrElse(Settings.NotificationConfig.push.fcm)
+    PushSettings.AppConfigs.get(key).map(_.fcm).getOrElse(PushSettings.DefaultConfig.fcm)
   }
 
   private[notification] def clientCredentials(

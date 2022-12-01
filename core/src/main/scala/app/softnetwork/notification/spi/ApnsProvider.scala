@@ -4,19 +4,11 @@ import java.io.{File => JFile}
 import akka.actor.typed.ActorSystem
 import app.softnetwork.concurrent.Completion
 import app.softnetwork.config.{Settings => CommonSettings}
-import app.softnetwork.notification.config.{ApnsConfig, Settings}
+import app.softnetwork.notification.config.{ApnsConfig, PushSettings}
 import com.eatthepath.pushy.apns.{ApnsClient, ApnsClientBuilder, PushNotificationResponse}
-import com.eatthepath.pushy.apns.util.{
-  ApnsPayloadBuilder,
-  SimpleApnsPayloadBuilder,
-  SimpleApnsPushNotification
-}
+import com.eatthepath.pushy.apns.util.{ApnsPayloadBuilder, SimpleApnsPayloadBuilder, SimpleApnsPushNotification}
 import com.typesafe.scalalogging.StrictLogging
-import org.softnetwork.notification.model.{
-  NotificationStatus,
-  NotificationStatusResult,
-  PushPayload
-}
+import org.softnetwork.notification.model.{NotificationStatus, NotificationStatusResult, PushPayload}
 
 import java.time.Duration
 import scala.annotation.tailrec
@@ -123,9 +115,9 @@ object ApnsProvider {
     configs.get(key) match {
       case Some(config) => config
       case _ =>
-        val config: ApnsConfig = Settings.PushConfigs.get(key).map(_.apns) match {
+        val config: ApnsConfig = PushSettings.AppConfigs.get(key).map(_.apns) match {
           case Some(apnsConfig) => apnsConfig
-          case _                => Settings.NotificationConfig.push.apns
+          case _                => PushSettings.DefaultConfig.apns
         }
         configs = configs + (key -> config)
         config

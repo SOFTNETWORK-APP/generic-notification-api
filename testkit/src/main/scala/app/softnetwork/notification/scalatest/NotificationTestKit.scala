@@ -1,7 +1,7 @@
 package app.softnetwork.notification.scalatest
 
 import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.config.Settings.NotificationConfig
+import app.softnetwork.notification.config.NotificationSettings.NotificationConfig
 import app.softnetwork.notification.handlers.MockNotificationHandler
 import app.softnetwork.notification.launch.NotificationGuardian
 import app.softnetwork.notification.model.Notification
