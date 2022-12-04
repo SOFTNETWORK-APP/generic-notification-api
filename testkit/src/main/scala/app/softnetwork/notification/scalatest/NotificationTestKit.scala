@@ -9,8 +9,10 @@ import app.softnetwork.notification.persistence.query.{
   NotificationCommandProcessorStream,
   Scheduler2NotificationProcessorStream
 }
-import app.softnetwork.notification.persistence.typed.NotificationBehavior
-import app.softnetwork.notification.persistence.typed.MockAllNotificationsBehavior
+import app.softnetwork.notification.persistence.typed.{
+  MockAllNotificationsBehavior,
+  NotificationBehavior
+}
 import app.softnetwork.persistence.query.InMemoryJournalProvider
 import app.softnetwork.scheduler.scalatest.SchedulerTestKit
 import org.scalatest.Suite
