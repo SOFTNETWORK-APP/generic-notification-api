@@ -1,9 +1,9 @@
-package app.softnetwork.notification.peristence.query
+package app.softnetwork.notification.persistence.query
 
 import akka.Done
 import akka.actor.typed.eventstream.EventStream.Publish
 import akka.persistence.typed.PersistenceId
-import app.softnetwork.notification.config.Settings
+import app.softnetwork.notification.config.NotificationSettings
 import app.softnetwork.notification.handlers.NotificationHandler
 import app.softnetwork.notification.message.{
   AddNotification,
@@ -19,13 +19,13 @@ import org.softnetwork.notification.message.{
   WrapNotificationCommandEvent
 }
 
-import scala.concurrent.{Future, Promise}
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 trait NotificationCommandProcessorStream extends EventProcessorStream[NotificationCommandEvent] {
   _: JournalProvider with NotificationHandler =>
 
-  override lazy val tag: String = Settings.NotificationConfig.eventStreams.externalToNotificationTag
+  override lazy val tag: String =
+    NotificationSettings.NotificationConfig.eventStreams.externalToNotificationTag
 
   /** @return
     *   whether or not the events processed by this processor stream would be published to the main
@@ -49,15 +49,7 @@ trait NotificationCommandProcessorStream extends EventProcessorStream[Notificati
     sequenceNr: Long
   ): Future[Done] = {
     event match {
-      case evt: WrapNotificationCommandEvent =>
-        val promise = Promise[Done]
-        processEvent(evt.event, persistenceId, sequenceNr) onComplete {
-          case Success(_) => promise.success(Done)
-          case Failure(f) =>
-            logger.error(f.getMessage)
-            promise.failure(f)
-        }
-        promise.future
+      case evt: WrapNotificationCommandEvent => processEvent(evt.event, persistenceId, sequenceNr)
       case evt: AddNotificationCommandEvent =>
         val command = AddNotification(evt.notification)
         !?(command) map {

@@ -1,9 +1,10 @@
-package app.softnetwork.notification.handlers
+package app.softnetwork.notification.spi
 
-import _root_.akka.actor.typed.ActorSystem
+import akka.actor.typed.ActorSystem
+import app.softnetwork.notification.config.{SMSMode, SMSSettings}
+import app.softnetwork.persistence.now
 import com.typesafe.scalalogging.StrictLogging
 import org.apache.commons.text.StringEscapeUtils
-import app.softnetwork.notification.config.{SMSMode, Settings}
 import org.softnetwork.notification.model.{
   NotificationAck,
   NotificationStatus,
@@ -11,34 +12,20 @@ import org.softnetwork.notification.model.{
   SMS
 }
 
-import app.softnetwork.persistence._
+trait SMSModeProvider extends SMSProvider with StrictLogging {
 
-/** Created by smanciot on 14/04/2018.
-  */
-trait SMSProvider extends NotificationProvider[SMS] with StrictLogging {
-  def send(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck =
-    throw new UnsupportedOperationException
-}
-
-trait MockSMSProvider extends SMSProvider with MockNotificationProvider[SMS]
-
-trait SMSModeProvider extends SMSProvider {
-
-  import java.io.{BufferedReader, InputStreamReader}
-  import java.net.{HttpURLConnection, URL, URLEncoder}
-
-  import java.util.Date
-
+  import NotificationStatus._
   import app.softnetwork.notification.config.SMSMode._
   import Status._
 
-  import NotificationStatus._
-
+  import java.io.{BufferedReader, InputStreamReader}
+  import java.net.{HttpURLConnection, URL, URLEncoder}
+  import java.util.Date
   import scala.util.{Failure, Success, Try}
 
-  lazy val config: Option[SMSMode.Config] = Settings.NotificationConfig.sms.mode
+  lazy val config: Option[SMSMode.Config] = SMSSettings.SMSConfig.mode
 
-  override def send(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck = {
+  override def sendSMS(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck = {
     import notification._
 
     config match {
@@ -58,23 +45,26 @@ trait SMSModeProvider extends SMSProvider {
             now()
           )
         } else {
-          val sendUrl = s"""
-                           |$baseUrl/$version/sendSMS.do?
-                           |accessToken=$accessToken
-                           |&message=${URLEncoder.encode(
-            StringEscapeUtils.unescapeHtml4(message).replaceAll("<br/>", "\\\n"),
-            "ISO-8859-15"
-          )}
-                           |&numero=${to.mkString(",")}
-                           |&emetteur=${URLEncoder.encode(from.value, "ISO-8859-15")}
-                           |${if (notificationUrl.isDefined)
-            s"&notification_url=${notificationUrl.get}"
-          else ""}
-                           |${if (notificationUrlResponse.isDefined)
-            s"&notification_ url_reponse=${notificationUrlResponse.get}"
-          else ""}
-                           |${if (stop) "&stop=2" else ""}
-                           |""".stripMargin.replaceAll("\\s+", "")
+          val sendUrl =
+            s"""
+               |$baseUrl/$version/sendSMS.do?
+               |accessToken=$accessToken
+               |&message=${URLEncoder.encode(
+              StringEscapeUtils.unescapeHtml4(message).replaceAll("<br/>", "\\\n"),
+              "ISO-8859-15"
+            )}
+               |&numero=${to.mkString(",")}
+               |&emetteur=${URLEncoder.encode(from.value, "ISO-8859-15")}
+               |${notificationUrl match {
+              case Some(value) => s"&notification_url=$value"
+              case _           => ""
+            }}
+               |${notificationUrlResponse match {
+              case Some(value) => s"&notification_url=$value"
+              case _           => ""
+            }}
+               |${if (stop) "&stop=2" else ""}
+               |""".stripMargin.replaceAll("\\s+", "")
 
           logger.info(sendUrl)
 
@@ -184,6 +174,7 @@ trait SMSModeProvider extends SMSProvider {
         }
 
       case None =>
+        logger.error("notification.sms.mode configuration has not been defined")
         new NotificationAck(
           None,
           to.map(recipient =>
@@ -198,7 +189,7 @@ trait SMSModeProvider extends SMSProvider {
     }
   }
 
-  override def ack(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck = {
+  override def ackSMS(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck = {
     val results = notification.results
     val uuid = notification.ackUuid.getOrElse("")
     config match {
@@ -291,7 +282,3 @@ trait SMSModeProvider extends SMSProvider {
     }
   }
 }
-
-object SMSModeProvider extends SMSModeProvider
-
-object MockSMSProvider extends MockSMSProvider

@@ -1,18 +1,21 @@
-package app.softnetwork.notification.peristence.typed
+package app.softnetwork.notification.persistence.typed
 
 import java.util.Date
 import akka.actor.typed.scaladsl.{ActorContext, TimerScheduler}
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.persistence.typed.scaladsl.Effect
-import app.softnetwork.notification.config.Settings
+import app.softnetwork.notification.config.NotificationSettings
 import org.slf4j.Logger
 import org.softnetwork.akka.message.SchedulerEvents.SchedulerEventWithCommand
 import app.softnetwork.scheduler.message.{AddSchedule, RemoveSchedule}
 import org.softnetwork.akka.model.Schedule
 import app.softnetwork.persistence.typed._
-import app.softnetwork.notification.handlers._
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.model._
+import app.softnetwork.notification.spi.{
+  DefaultMailAndSMSAndFcmAndIosProvider,
+  NotificationProvider
+}
 import org.softnetwork.notification.message._
 import org.softnetwork.notification.model._
 import app.softnetwork.scheduler.config.{Settings => SchedulerSettings}
@@ -22,15 +25,15 @@ import scala.language.{implicitConversions, postfixOps}
 /** Created by smanciot on 13/04/2020.
   */
 sealed trait NotificationBehavior[T <: Notification]
-    extends EntityBehavior[NotificationCommand, T, NotificationEvent, NotificationCommandResult] {
-  self: NotificationProvider[T] =>
+    extends EntityBehavior[NotificationCommand, T, NotificationEvent, NotificationCommandResult]
+    with NotificationProvider {
+
+  override type N = T
 
   /** @return
     *   node role required to start this actor
     */
-  override def role: String = Settings.NotificationConfig.akkaNodeRole
-
-  private[this] val provider: NotificationProvider[T] = this
+  override def role: String = NotificationSettings.NotificationConfig.akkaNodeRole
 
   private[this] val notificationTimerKey: String = "NotificationTimerKey"
 
@@ -222,7 +225,7 @@ sealed trait NotificationBehavior[T <: Notification]
               case Rejected  => Effect.none.thenRun(_ => NotificationRejected(entityId) ~> replyTo)
               case Undelivered =>
                 Effect.none.thenRun(_ => NotificationUndelivered(entityId) ~> replyTo)
-              case _ => ack(entityId, s, replyTo) // Pending
+              case _ => ackNotification(entityId, s, replyTo) // Pending
             }
           case _ => Effect.none.thenRun(_ => NotificationNotFound ~> replyTo)
         }
@@ -364,13 +367,13 @@ sealed trait NotificationBehavior[T <: Notification]
     }
   }
 
-  private[this] def ack(
+  private[this] def ackNotification(
     _uuid: String,
     notification: T,
     replyTo: Option[ActorRef[NotificationCommandResult]]
   )(implicit log: Logger, system: ActorSystem[_]): Effect[NotificationEvent, Option[T]] = {
     import notification._
-    val ack: NotificationAck = ackUuid match {
+    val notificationAck: NotificationAck = ackUuid match {
       case Some(_) =>
         import NotificationStatus._
         status match {
@@ -381,7 +384,7 @@ sealed trait NotificationBehavior[T <: Notification]
               _uuid,
               status.name
             )
-            provider.ack(
+            ack(
               notification
             ) // we only call the provider api if the notification is pending
           case _ => NotificationAck(ackUuid, results, new Date())
@@ -391,15 +394,15 @@ sealed trait NotificationBehavior[T <: Notification]
     (notification match {
       case n: Mail =>
         Some(
-          MailRecordedEvent(n.copyWithAck(ack).asInstanceOf[Mail])
+          MailRecordedEvent(n.copyWithAck(notificationAck).asInstanceOf[Mail])
         )
       case n: SMS =>
         Some(
-          SMSRecordedEvent(n.copyWithAck(ack).asInstanceOf[SMS])
+          SMSRecordedEvent(n.copyWithAck(notificationAck).asInstanceOf[SMS])
         )
       case n: Push =>
         Some(
-          PushRecordedEvent(n.copyWithAck(ack).asInstanceOf[Push])
+          PushRecordedEvent(n.copyWithAck(notificationAck).asInstanceOf[Push])
         )
       case _ => None
     }) match {
@@ -409,7 +412,7 @@ sealed trait NotificationBehavior[T <: Notification]
           .thenRun(_ =>
             {
               import NotificationStatus._
-              ack.status match {
+              notificationAck.status match {
                 case Rejected    => NotificationRejected(_uuid)
                 case Undelivered => NotificationUndelivered(_uuid)
                 case Sent        => NotificationSent(_uuid)
@@ -444,7 +447,7 @@ sealed trait NotificationBehavior[T <: Notification]
                 status.name
               )
               Some(
-                (provider.ack(notification), 0)
+                (ack(notification), 0)
               ) // FIXME acknowledgment must be properly implemented ...
             } else {
               log.info(
@@ -454,7 +457,7 @@ sealed trait NotificationBehavior[T <: Notification]
                 status.name,
                 to.mkString(", ")
               )
-              Some((provider.send(notification), 1))
+              Some((send(notification), 1))
             }
         }
       case _ =>
@@ -469,7 +472,7 @@ sealed trait NotificationBehavior[T <: Notification]
             status.name,
             to.mkString(", ")
           )
-          Some((provider.send(notification), 1))
+          Some((send(notification), 1))
         }
     }
     notification match {
@@ -511,16 +514,8 @@ sealed trait NotificationBehavior[T <: Notification]
 
 trait AllNotificationsBehavior
     extends NotificationBehavior[Notification]
-    with AllNotificationsProvider {
+    with DefaultMailAndSMSAndFcmAndIosProvider {
   override val persistenceId = "Notification"
 }
 
-trait MockAllNotificationsBehavior
-    extends AllNotificationsBehavior
-    with MockAllNotificationsProvider {
-  override val persistenceId = "MockNotification"
-}
-
 object AllNotificationsBehavior extends AllNotificationsBehavior
-
-object MockAllNotificationsBehavior extends MockAllNotificationsBehavior

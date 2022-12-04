@@ -1,28 +1,26 @@
-package app.softnetwork.notification.handlers
+package app.softnetwork.notification.spi
 
 /** Created by smanciot on 07/04/2018.
   */
 
-import java.util.Date
-import javax.activation.FileDataSource
-
 import akka.actor.typed.ActorSystem
+import app.softnetwork.notification.config.{MailConfig, MailSettings}
 import com.typesafe.scalalogging.StrictLogging
-import app.softnetwork.notification.config.Settings
-import app.softnetwork.notification.config.MailConfig
+import org.apache.commons.mail._
 import org.softnetwork.notification.model.MailType._
 import org.softnetwork.notification.model._
 
+import java.util.Date
+import javax.activation.FileDataSource
 import scala.util.{Failure, Success, Try}
 
 /** From https://gist.github.com/mariussoutier/3436111
   */
-trait MailProvider extends NotificationProvider[Mail] with StrictLogging {
+trait SimpleMailProvider extends MailProvider with StrictLogging {
 
-  lazy val mailConfig: MailConfig = Settings.NotificationConfig.mail
+  lazy val mailConfig: MailConfig = MailSettings.MailConfig
 
-  def send(notification: Mail)(implicit system: ActorSystem[_]): NotificationAck = {
-    import org.apache.commons.mail._
+  def sendMail(notification: Mail)(implicit system: ActorSystem[_]): NotificationAck = {
 
     val format =
       if (notification.attachment.nonEmpty || notification.attachments.nonEmpty) MultiPart
@@ -31,14 +29,15 @@ trait MailProvider extends NotificationProvider[Mail] with StrictLogging {
 
     val commonsMail: Email = format match {
       case Rich =>
-        new HtmlEmail().setHtmlMsg(notification.richMessage.get).setTextMsg(notification.message)
+        new HtmlEmail()
+          .setHtmlMsg(notification.richMessage.getOrElse(notification.message))
+          .setTextMsg(notification.message)
       case MultiPart =>
         val multipart = new MultiPartEmail()
         val attachments = notification.attachments.toList ++ {
-          if (notification.attachment.isDefined) {
-            List(notification.attachment.get)
-          } else {
-            List.empty
+          notification.attachment match {
+            case Some(attachment) => List(attachment)
+            case _                => List.empty
           }
         }
         attachments.foreach(attachment => {
@@ -101,9 +100,3 @@ trait MailProvider extends NotificationProvider[Mail] with StrictLogging {
   }
 
 }
-
-trait MockMailProvider extends MailProvider with MockNotificationProvider[Mail]
-
-object MailProvider extends MailProvider
-
-object MockMailProvider extends MockMailProvider

@@ -2,11 +2,11 @@ package app.softnetwork.notification.launch
 
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.model.Notification
-import app.softnetwork.notification.peristence.query.{
+import app.softnetwork.notification.persistence.query.{
   NotificationCommandProcessorStream,
   Scheduler2NotificationProcessorStream
 }
-import app.softnetwork.notification.peristence.typed.NotificationBehavior
+import app.softnetwork.notification.persistence.typed.NotificationBehavior
 import app.softnetwork.persistence.launch.PersistentEntity
 import app.softnetwork.persistence.query.{EventProcessorStream, SchemaProvider}
 import app.softnetwork.scheduler.launch.SchedulerGuardian

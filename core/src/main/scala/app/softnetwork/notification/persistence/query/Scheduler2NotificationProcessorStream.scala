@@ -1,4 +1,4 @@
-package app.softnetwork.notification.peristence.query
+package app.softnetwork.notification.persistence.query
 
 import akka.actor.typed.eventstream.EventStream.Publish
 import org.softnetwork.akka.model.Schedule

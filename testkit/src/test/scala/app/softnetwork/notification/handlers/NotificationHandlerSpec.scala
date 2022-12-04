@@ -4,7 +4,7 @@ import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.eventstream.EventStream.Subscribe
 import akka.actor.typed.ActorSystem
 import org.scalatest.wordspec.AnyWordSpecLike
-import app.softnetwork.notification.config.Settings
+import app.softnetwork.notification.config.MailSettings
 import app.softnetwork.notification.message._
 import org.softnetwork.notification.model.{From, Mail}
 import app.softnetwork.notification.scalatest.NotificationTestKit
@@ -16,7 +16,7 @@ class NotificationHandlerSpec
     with AnyWordSpecLike
     with NotificationTestKit {
 
-  lazy val from: String = Settings.NotificationConfig.mail.username
+  lazy val from: String = MailSettings.MailConfig.username
   val to = Seq("nobody@gmail.com")
   val subject = "Sujet"
   val message = "message"

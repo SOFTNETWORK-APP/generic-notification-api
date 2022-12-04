@@ -1,15 +1,15 @@
-package app.softnetwork.notification.handlers
+package app.softnetwork.notification.spi
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import org.apache.commons.text.StringEscapeUtils
-import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.softnetwork.notification.model.{From, NotificationAck, NotificationStatus, SMS}
 
 /** Created by smanciot on 25/08/2018.
   */
-class SMSModeProviderSpec extends AnyWordSpec with Matchers with MockSMSProvider {
+class SMSModeProviderSpec extends AnyWordSpec with Matchers with MockNotificationProvider {
 
   var ack: NotificationAck = _
 

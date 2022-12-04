@@ -1,17 +1,17 @@
-package app.softnetwork.notification.handlers
+package app.softnetwork.notification.spi
+
+import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.Behaviors
+import app.softnetwork.notification.config.MailSettings
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+import org.softnetwork.notification.model._
 
 import java.io.{File, FileOutputStream}
 
-import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.ActorSystem
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers
-import app.softnetwork.notification.config.Settings
-import org.softnetwork.notification.model._
-
 /** Created by smanciot on 25/08/2018.
   */
-class MailProviderSpec extends AnyFlatSpec with Matchers with MockMailProvider {
+class MailProviderSpec extends AnyFlatSpec with Matchers with MockNotificationProvider {
 
   var ack: NotificationAck = _
 
@@ -21,7 +21,7 @@ class MailProviderSpec extends AnyFlatSpec with Matchers with MockMailProvider {
 
   val mail: Mail = Mail.defaultInstance
     .withUuid("test")
-    .withFrom(From.defaultInstance.withValue(Settings.NotificationConfig.mail.username))
+    .withFrom(From.defaultInstance.withValue(MailSettings.MailConfig.username))
     .withTo(Seq(email))
     .withSubject("SUBJECT")
     .withMessage(message)
