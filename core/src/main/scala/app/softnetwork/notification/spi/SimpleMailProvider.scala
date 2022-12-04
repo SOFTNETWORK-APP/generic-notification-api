@@ -29,14 +29,15 @@ trait SimpleMailProvider extends MailProvider with StrictLogging {
 
     val commonsMail: Email = format match {
       case Rich =>
-        new HtmlEmail().setHtmlMsg(notification.richMessage.get).setTextMsg(notification.message)
+        new HtmlEmail()
+          .setHtmlMsg(notification.richMessage.getOrElse(notification.message))
+          .setTextMsg(notification.message)
       case MultiPart =>
         val multipart = new MultiPartEmail()
         val attachments = notification.attachments.toList ++ {
-          if (notification.attachment.isDefined) {
-            List(notification.attachment.get)
-          } else {
-            List.empty
+          notification.attachment match {
+            case Some(attachment) => List(attachment)
+            case _                => List.empty
           }
         }
         attachments.foreach(attachment => {
