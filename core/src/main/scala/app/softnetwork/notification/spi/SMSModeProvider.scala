@@ -55,10 +55,14 @@ trait SMSModeProvider extends SMSProvider with StrictLogging {
             )}
                |&numero=${to.mkString(",")}
                |&emetteur=${URLEncoder.encode(from.value, "ISO-8859-15")}
-               |${if (notificationUrl.isDefined) s"&notification_url=${notificationUrl.get}" else ""}
-               |${if (notificationUrlResponse.isDefined)
-              s"&notification_ url_reponse=${notificationUrlResponse.get}"
-            else ""}
+               |${notificationUrl match {
+              case Some(value) => s"&notification_url=$value"
+              case _           => ""
+            }}
+               |${notificationUrlResponse match {
+              case Some(value) => s"&notification_url=$value"
+              case _           => ""
+            }}
                |${if (stop) "&stop=2" else ""}
                |""".stripMargin.replaceAll("\\s+", "")
 

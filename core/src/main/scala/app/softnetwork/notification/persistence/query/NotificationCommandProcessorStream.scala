@@ -19,8 +19,7 @@ import org.softnetwork.notification.message.{
   WrapNotificationCommandEvent
 }
 
-import scala.concurrent.{Future, Promise}
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 trait NotificationCommandProcessorStream extends EventProcessorStream[NotificationCommandEvent] {
   _: JournalProvider with NotificationHandler =>
@@ -50,15 +49,7 @@ trait NotificationCommandProcessorStream extends EventProcessorStream[Notificati
     sequenceNr: Long
   ): Future[Done] = {
     event match {
-      case evt: WrapNotificationCommandEvent =>
-        val promise = Promise[Done]
-        processEvent(evt.event, persistenceId, sequenceNr) onComplete {
-          case Success(_) => promise.success(Done)
-          case Failure(f) =>
-            logger.error(f.getMessage)
-            promise.failure(f)
-        }
-        promise.future
+      case evt: WrapNotificationCommandEvent => processEvent(evt.event, persistenceId, sequenceNr)
       case evt: AddNotificationCommandEvent =>
         val command = AddNotification(evt.notification)
         !?(command) map {
