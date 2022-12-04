@@ -25,7 +25,8 @@ import scala.util.{Failure, Success}
 trait NotificationCommandProcessorStream extends EventProcessorStream[NotificationCommandEvent] {
   _: JournalProvider with NotificationHandler =>
 
-  override lazy val tag: String = NotificationSettings.NotificationConfig.eventStreams.externalToNotificationTag
+  override lazy val tag: String =
+    NotificationSettings.NotificationConfig.eventStreams.externalToNotificationTag
 
   /** @return
     *   whether or not the events processed by this processor stream would be published to the main

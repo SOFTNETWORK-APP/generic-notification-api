@@ -5,7 +5,12 @@ import app.softnetwork.notification.config.{SMSMode, SMSSettings}
 import app.softnetwork.persistence.now
 import com.typesafe.scalalogging.StrictLogging
 import org.apache.commons.text.StringEscapeUtils
-import org.softnetwork.notification.model.{NotificationAck, NotificationStatus, NotificationStatusResult, SMS}
+import org.softnetwork.notification.model.{
+  NotificationAck,
+  NotificationStatus,
+  NotificationStatusResult,
+  SMS
+}
 
 trait SMSModeProvider extends SMSProvider with StrictLogging {
 

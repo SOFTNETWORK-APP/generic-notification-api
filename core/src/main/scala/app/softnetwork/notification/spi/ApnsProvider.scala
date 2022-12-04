@@ -6,9 +6,17 @@ import app.softnetwork.concurrent.Completion
 import app.softnetwork.config.{Settings => CommonSettings}
 import app.softnetwork.notification.config.{ApnsConfig, PushSettings}
 import com.eatthepath.pushy.apns.{ApnsClient, ApnsClientBuilder, PushNotificationResponse}
-import com.eatthepath.pushy.apns.util.{ApnsPayloadBuilder, SimpleApnsPayloadBuilder, SimpleApnsPushNotification}
+import com.eatthepath.pushy.apns.util.{
+  ApnsPayloadBuilder,
+  SimpleApnsPayloadBuilder,
+  SimpleApnsPushNotification
+}
 import com.typesafe.scalalogging.StrictLogging
-import org.softnetwork.notification.model.{NotificationStatus, NotificationStatusResult, PushPayload}
+import org.softnetwork.notification.model.{
+  NotificationStatus,
+  NotificationStatusResult,
+  PushPayload
+}
 
 import java.time.Duration
 import scala.annotation.tailrec

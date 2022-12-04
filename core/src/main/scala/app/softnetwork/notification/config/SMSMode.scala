@@ -5,14 +5,14 @@ package app.softnetwork.notification.config
 object SMSMode {
 
   case class Config(
-                     accessToken: String,
-                     baseUrl: String = "https://api.smsmode.com/http",
-                     version: String = "1.6",
-                     notificationUrl: Option[String] = None,
-                     notificationUrlResponse: Option[String] = None,
-                     stop: Boolean = false,
-                     disabled: Boolean = false
-                   )
+    accessToken: String,
+    baseUrl: String = "https://api.smsmode.com/http",
+    version: String = "1.6",
+    notificationUrl: Option[String] = None,
+    notificationUrlResponse: Option[String] = None,
+    stop: Boolean = false,
+    disabled: Boolean = false
+  )
 
   object ResponseType extends Enumeration {
     type ResponseType = Value

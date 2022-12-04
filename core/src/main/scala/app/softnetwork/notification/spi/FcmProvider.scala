@@ -1,13 +1,23 @@
 package app.softnetwork.notification.spi
 
-import java.io.{FileInputStream, File => JFile}
+import java.io.{File => JFile, FileInputStream}
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.config.{FcmConfig, PushSettings}
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.messaging.{AndroidConfig, AndroidNotification, BatchResponse, FirebaseMessaging, MulticastMessage}
+import com.google.firebase.messaging.{
+  AndroidConfig,
+  AndroidNotification,
+  BatchResponse,
+  FirebaseMessaging,
+  MulticastMessage
+}
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.typesafe.scalalogging.StrictLogging
-import org.softnetwork.notification.model.{NotificationStatus, NotificationStatusResult, PushPayload}
+import org.softnetwork.notification.model.{
+  NotificationStatus,
+  NotificationStatusResult,
+  PushPayload
+}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
