@@ -1,6 +1,7 @@
 package app.softnetwork.notification.api
 
 import akka.actor.typed.ActorSystem
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import app.softnetwork.notification.handlers.NotificationHandler
 import app.softnetwork.notification.launch.NotificationApplication
 import app.softnetwork.notification.model.Notification
@@ -14,6 +15,8 @@ import app.softnetwork.notification.persistence.typed.{
 }
 import app.softnetwork.persistence.jdbc.query.{JdbcJournalProvider, JdbcSchema, JdbcSchemaProvider}
 import app.softnetwork.scheduler.api.SchedulerApi
+
+import scala.concurrent.Future
 
 trait NotificationApi extends SchedulerApi with NotificationApplication {
 
@@ -47,4 +50,9 @@ trait NotificationApi extends SchedulerApi with NotificationApplication {
         }
       )
 
+  override def grpcServices
+    : ActorSystem[_] => Seq[PartialFunction[HttpRequest, Future[HttpResponse]]] = system =>
+    Seq(
+      NotificationServiceApiHandler.partial(NotificationServer(system))(system)
+    )
 }

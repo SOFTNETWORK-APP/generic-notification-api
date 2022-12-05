@@ -19,6 +19,7 @@ import app.softnetwork.notification.spi.{
 import org.softnetwork.notification.message._
 import org.softnetwork.notification.model._
 import app.softnetwork.scheduler.config.{Settings => SchedulerSettings}
+import org.softnetwork.notification.model.NotificationStatus._
 
 import scala.language.{implicitConversions, postfixOps}
 
@@ -102,10 +103,8 @@ sealed trait NotificationBehavior[T <: Notification]
                   )
                 )
               )
-              .thenRun(_ => {
-                NotificationAdded(entityId) ~> replyTo
-              })
-          case _ => Effect.unhandled
+              .thenRun(_ => NotificationAdded(entityId) ~> replyTo)
+          case _ => Effect.none.thenRun(_ => NotificationNotAdded ~> replyTo)
         }
 
       case _: RemoveNotification =>
@@ -127,21 +126,35 @@ sealed trait NotificationBehavior[T <: Notification]
           .thenRun(_ => { NotificationRemoved ~> replyTo }) //.thenStop()
 
       case cmd: SendNotification[T] =>
-        sendNotification(entityId, cmd.notification) match {
-          case Some(event) =>
-            import NotificationStatus._
-            val notification = event.asInstanceOf[NotificationRecordedEvent[T]].notification
-            import notification._
+        val tuple = sendNotification(entityId, cmd.notification)
+        Effect
+          .persist(
+            List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
+          )
+          .thenRun(_ =>
+            {
+              tuple._2.status match {
+                case Rejected    => NotificationRejected(entityId)
+                case Undelivered => NotificationUndelivered(entityId)
+                case Sent        => NotificationSent(entityId)
+                case Delivered   => NotificationDelivered(entityId)
+                case _           => NotificationPending(entityId)
+              }
+            }
+            ~> replyTo
+          )
+
+      case _: ResendNotification =>
+        state match {
+          case Some(notification) =>
+            val tuple = sendNotification(entityId, notification)
             Effect
               .persist(
-                List(
-                  event,
-                  scheduledNotificationEvent(entityId, notification)
-                )
+                List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
               )
               .thenRun(_ =>
                 {
-                  status match {
+                  tuple._2.status match {
                     case Rejected    => NotificationRejected(entityId)
                     case Undelivered => NotificationUndelivered(entityId)
                     case Sent        => NotificationSent(entityId)
@@ -151,81 +164,20 @@ sealed trait NotificationBehavior[T <: Notification]
                 }
                 ~> replyTo
               )
-          case _ => Effect.none
-        }
-
-      case _: ResendNotification =>
-        state match {
-          case Some(s) =>
-            import s._
-            import NotificationStatus._
-            status match {
-              case Sent =>
-                Effect
-                  .persist(
-                    ScheduleForNotificationRemoved(
-                      RemoveSchedule(
-                        persistenceId,
-                        entityId,
-                        notificationTimerKey
-                      )
-                    )
-                  )
-                  .thenRun(_ => NotificationSent(entityId) ~> replyTo)
-              case Delivered =>
-                Effect
-                  .persist(
-                    ScheduleForNotificationRemoved(
-                      RemoveSchedule(
-                        persistenceId,
-                        entityId,
-                        notificationTimerKey
-                      )
-                    )
-                  )
-                  .thenRun(_ => NotificationDelivered(entityId) ~> replyTo)
-              case _ =>
-                sendNotification(entityId, s) match {
-                  case Some(event) =>
-                    import NotificationStatus._
-                    val notification = event.asInstanceOf[NotificationRecordedEvent[T]].notification
-                    import notification._
-                    Effect
-                      .persist(
-                        List(
-                          event,
-                          scheduledNotificationEvent(entityId, notification)
-                        )
-                      )
-                      .thenRun(_ =>
-                        {
-                          status match {
-                            case Rejected    => NotificationRejected(entityId)
-                            case Undelivered => NotificationUndelivered(entityId)
-                            case Sent        => NotificationSent(entityId)
-                            case Delivered   => NotificationDelivered(entityId)
-                            case _           => NotificationPending(entityId)
-                          }
-                        } ~> replyTo
-                      )
-                  case _ => Effect.none
-                }
-            }
           case _ => Effect.none.thenRun(_ => NotificationNotFound ~> replyTo)
         }
 
       case _: GetNotificationStatus =>
         state match {
-          case Some(s) =>
-            import s._
-            import NotificationStatus._
+          case Some(notification) =>
+            import notification._
             status match {
               case Sent      => Effect.none.thenRun(_ => NotificationSent(entityId) ~> replyTo)
               case Delivered => Effect.none.thenRun(_ => NotificationDelivered(entityId) ~> replyTo)
               case Rejected  => Effect.none.thenRun(_ => NotificationRejected(entityId) ~> replyTo)
               case Undelivered =>
                 Effect.none.thenRun(_ => NotificationUndelivered(entityId) ~> replyTo)
-              case _ => ackNotification(entityId, s, replyTo) // Pending
+              case _ => ackNotification(entityId, notification, replyTo) // Pending
             }
           case _ => Effect.none.thenRun(_ => NotificationNotFound ~> replyTo)
         }
@@ -241,58 +193,25 @@ sealed trait NotificationBehavior[T <: Notification]
 
       case ScheduleNotification =>
         state match {
-          case Some(s) =>
-            import s._
-            if (status.isSent || status.isDelivered) { // the notification has been sent/delivered - the schedule should be removed
-              Effect
-                .persist(
-                  ScheduleForNotificationRemoved(
-                    RemoveSchedule(
-                      persistenceId,
-                      entityId,
-                      notificationTimerKey
-                    )
-                  )
-                )
-                .thenNoReply()
-            } else { // the notification is in pending, rejected or undelivered status ...
-              sendNotification(entityId, s) match {
-                case Some(event) =>
-                  Effect
-                    .persist(
-                      List(
-                        event,
-                        if (maxTries > 0 && nbTries < maxTries) {
-                          ScheduleForNotificationAdded(
-                            AddSchedule(
-                              Schedule(persistenceId, entityId, notificationTimerKey, delay)
-                            )
-                          )
-                        } else {
-                          ScheduleForNotificationRemoved(
-                            RemoveSchedule(
-                              persistenceId,
-                              entityId,
-                              notificationTimerKey
-                            )
-                          )
-                        }
-                      )
-                    )
-                    .thenNoReply()
-                case _ =>
-                  Effect
-                    .persist(
-                      ScheduleForNotificationAdded(
-                        AddSchedule(
-                          Schedule(persistenceId, entityId, notificationTimerKey, delay)
-                        )
-                      )
-                    )
-                    .thenNoReply()
-              }
-            }
-          case _ =>
+          case Some(notification) =>
+            val tuple = sendNotification(entityId, notification)
+            Effect
+              .persist(
+                List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
+              )
+              .thenRun(_ =>
+                {
+                  tuple._2.status match {
+                    case Rejected    => NotificationRejected(entityId)
+                    case Undelivered => NotificationUndelivered(entityId)
+                    case Sent        => NotificationSent(entityId)
+                    case Delivered   => NotificationDelivered(entityId)
+                    case _           => NotificationPending(entityId)
+                  }
+                }
+                ~> replyTo
+              )
+          case _ => // should never be the case
             Effect
               .persist(
                 ScheduleForNotificationRemoved(
@@ -303,7 +222,7 @@ sealed trait NotificationBehavior[T <: Notification]
                   )
                 )
               )
-              .thenNoReply()
+              .thenRun(_ => NotificationNotFound ~> replyTo)
         }
 
       case _ => super.handleCommand(entityId, state, command, replyTo, timers)
@@ -375,7 +294,6 @@ sealed trait NotificationBehavior[T <: Notification]
     import notification._
     val notificationAck: NotificationAck = ackUuid match {
       case Some(_) =>
-        import NotificationStatus._
         status match {
           case Pending =>
             log.info(
@@ -411,7 +329,6 @@ sealed trait NotificationBehavior[T <: Notification]
           .persist(event)
           .thenRun(_ =>
             {
-              import NotificationStatus._
               notificationAck.status match {
                 case Rejected    => NotificationRejected(_uuid)
                 case Undelivered => NotificationUndelivered(_uuid)
@@ -429,15 +346,15 @@ sealed trait NotificationBehavior[T <: Notification]
   private[this] def sendNotification(entityId: String, notification: T)(implicit
     log: Logger,
     system: ActorSystem[_]
-  ): Option[NotificationEvent] = {
+  ): (Option[NotificationEvent], T) = {
     import notification._
-    import NotificationStatus._
-    val maybeSent = status match {
+    val maybeAckWithNumberOfRetries: Option[(NotificationAck, Int)] = status match {
       case Sent      => None
       case Delivered => None
       case Pending =>
         notification.deferred match {
-          case Some(deferred) if deferred.after(new Date()) => None
+          case Some(deferred) if deferred.after(new Date()) =>
+            None // the notification is still deferred
           case _ =>
             if (nbTries > 0) { // the notification has already been sent at least one time, waiting for an acknowledgement
               log.info(
@@ -475,39 +392,34 @@ sealed trait NotificationBehavior[T <: Notification]
           Some((send(notification), 1))
         }
     }
-    notification match {
-      case n: Mail =>
-        Some(
-          MailRecordedEvent(
-            maybeSent match {
-              case Some(ack) =>
-                n.withNbTries(n.nbTries + ack._2).copyWithAck(ack._1).asInstanceOf[Mail]
-              case _ => n
-            }
+
+    val updatedNotification =
+      maybeAckWithNumberOfRetries match {
+        case Some(ackWithNumberOfRetries) =>
+          notification
+            .withNbTries(notification.nbTries + ackWithNumberOfRetries._2)
+            .copyWithAck(ackWithNumberOfRetries._1)
+        case _ => notification
+      }
+
+    (
+      notification match {
+        case _: Mail =>
+          Some(
+            MailRecordedEvent(updatedNotification.asInstanceOf[Mail])
           )
-        )
-      case n: SMS =>
-        Some(
-          SMSRecordedEvent(
-            maybeSent match {
-              case Some(ack) =>
-                n.withNbTries(n.nbTries + ack._2).copyWithAck(ack._1).asInstanceOf[SMS]
-              case _ => n
-            }
+        case _: SMS =>
+          Some(
+            SMSRecordedEvent(updatedNotification.asInstanceOf[SMS])
           )
-        )
-      case n: Push =>
-        Some(
-          PushRecordedEvent(
-            maybeSent match {
-              case Some(ack) =>
-                n.withNbTries(n.nbTries + ack._2).copyWithAck(ack._1).asInstanceOf[Push]
-              case _ => n
-            }
+        case _: Push =>
+          Some(
+            PushRecordedEvent(updatedNotification.asInstanceOf[Push])
           )
-        )
-      case _ => None
-    }
+        case _ => None
+      },
+      updatedNotification.asInstanceOf[T]
+    )
   }
 
 }
