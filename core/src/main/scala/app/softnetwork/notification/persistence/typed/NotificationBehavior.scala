@@ -127,13 +127,14 @@ sealed trait NotificationBehavior[T <: Notification]
 
       case cmd: SendNotification[T] =>
         val tuple = sendNotification(entityId, cmd.notification)
+        val events: List[NotificationEvent] =
+          List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
+        val status: NotificationStatus = tuple._2.status
         Effect
-          .persist(
-            List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
-          )
+          .persist(events)
           .thenRun(_ =>
             {
-              tuple._2.status match {
+              status match {
                 case Rejected    => NotificationRejected(entityId)
                 case Undelivered => NotificationUndelivered(entityId)
                 case Sent        => NotificationSent(entityId)
@@ -148,10 +149,10 @@ sealed trait NotificationBehavior[T <: Notification]
         state match {
           case Some(notification) =>
             val tuple = sendNotification(entityId, notification)
+            val events: List[NotificationEvent] =
+              List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
             Effect
-              .persist(
-                List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
-              )
+              .persist(events)
               .thenRun(_ =>
                 {
                   tuple._2.status match {
@@ -396,9 +397,11 @@ sealed trait NotificationBehavior[T <: Notification]
     val updatedNotification =
       maybeAckWithNumberOfRetries match {
         case Some(ackWithNumberOfRetries) =>
+          val notificationAck: NotificationAck = ackWithNumberOfRetries._1
+          val nbTries: Int = notification.nbTries + ackWithNumberOfRetries._2
           notification
-            .withNbTries(notification.nbTries + ackWithNumberOfRetries._2)
-            .copyWithAck(ackWithNumberOfRetries._1)
+            .withNbTries(nbTries)
+            .copyWithAck(notificationAck)
         case _ => notification
       }
 
