@@ -1,6 +1,9 @@
 package app.softnetwork.notification.scalatest
 
 import akka.actor.typed.ActorSystem
+import akka.http.scaladsl.testkit.InMemoryPersistenceScalatestRouteTest
+import app.softnetwork.api.server.ApiRoutes
+import app.softnetwork.notification.api.NotificationGrpcServices
 import app.softnetwork.notification.config.NotificationSettings.NotificationConfig
 import app.softnetwork.notification.handlers.MockNotificationHandler
 import app.softnetwork.notification.launch.NotificationGuardian
@@ -51,4 +54,14 @@ trait NotificationTestKit extends SchedulerTestKit with NotificationGuardian { _
           override implicit def system: ActorSystem[_] = sys
         }
       )
+}
+
+trait NotificationRouteTestKit
+    extends InMemoryPersistenceScalatestRouteTest
+    with ApiRoutes
+    with NotificationTestKit
+    with NotificationGrpcServices { _: Suite =>
+
+  override lazy val additionalConfig: String = grpcConfig
+
 }

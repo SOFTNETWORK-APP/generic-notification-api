@@ -69,6 +69,8 @@ package object message {
 
   case object NotificationNotFound extends NotificationErrorMessage("NotificationNotFound")
 
+  case object NotificationNotAdded extends NotificationErrorMessage("NotificationNotAdded")
+
   case object NotificationMaxTriesReached
       extends NotificationErrorMessage("NotificationMaxTriesReached")
 
