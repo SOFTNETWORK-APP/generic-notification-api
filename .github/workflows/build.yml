@@ -37,7 +37,7 @@ jobs:
       with:
         java-version: '8'
         distribution: 'temurin'
-        cache: 'sbt'
+#        cache: 'sbt'
     - name: Run tests & Coverage Report
       run: sbt coverage test coverageReport
     - name: Upload coverage to Codecov
@@ -58,6 +58,6 @@ jobs:
         with:
           java-version: '8'
           distribution: 'temurin'
-          cache: 'sbt'
+#          cache: 'sbt'
       - name: Formatting
         run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck

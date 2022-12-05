@@ -126,7 +126,7 @@ sealed trait NotificationBehavior[T <: Notification]
           .thenRun(_ => { NotificationRemoved ~> replyTo }) //.thenStop()
 
       case cmd: SendNotification[T] =>
-        val tuple = sendNotification(entityId, cmd.notification)
+        val tuple: (Option[NotificationEvent], T) = sendNotification(entityId, cmd.notification)
         val events: List[NotificationEvent] =
           List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
         val status: NotificationStatus = tuple._2.status
@@ -148,7 +148,7 @@ sealed trait NotificationBehavior[T <: Notification]
       case _: ResendNotification =>
         state match {
           case Some(notification) =>
-            val tuple = sendNotification(entityId, notification)
+            val tuple: (Option[NotificationEvent], T) = sendNotification(entityId, notification)
             val events: List[NotificationEvent] =
               List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
             Effect
@@ -195,11 +195,10 @@ sealed trait NotificationBehavior[T <: Notification]
       case ScheduleNotification =>
         state match {
           case Some(notification) =>
-            val tuple = sendNotification(entityId, notification)
+            val tuple: (Option[NotificationEvent], T) = sendNotification(entityId, notification)
+            val events = List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
             Effect
-              .persist(
-                List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
-              )
+              .persist(events)
               .thenRun(_ =>
                 {
                   tuple._2.status match {
