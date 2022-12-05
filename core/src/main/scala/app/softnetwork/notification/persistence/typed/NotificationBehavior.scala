@@ -125,47 +125,12 @@ sealed trait NotificationBehavior[T <: Notification]
           )
           .thenRun(_ => { NotificationRemoved ~> replyTo }) //.thenStop()
 
-      case cmd: SendNotification[T] =>
-        val tuple = sendNotification(entityId, cmd.notification)
-        val events: List[NotificationEvent] =
-          List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
-        val status: NotificationStatus = tuple._2.status
-        Effect
-          .persist(events)
-          .thenRun(_ =>
-            {
-              status match {
-                case Rejected    => NotificationRejected(entityId)
-                case Undelivered => NotificationUndelivered(entityId)
-                case Sent        => NotificationSent(entityId)
-                case Delivered   => NotificationDelivered(entityId)
-                case _           => NotificationPending(entityId)
-              }
-            }
-            ~> replyTo
-          )
+      case cmd: SendNotification[T] => sendNotification(entityId, cmd.notification, replyTo)
 
       case _: ResendNotification =>
         state match {
-          case Some(notification) =>
-            val tuple = sendNotification(entityId, notification)
-            val events: List[NotificationEvent] =
-              List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
-            Effect
-              .persist(events)
-              .thenRun(_ =>
-                {
-                  tuple._2.status match {
-                    case Rejected    => NotificationRejected(entityId)
-                    case Undelivered => NotificationUndelivered(entityId)
-                    case Sent        => NotificationSent(entityId)
-                    case Delivered   => NotificationDelivered(entityId)
-                    case _           => NotificationPending(entityId)
-                  }
-                }
-                ~> replyTo
-              )
-          case _ => Effect.none.thenRun(_ => NotificationNotFound ~> replyTo)
+          case Some(notification) => sendNotification(entityId, notification, replyTo)
+          case _                  => Effect.none.thenRun(_ => NotificationNotFound ~> replyTo)
         }
 
       case _: GetNotificationStatus =>
@@ -194,24 +159,7 @@ sealed trait NotificationBehavior[T <: Notification]
 
       case ScheduleNotification =>
         state match {
-          case Some(notification) =>
-            val tuple = sendNotification(entityId, notification)
-            Effect
-              .persist(
-                List(tuple._1).flatten :+ scheduledNotificationEvent(entityId, tuple._2)
-              )
-              .thenRun(_ =>
-                {
-                  tuple._2.status match {
-                    case Rejected    => NotificationRejected(entityId)
-                    case Undelivered => NotificationUndelivered(entityId)
-                    case Sent        => NotificationSent(entityId)
-                    case Delivered   => NotificationDelivered(entityId)
-                    case _           => NotificationPending(entityId)
-                  }
-                }
-                ~> replyTo
-              )
+          case Some(notification) => sendNotification(entityId, notification, replyTo)
           case _ => // should never be the case
             Effect
               .persist(
@@ -344,10 +292,14 @@ sealed trait NotificationBehavior[T <: Notification]
     }
   }
 
-  private[this] def sendNotification(entityId: String, notification: T)(implicit
+  private[this] def sendNotification(
+    entityId: String,
+    notification: T,
+    replyTo: Option[ActorRef[NotificationCommandResult]]
+  )(implicit
     log: Logger,
     system: ActorSystem[_]
-  ): (Option[NotificationEvent], T) = {
+  ): Effect[NotificationEvent, Option[T]] = {
     import notification._
     val maybeAckWithNumberOfRetries: Option[(NotificationAck, Int)] = status match {
       case Sent      => None
@@ -405,7 +357,7 @@ sealed trait NotificationBehavior[T <: Notification]
         case _ => notification
       }
 
-    (
+    val event: Option[NotificationEvent] =
       notification match {
         case _: Mail =>
           Some(
@@ -420,9 +372,27 @@ sealed trait NotificationBehavior[T <: Notification]
             PushRecordedEvent(updatedNotification.asInstanceOf[Push])
           )
         case _ => None
-      },
-      updatedNotification.asInstanceOf[T]
-    )
+      }
+
+    val events: List[NotificationEvent] =
+      List(event).flatten :+ scheduledNotificationEvent(
+        entityId,
+        updatedNotification.asInstanceOf[T]
+      )
+    Effect
+      .persist(events)
+      .thenRun(_ =>
+        {
+          updatedNotification.status match {
+            case Rejected    => NotificationRejected(entityId)
+            case Undelivered => NotificationUndelivered(entityId)
+            case Sent        => NotificationSent(entityId)
+            case Delivered   => NotificationDelivered(entityId)
+            case _           => NotificationPending(entityId)
+          }
+        }
+        ~> replyTo
+      )
   }
 
 }
