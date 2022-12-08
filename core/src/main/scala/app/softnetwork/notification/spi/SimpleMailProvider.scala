@@ -83,7 +83,7 @@ trait SimpleMailProvider extends MailProvider with StrictLogging {
         NotificationAck(
           Some(s),
           notification.to.map(recipient =>
-            NotificationStatusResult(recipient, NotificationStatus.Sent, None)
+            NotificationStatusResult(recipient, NotificationStatus.Sent, None, Some(s))
           ),
           new Date()
         )

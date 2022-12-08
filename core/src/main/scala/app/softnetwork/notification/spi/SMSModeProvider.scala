@@ -98,7 +98,8 @@ trait SMSModeProvider extends SMSProvider with StrictLogging {
                               NotificationStatusResult(
                                 recipient,
                                 Pending,
-                                None
+                                None,
+                                Some(smsId)
                               )
                             ),
                             now()
@@ -110,7 +111,8 @@ trait SMSModeProvider extends SMSProvider with StrictLogging {
                               NotificationStatusResult(
                                 recipient,
                                 Undelivered,
-                                Some(l(1).trim)
+                                Some(l(1).trim),
+                                Some(smsId)
                               )
                             ),
                             now()
@@ -263,7 +265,8 @@ trait SMSModeProvider extends SMSProvider with StrictLogging {
                           else
                             notification.to.head,
                           status,
-                          error
+                          error,
+                          Some(uuid)
                         )
                       }),
                       new Date()
