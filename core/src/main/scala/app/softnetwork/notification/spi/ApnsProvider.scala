@@ -106,11 +106,14 @@ object ApnsProvider {
           clientCredentials(apnsConfig)(
             new ApnsClientBuilder()
               .setApnsServer(
-                if (apnsConfig.dryRun) {
-                  ApnsClientBuilder.DEVELOPMENT_APNS_HOST
-                } else {
-                  ApnsClientBuilder.PRODUCTION_APNS_HOST
-                }
+                apnsConfig.hostname.getOrElse(
+                  if (apnsConfig.dryRun) {
+                    ApnsClientBuilder.DEVELOPMENT_APNS_HOST
+                  } else {
+                    ApnsClientBuilder.PRODUCTION_APNS_HOST
+                  }
+                ),
+                apnsConfig.port.getOrElse(ApnsClientBuilder.DEFAULT_APNS_PORT)
               )
           ).setConnectionTimeout(Duration.ofSeconds(CommonSettings.DefaultTimeout.toSeconds))
             .build()
@@ -156,21 +159,35 @@ object ApnsProvider {
         NotificationStatus.Sent
       else
         NotificationStatus.Rejected,
-      error
+      error,
+      Option(result.getApnsId.toString)
     )
   }
 
   private[notification] def clientCredentials(
     apnsConfig: ApnsConfig
   ): ApnsClientBuilder => ApnsClientBuilder = builder => {
-    val file = new JFile(apnsConfig.keystore.path)
-    if (file.exists) {
-      builder.setClientCredentials(file, apnsConfig.keystore.password)
-    } else {
-      builder.setClientCredentials(
-        getClass.getClassLoader.getResourceAsStream(apnsConfig.keystore.path),
-        apnsConfig.keystore.password
-      )
+    val keystore = new JFile(apnsConfig.keystore.path)
+    val updatedBuilder =
+      if (keystore.exists) {
+        builder.setClientCredentials(keystore, apnsConfig.keystore.password)
+      } else {
+        builder.setClientCredentials(
+          getClass.getClassLoader.getResourceAsStream(apnsConfig.keystore.path),
+          Option(apnsConfig.keystore.password).orNull
+        )
+      }
+    apnsConfig.truststore match {
+      case Some(path) =>
+        val truststore = new JFile(path)
+        if (truststore.exists()) {
+          updatedBuilder.setTrustedServerCertificateChain(truststore)
+        } else {
+          updatedBuilder.setTrustedServerCertificateChain(
+            getClass.getClassLoader.getResourceAsStream(path)
+          )
+        }
+      case _ => updatedBuilder
     }
   }
 

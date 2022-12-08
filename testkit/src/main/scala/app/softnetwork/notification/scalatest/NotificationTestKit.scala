@@ -20,7 +20,8 @@ import app.softnetwork.persistence.query.InMemoryJournalProvider
 import app.softnetwork.scheduler.scalatest.SchedulerTestKit
 import org.scalatest.Suite
 
-trait NotificationTestKit extends SchedulerTestKit with NotificationGuardian { _: Suite =>
+trait NotificationTestKit extends SchedulerTestKit with NotificationGuardian[Notification] {
+  _: Suite =>
 
   /** @return
     *   roles associated with this node

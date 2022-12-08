@@ -5,6 +5,7 @@ import app.softnetwork.notification.model.Notification
 import org.softnetwork.notification.model.{
   Mail,
   NotificationAck,
+  NotificationStatus,
   NotificationStatusResult,
   Platform,
   Push,
@@ -70,7 +71,16 @@ package object spi {
         pushToAndroid(
           notification,
           notification.devices.filter(_.platform == Platform.ANDROID).map(_.regId).distinct
-        ).distinct,
+        ).distinct ++
+        notification.devices
+          .filterNot(_.platform == Platform.ANDROID)
+          .map(d =>
+            NotificationStatusResult(
+              d.regId,
+              NotificationStatus.Undelivered,
+              Some(s"${d.platform.name} device not handled by AndroidProvider")
+            )
+          ),
         new Date()
       )
     }
@@ -86,7 +96,16 @@ package object spi {
         pushToIos(
           notification,
           notification.devices.filter(_.platform == Platform.IOS).map(_.regId).distinct
-        ).distinct,
+        ).distinct ++
+        notification.devices
+          .filterNot(_.platform == Platform.IOS)
+          .map(d =>
+            NotificationStatusResult(
+              d.regId,
+              NotificationStatus.Undelivered,
+              Some(s"${d.platform.name} device not handled by IosProvider")
+            )
+          ),
         new Date()
       )
     }

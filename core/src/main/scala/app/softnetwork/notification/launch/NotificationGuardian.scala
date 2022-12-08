@@ -14,11 +14,11 @@ import app.softnetwork.scheduler.persistence.query.Scheduler2EntityProcessorStre
 
 import scala.language.implicitConversions
 
-trait NotificationGuardian extends SchedulerGuardian { _: SchemaProvider =>
+trait NotificationGuardian[T <: Notification] extends SchedulerGuardian { _: SchemaProvider =>
 
   import app.softnetwork.persistence.launch.PersistenceGuardian._
 
-  def notificationBehavior: ActorSystem[_] => Option[NotificationBehavior[Notification]] = _ => None
+  def notificationBehavior: ActorSystem[_] => Option[NotificationBehavior[T]] = _ => None
 
   def notificationEntities: ActorSystem[_] => Seq[PersistentEntity[_, _, _, _]] = sys =>
     notificationBehavior(sys) match {

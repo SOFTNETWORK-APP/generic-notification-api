@@ -1,8 +1,10 @@
 package app.softnetwork.sbt.build
 
-import java.net.{NetworkInterface, ServerSocket}
+import java.net.{InetAddress, NetworkInterface, ServerSocket}
 
 object Utils {
+
+  def hostname: String = InetAddress.getLocalHost.getHostAddress
 
   def getCurrentIpAddress: String = {
     var ip: String = ""

@@ -3,6 +3,7 @@ package app.softnetwork.notification
 import app.softnetwork.persistence.message._
 import org.softnetwork.akka.model.Schedule
 import app.softnetwork.notification.model.Notification
+import org.softnetwork.notification.model.NotificationStatusResult
 
 /** Created by smanciot on 15/04/2020.
   */
@@ -44,13 +45,16 @@ package object message {
   case object NotificationRemoved extends NotificationCommandResult
 
   @SerialVersionUID(0L)
-  case class NotificationSent(uuid: String) extends NotificationCommandResult
+  case class NotificationSent(uuid: String, results: Seq[NotificationStatusResult])
+      extends NotificationCommandResult
 
   @SerialVersionUID(0L)
-  case class NotificationDelivered(uuid: String) extends NotificationCommandResult
+  case class NotificationDelivered(uuid: String, results: Seq[NotificationStatusResult])
+      extends NotificationCommandResult
 
   @SerialVersionUID(0L)
-  case class NotificationPending(uuid: String) extends NotificationCommandResult
+  case class NotificationPending(uuid: String, results: Seq[NotificationStatusResult])
+      extends NotificationCommandResult
 
   case class Schedule4NotificationTriggered(schedule: Schedule) extends NotificationCommandResult
 
@@ -60,11 +64,11 @@ package object message {
       with NotificationCommandResult
 
   @SerialVersionUID(0L)
-  case class NotificationUndelivered(uuid: String)
-      extends NotificationErrorMessage("NotificationNotDelivered")
+  case class NotificationUndelivered(uuid: String, results: Seq[NotificationStatusResult])
+      extends NotificationErrorMessage("NotificationUndelivered")
 
   @SerialVersionUID(0L)
-  case class NotificationRejected(uuid: String)
+  case class NotificationRejected(uuid: String, results: Seq[NotificationStatusResult])
       extends NotificationErrorMessage("NotificationRejected")
 
   case object NotificationNotFound extends NotificationErrorMessage("NotificationNotFound")

@@ -154,7 +154,8 @@ object FcmProvider {
           NotificationStatus.Sent
         else
           NotificationStatus.Rejected,
-        Option(r.getException).map(e => e.getMessage)
+        Option(r.getException).map(e => e.getMessage),
+        Option(r.getMessageId)
       )
   }
 }

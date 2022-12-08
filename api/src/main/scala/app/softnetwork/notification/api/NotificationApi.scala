@@ -18,7 +18,7 @@ import app.softnetwork.scheduler.api.SchedulerApi
 
 import scala.concurrent.Future
 
-trait NotificationApi extends SchedulerApi with NotificationApplication {
+trait NotificationApi extends SchedulerApi with NotificationApplication[Notification] {
 
   override def notificationBehavior: ActorSystem[_] => Option[NotificationBehavior[Notification]] =
     _ => Some(AllNotificationsBehavior)
