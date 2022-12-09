@@ -1,6 +1,7 @@
 package app.softnetwork.notification.launch
 
 import akka.actor.typed.ActorSystem
+import app.softnetwork.notification.api.NotificationServer
 import app.softnetwork.notification.model.Notification
 import app.softnetwork.notification.persistence.query.{
   NotificationCommandProcessorStream,
@@ -18,13 +19,10 @@ trait NotificationGuardian[T <: Notification] extends SchedulerGuardian { _: Sch
 
   import app.softnetwork.persistence.launch.PersistenceGuardian._
 
-  def notificationBehavior: ActorSystem[_] => Option[NotificationBehavior[T]] = _ => None
+  def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[T]] = _ => Seq.empty
 
   def notificationEntities: ActorSystem[_] => Seq[PersistentEntity[_, _, _, _]] = sys =>
-    notificationBehavior(sys) match {
-      case Some(value) => Seq(value)
-      case _           => Seq.empty
-    }
+    notificationBehaviors(sys).map(entity2PersistentEntity)
 
   /** initialize all entities
     */
@@ -56,4 +54,7 @@ trait NotificationGuardian[T <: Notification] extends SchedulerGuardian { _: Sch
     schedulerEventProcessorStreams(sys) ++
     notificationEventProcessorStreams(sys)
 
+  /** initialize all notification servers
+    */
+  def notificationServers: ActorSystem[_] => Seq[NotificationServer]
 }

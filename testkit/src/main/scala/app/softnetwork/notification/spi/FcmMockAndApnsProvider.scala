@@ -1,0 +1,3 @@
+package app.softnetwork.notification.spi
+
+trait FcmMockAndApnsProvider extends AndroidAndIosProvider with FcmMockProvider with ApnsProvider

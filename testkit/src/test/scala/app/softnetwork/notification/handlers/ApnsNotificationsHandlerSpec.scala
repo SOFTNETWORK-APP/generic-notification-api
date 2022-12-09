@@ -1,38 +1,22 @@
 package app.softnetwork.notification.handlers
 
 import akka.actor.testkit.typed.scaladsl.TestProbe
-import akka.actor.typed.ActorSystem
 import akka.actor.typed.eventstream.EventStream.Subscribe
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import app.softnetwork.notification.api.{
-  ApnsNotificationServer,
-  NotificationClient,
-  NotificationGrpcServer,
-  NotificationServiceApiHandler
-}
+import app.softnetwork.notification.api.{NotificationClient, NotificationGrpcServer}
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.ApnsNotificationsTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.softnetwork.notification.model.{BasicDevice, NotificationStatus, Platform, Push}
 
-import scala.concurrent.Future
-
 /** Created by smanciot on 07/12/2022.
   */
-class ApnsNotificationHandlerSpec
-    extends ApnsNotificationHandler
+class ApnsNotificationsHandlerSpec
+    extends ApnsNotificationsHandler
     with AnyWordSpecLike
-    with NotificationGrpcServer
+    with NotificationGrpcServer[Push]
     with ApnsNotificationsTestKit {
 
-  override def grpcServices
-    : ActorSystem[_] => Seq[PartialFunction[HttpRequest, Future[HttpResponse]]] =
-    system =>
-      Seq(
-        NotificationServiceApiHandler.partial(ApnsNotificationServer(system))(system)
-      )
-
-  val subject = "Sujet"
+  val subject = "test"
   val message = "message"
 
   protected def generatePush(uuid: String, devices: BasicDevice*): Push =
@@ -45,7 +29,7 @@ class ApnsNotificationHandlerSpec
 
   val iosDevice: BasicDevice = BasicDevice(generateRandomDeviceToken, Platform.IOS)
 
-  val androidDevice: BasicDevice = BasicDevice("android", Platform.ANDROID)
+  val androidDevice: BasicDevice = BasicDevice("test-token-android", Platform.ANDROID)
 
   val probe: TestProbe[Schedule4NotificationTriggered] =
     createTestProbe[Schedule4NotificationTriggered]()

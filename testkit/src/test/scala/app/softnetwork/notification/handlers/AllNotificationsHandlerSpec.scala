@@ -7,20 +7,21 @@ import app.softnetwork.notification.api.{NotificationClient, NotificationGrpcSer
 import org.scalatest.wordspec.AnyWordSpecLike
 import app.softnetwork.notification.config.MailSettings
 import app.softnetwork.notification.message._
+import app.softnetwork.notification.model.Notification
 import org.softnetwork.notification.model.{From, Mail, Push, SMS}
-import app.softnetwork.notification.scalatest.NotificationTestKit
+import app.softnetwork.notification.scalatest.AllNotificationsTestKit
 
 /** Created by smanciot on 14/04/2020.
   */
-class NotificationHandlerSpec
-    extends MockNotificationHandler
+class AllNotificationsHandlerSpec
+    extends MockAllNotificationsHandler
     with AnyWordSpecLike
-    with NotificationGrpcServer
-    with NotificationTestKit {
+    with NotificationGrpcServer[Notification]
+    with AllNotificationsTestKit {
 
   lazy val from: String = MailSettings.MailConfig.username
   val to = Seq("nobody@gmail.com")
-  val subject = "Sujet"
+  val subject = "test"
   val message = "message"
 
   private[this] def generateMail(uuid: String): Mail =

@@ -6,7 +6,8 @@ import app.softnetwork.notification.message.{AddNotification, NotificationAdded}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-trait NotificationServer extends NotificationServiceApi with NotificationHandler {
+trait NotificationServer extends NotificationServiceApi {
+  _: NotificationHandler =>
   implicit def system: ActorSystem[_]
 
   implicit lazy val ec: ExecutionContextExecutor = system.executionContext
@@ -41,14 +42,6 @@ trait NotificationServer extends NotificationServiceApi with NotificationHandler
           case _                    => AddNotificationResponse()
         }
       case _ => Future.successful(AddNotificationResponse())
-    }
-  }
-}
-
-object NotificationServer {
-  def apply(sys: ActorSystem[_]): NotificationServer = {
-    new NotificationServer {
-      override implicit val system: ActorSystem[_] = sys
     }
   }
 }

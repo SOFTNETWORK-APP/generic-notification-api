@@ -1,8 +1,7 @@
 package app.softnetwork.notification.api
 
 import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import app.softnetwork.notification.handlers.NotificationHandler
+import app.softnetwork.notification.handlers.AllNotificationsHandler
 import app.softnetwork.notification.launch.NotificationApplication
 import app.softnetwork.notification.model.Notification
 import app.softnetwork.notification.persistence.query.{
@@ -16,19 +15,17 @@ import app.softnetwork.notification.persistence.typed.{
 import app.softnetwork.persistence.jdbc.query.{JdbcJournalProvider, JdbcSchema, JdbcSchemaProvider}
 import app.softnetwork.scheduler.api.SchedulerApi
 
-import scala.concurrent.Future
+trait AllNotificationsApi extends SchedulerApi with NotificationApplication[Notification] {
 
-trait NotificationApi extends SchedulerApi with NotificationApplication[Notification] {
-
-  override def notificationBehavior: ActorSystem[_] => Option[NotificationBehavior[Notification]] =
-    _ => Some(AllNotificationsBehavior)
+  override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Notification]] =
+    _ => Seq(AllNotificationsBehavior)
 
   override def scheduler2NotificationProcessorStream
     : ActorSystem[_] => Option[Scheduler2NotificationProcessorStream] =
     sys =>
       Some(
         new Scheduler2NotificationProcessorStream()
-          with NotificationHandler
+          with AllNotificationsHandler
           with JdbcJournalProvider
           with JdbcSchemaProvider {
           override val tag = s"${AllNotificationsBehavior.persistenceId}-scheduler"
@@ -42,7 +39,7 @@ trait NotificationApi extends SchedulerApi with NotificationApplication[Notifica
     sys =>
       Some(
         new NotificationCommandProcessorStream
-          with NotificationHandler
+          with AllNotificationsHandler
           with JdbcJournalProvider
           with JdbcSchemaProvider {
           override lazy val schemaType: JdbcSchema.SchemaType = jdbcSchemaType
@@ -50,9 +47,9 @@ trait NotificationApi extends SchedulerApi with NotificationApplication[Notifica
         }
       )
 
-  override def grpcServices
-    : ActorSystem[_] => Seq[PartialFunction[HttpRequest, Future[HttpResponse]]] = system =>
-    Seq(
-      NotificationServiceApiHandler.partial(NotificationServer(system))(system)
-    )
+  /** initialize all notification servers
+    */
+  override def notificationServers: ActorSystem[_] => Seq[NotificationServer] = sys =>
+    Seq(AllNotificationsServer(sys))
+
 }

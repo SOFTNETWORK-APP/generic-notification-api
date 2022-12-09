@@ -11,6 +11,10 @@ import scala.reflect.ClassTag
 /** Created by smanciot on 14/04/2020.
   */
 
+trait NotificationHandler extends EntityPattern[NotificationCommand, NotificationCommandResult] {
+  _: CommandTypeKey[NotificationCommand] =>
+}
+
 trait AllNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
   override def TypeKey(implicit
     tTag: ClassTag[NotificationCommand]
@@ -18,9 +22,7 @@ trait AllNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
     AllNotificationsBehavior.TypeKey
 }
 
-trait NotificationHandler
-    extends EntityPattern[NotificationCommand, NotificationCommandResult]
-    with AllNotificationsTypeKey
+trait AllNotificationsHandler extends NotificationHandler with AllNotificationsTypeKey
 
 trait ApnsNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
   override def TypeKey(implicit
@@ -29,7 +31,7 @@ trait ApnsNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
     ApnsNotificationsBehavior.TypeKey
 }
 
-trait ApnsNotificationHandler extends NotificationHandler with ApnsNotificationsTypeKey
+trait ApnsNotificationsHandler extends NotificationHandler with ApnsNotificationsTypeKey
 
 trait FcmNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
   override def TypeKey(implicit
@@ -38,7 +40,7 @@ trait FcmNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
     FcmNotificationsBehavior.TypeKey
 }
 
-trait FcmNotificationHandler extends NotificationHandler with FcmNotificationsTypeKey
+trait FcmNotificationsHandler extends NotificationHandler with FcmNotificationsTypeKey
 
 trait FcmAndApnsNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
   override def TypeKey(implicit
@@ -47,7 +49,7 @@ trait FcmAndApnsNotificationsTypeKey extends CommandTypeKey[NotificationCommand]
     FcmAndApnsNotificationsBehavior.TypeKey
 }
 
-trait FcmAndApnsNotificationHandler extends NotificationHandler with FcmAndApnsNotificationsTypeKey
+trait FcmAndApnsNotificationsHandler extends NotificationHandler with FcmAndApnsNotificationsTypeKey
 
 trait SimpleMailNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
   override def TypeKey(implicit
@@ -56,7 +58,7 @@ trait SimpleMailNotificationsTypeKey extends CommandTypeKey[NotificationCommand]
     SimpleMailNotificationsBehavior.TypeKey
 }
 
-trait SimpleMailNotificationHandler extends NotificationHandler with SimpleMailNotificationsTypeKey
+trait SimpleMailNotificationsHandler extends NotificationHandler with SimpleMailNotificationsTypeKey
 
 trait SMSModeNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
   override def TypeKey(implicit
@@ -65,4 +67,4 @@ trait SMSModeNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
     SMSModeNotificationsBehavior.TypeKey
 }
 
-trait SMSModeNotificationHandler extends NotificationHandler with SMSModeNotificationsTypeKey
+trait SMSModeNotificationsHandler extends NotificationHandler with SMSModeNotificationsTypeKey

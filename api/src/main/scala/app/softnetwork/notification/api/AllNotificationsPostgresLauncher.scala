@@ -2,4 +2,4 @@ package app.softnetwork.notification.api
 
 import app.softnetwork.persistence.jdbc.query.PostgresSchemaProvider
 
-object NotificationPostgresLauncher extends NotificationApi with PostgresSchemaProvider
+object AllNotificationsPostgresLauncher extends AllNotificationsApi with PostgresSchemaProvider

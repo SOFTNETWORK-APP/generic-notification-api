@@ -1,4 +1,4 @@
-import app.softnetwork.sbt.build.Versions
+import app.softnetwork.sbt.build._
 
 Test / parallelExecution := false
 
