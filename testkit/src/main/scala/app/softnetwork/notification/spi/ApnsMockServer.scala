@@ -15,7 +15,7 @@ import scala.concurrent.Future
 import scala.language.reflectiveCalls
 import scala.util.{Failure, Success, Try}
 
-trait ApnsMockServer extends NotificationMockServer { _: { def hostname: String } =>
+trait ApnsMockServer extends NotificationMockServer {
 
   lazy val apnsConfig: ApnsConfig =
     PushSettings.AppConfigs.getOrElse("mock", PushSettings.DefaultConfig).apns

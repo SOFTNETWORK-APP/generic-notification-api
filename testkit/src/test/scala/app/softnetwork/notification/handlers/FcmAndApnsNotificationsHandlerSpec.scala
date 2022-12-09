@@ -83,6 +83,11 @@ class FcmAndApnsNotificationsHandlerSpec
               .find(_.recipient == iosDevice.regId)
               .exists(r => r.status == NotificationStatus.Sent && r.uuid.isDefined)
           )
+          assert(
+            n.results
+              .find(_.recipient == androidDevice.regId)
+              .exists(r => r.status == NotificationStatus.Sent && r.uuid.isDefined)
+          )
         case _ => fail()
       }
     }
@@ -98,6 +103,11 @@ class FcmAndApnsNotificationsHandlerSpec
               assert(
                 n.results
                   .find(_.recipient == iosDevice.regId)
+                  .exists(r => r.status == NotificationStatus.Sent && r.uuid.isDefined)
+              )
+              assert(
+                n.results
+                  .find(_.recipient == androidDevice.regId)
                   .exists(r => r.status == NotificationStatus.Sent && r.uuid.isDefined)
               )
             case _ => fail()
@@ -123,6 +133,11 @@ class FcmAndApnsNotificationsHandlerSpec
                   .find(_.recipient == iosDevice.regId)
                   .exists(r => r.status == NotificationStatus.Sent && r.uuid.isDefined)
               )
+              assert(
+                n.results
+                  .find(_.recipient == androidDevice.regId)
+                  .exists(r => r.status == NotificationStatus.Sent && r.uuid.isDefined)
+              )
             case _ => fail()
           }
         case _ => fail()
@@ -140,6 +155,11 @@ class FcmAndApnsNotificationsHandlerSpec
               assert(
                 n.results
                   .find(_.recipient == iosDevice.regId)
+                  .exists(r => r.status == NotificationStatus.Sent && r.uuid.isDefined)
+              )
+              assert(
+                n.results
+                  .find(_.recipient == androidDevice.regId)
                   .exists(r => r.status == NotificationStatus.Sent && r.uuid.isDefined)
               )
               succeed

@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.StrictLogging
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait NotificationMockServer extends Completion with StrictLogging { _: { def hostname: String } =>
+trait NotificationMockServer extends Completion with StrictLogging {
 
   def name: String
 
