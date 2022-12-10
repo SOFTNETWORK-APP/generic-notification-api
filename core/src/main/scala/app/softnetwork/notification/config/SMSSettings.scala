@@ -2,7 +2,9 @@ package app.softnetwork.notification.config
 
 import configs.Configs
 
-trait SMSSettings extends NotificationSettings {
+import scala.language.reflectiveCalls
+
+trait SMSSettings extends NotificationSettings { _: InternalConfig =>
 
   lazy val SMSConfig: SMSConfig =
     Configs[SMSConfig].get(config, "notification.sms").toEither match {
@@ -13,4 +15,4 @@ trait SMSSettings extends NotificationSettings {
     }
 }
 
-object SMSSettings extends SMSSettings
+object SMSSettings extends SMSSettings with DefaultConfig

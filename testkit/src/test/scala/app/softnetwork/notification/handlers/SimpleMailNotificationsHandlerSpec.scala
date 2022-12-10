@@ -2,7 +2,7 @@ package app.softnetwork.notification.handlers
 
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.eventstream.EventStream.Subscribe
-import app.softnetwork.notification.api.{NotificationClient, NotificationGrpcServer}
+import app.softnetwork.notification.api.NotificationClient
 import app.softnetwork.notification.config.MailSettings
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.SimpleMailNotificationsTestKit
@@ -14,7 +14,6 @@ import org.softnetwork.notification.model.{From, Mail}
 class SimpleMailNotificationsHandlerSpec
     extends SimpleMailNotificationsHandler
     with AnyWordSpecLike
-    with NotificationGrpcServer[Mail]
     with SimpleMailNotificationsTestKit {
 
   lazy val from: String = MailSettings.MailConfig.username

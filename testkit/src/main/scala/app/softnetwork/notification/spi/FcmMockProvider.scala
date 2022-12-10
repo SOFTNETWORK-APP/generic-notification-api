@@ -1,6 +1,6 @@
 package app.softnetwork.notification.spi
 
-import app.softnetwork.notification.config.FcmConfig
+import app.softnetwork.notification.config.{FcmConfig, InternalConfig}
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.messaging.{
@@ -11,7 +11,7 @@ import com.google.firebase.messaging.{
   MockGoogleCredentials
 }
 
-trait FcmMockProvider extends FcmProvider {
+trait FcmMockProvider extends FcmProvider { _: InternalConfig =>
 
   override protected def credentials(config: FcmConfig): GoogleCredentials = {
     MockGoogleCredentials("test-token")

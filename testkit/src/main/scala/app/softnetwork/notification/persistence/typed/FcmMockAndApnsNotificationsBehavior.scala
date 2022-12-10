@@ -1,9 +1,0 @@
-package app.softnetwork.notification.persistence.typed
-
-import app.softnetwork.notification.spi.FcmMockAndApnsProvider
-
-trait FcmMockAndApnsNotificationsBehavior
-    extends AndroidAndIosNotificationsBehavior
-    with FcmMockAndApnsProvider
-
-object FcmMockAndApnsNotificationsBehavior extends FcmMockAndApnsNotificationsBehavior

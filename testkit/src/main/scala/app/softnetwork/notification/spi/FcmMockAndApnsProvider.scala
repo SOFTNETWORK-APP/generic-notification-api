@@ -1,3 +1,7 @@
 package app.softnetwork.notification.spi
 
-trait FcmMockAndApnsProvider extends AndroidAndIosProvider with FcmMockProvider with ApnsProvider
+import app.softnetwork.notification.config.InternalConfig
+
+trait FcmMockAndApnsProvider extends AndroidAndIosProvider with FcmMockProvider with ApnsProvider {
+  _: InternalConfig =>
+}

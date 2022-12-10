@@ -2,6 +2,7 @@ package app.softnetwork.notification.persistence.typed
 
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.spi.{SMSModeProvider, SMSProvider}
+import com.typesafe.config.{Config, ConfigFactory}
 import org.softnetwork.notification.model.{NotificationAck, SMS}
 
 trait SMSNotificationsBehavior extends NotificationBehavior[SMS] { _: SMSProvider =>
@@ -12,6 +13,10 @@ trait SMSNotificationsBehavior extends NotificationBehavior[SMS] { _: SMSProvide
   )
 }
 
-trait SMSModeNotificationsBehavior extends SMSNotificationsBehavior with SMSModeProvider
+trait SMSModeNotificationsBehavior extends SMSNotificationsBehavior with SMSModeProvider {
+  _: { def config: Config } =>
+}
 
-object SMSModeNotificationsBehavior extends SMSModeNotificationsBehavior
+object SMSModeNotificationsBehavior extends SMSModeNotificationsBehavior {
+  lazy val config: Config = ConfigFactory.load()
+}

@@ -1,34 +1,37 @@
 package app.softnetwork.notification.scalatest
 
 import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.api.{
-  FcmNotificationsServer,
-  NotificationGrpcServer,
-  NotificationServer
-}
+import akka.http.scaladsl.server.Route
+import app.softnetwork.notification.api.{NotificationServer, SMSModeNotificationsServer}
 import app.softnetwork.notification.config.InternalConfig
-import app.softnetwork.notification.handlers.FcmNotificationsHandler
+import app.softnetwork.notification.handlers.SMSModeNotificationsHandler
 import app.softnetwork.notification.persistence.query.{
   NotificationCommandProcessorStream,
   Scheduler2NotificationProcessorStream
 }
 import app.softnetwork.notification.persistence.typed.{
-  FcmNotificationsBehavior,
-  NotificationBehavior
+  NotificationBehavior,
+  SMSModeNotificationsBehavior
 }
-import app.softnetwork.notification.spi.FcmMockProvider
+import app.softnetwork.notification.spi.SMSModeService
 import app.softnetwork.persistence.query.InMemoryJournalProvider
 import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.Suite
-import org.softnetwork.notification.model.Push
+import org.softnetwork.notification.model.SMS
 
-trait FcmNotificationsTestKit extends NotificationTestKit[Push] with NotificationGrpcServer[Push] {
-  _: Suite =>
+trait SMSModeRouteTestKit extends NotificationRouteTestKit[SMS] { _: Suite =>
 
-  override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>
+  override lazy val additionalConfig: String = grpcConfig +
+    s"""
+      |notification.sms.mode.base-url = http://$interface:$port
+      |""".stripMargin
+
+  override def apiRoutes(system: ActorSystem[_]): Route = SMSModeService.route
+
+  override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[SMS]] = _ =>
     Seq(
-      new FcmNotificationsBehavior with FcmMockProvider with InternalConfig {
-        override def config: Config = akkaConfig.withFallback(ConfigFactory.load())
+      new SMSModeNotificationsBehavior with InternalConfig {
+        lazy val config: Config = akkaConfig.withFallback(ConfigFactory.load())
       }
     )
 
@@ -37,9 +40,9 @@ trait FcmNotificationsTestKit extends NotificationTestKit[Push] with Notificatio
     sys =>
       Some(
         new Scheduler2NotificationProcessorStream
-          with FcmNotificationsHandler
+          with SMSModeNotificationsHandler
           with InMemoryJournalProvider {
-          override val tag: String = s"${FcmNotificationsBehavior.persistenceId}-scheduler"
+          override val tag: String = s"${SMSModeNotificationsBehavior.persistenceId}-scheduler"
           override protected val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }
@@ -50,7 +53,7 @@ trait FcmNotificationsTestKit extends NotificationTestKit[Push] with Notificatio
     sys =>
       Some(
         new NotificationCommandProcessorStream
-          with FcmNotificationsHandler
+          with SMSModeNotificationsHandler
           with InMemoryJournalProvider {
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
@@ -60,6 +63,5 @@ trait FcmNotificationsTestKit extends NotificationTestKit[Push] with Notificatio
   /** initialize all notification servers
     */
   override def notificationServers: ActorSystem[_] => Seq[NotificationServer] =
-    system => Seq(FcmNotificationsServer(system))
-
+    system => Seq(SMSModeNotificationsServer(system))
 }

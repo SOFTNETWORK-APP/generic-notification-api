@@ -1,7 +1,11 @@
 package app.softnetwork.notification.scalatest
 
 import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.api.{ApnsNotificationsServer, NotificationServer}
+import app.softnetwork.notification.api.{
+  ApnsNotificationsServer,
+  NotificationGrpcServer,
+  NotificationServer
+}
 import app.softnetwork.notification.handlers.ApnsNotificationsHandler
 import app.softnetwork.notification.persistence.query.{
   NotificationCommandProcessorStream,
@@ -18,6 +22,7 @@ import org.softnetwork.notification.model.Push
 
 trait ApnsNotificationsTestKit
     extends NotificationsWithMockServerTestKit[Push]
+    with NotificationGrpcServer[Push]
     with ApnsMockServer { _: Suite =>
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>

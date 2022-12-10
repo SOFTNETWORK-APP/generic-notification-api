@@ -1,9 +1,9 @@
 package app.softnetwork.notification.api
 
 import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.handlers.FcmMockNotificationsHandler
+import app.softnetwork.notification.handlers.FcmNotificationsHandler
 
-trait FcmNotificationsServer extends NotificationServer with FcmMockNotificationsHandler
+trait FcmNotificationsServer extends NotificationServer with FcmNotificationsHandler
 
 object FcmNotificationsServer {
   def apply(sys: ActorSystem[_]): FcmNotificationsServer = {

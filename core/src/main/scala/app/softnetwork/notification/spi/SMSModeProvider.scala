@@ -1,7 +1,7 @@
 package app.softnetwork.notification.spi
 
 import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.config.{SMSMode, SMSSettings}
+import app.softnetwork.notification.config.{InternalConfig, SMSMode, SMSSettings}
 import app.softnetwork.persistence.now
 import com.typesafe.scalalogging.StrictLogging
 import org.apache.commons.text.StringEscapeUtils
@@ -12,7 +12,7 @@ import org.softnetwork.notification.model.{
   SMS
 }
 
-trait SMSModeProvider extends SMSProvider with StrictLogging {
+trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { _: InternalConfig =>
 
   import NotificationStatus._
   import app.softnetwork.notification.config.SMSMode._
@@ -23,12 +23,12 @@ trait SMSModeProvider extends SMSProvider with StrictLogging {
   import java.util.Date
   import scala.util.{Failure, Success, Try}
 
-  lazy val config: Option[SMSMode.Config] = SMSSettings.SMSConfig.mode
+  lazy val maybeConfig: Option[SMSMode.Config] = SMSConfig.mode
 
   override def sendSMS(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck = {
     import notification._
 
-    config match {
+    maybeConfig match {
       case Some(conf) =>
         import conf._
 
@@ -194,7 +194,7 @@ trait SMSModeProvider extends SMSProvider with StrictLogging {
   override def ackSMS(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck = {
     val results = notification.results
     val uuid = notification.ackUuid.getOrElse("")
-    config match {
+    maybeConfig match {
       case Some(conf) =>
         import conf._
         val ackUrl = s"""

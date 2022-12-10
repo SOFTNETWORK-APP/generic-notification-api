@@ -1,6 +1,7 @@
 package app.softnetwork.notification.persistence.typed
 
 import akka.actor.typed.ActorSystem
+import app.softnetwork.notification.config.{DefaultConfig, InternalConfig}
 import app.softnetwork.notification.spi.{
   AndroidAndIosProvider,
   AndroidProvider,
@@ -21,9 +22,11 @@ trait AndroidNotificationsBehavior extends PushNotificationsBehavior { _: Androi
   override def persistenceId: String = "AndroidNotification"
 }
 
-trait FcmNotificationsBehavior extends AndroidNotificationsBehavior with FcmProvider
+trait FcmNotificationsBehavior extends AndroidNotificationsBehavior with FcmProvider {
+  _: InternalConfig =>
+}
 
-object FcmNotificationsBehavior extends FcmNotificationsBehavior
+object FcmNotificationsBehavior extends FcmNotificationsBehavior with DefaultConfig
 
 trait IosNotificationsBehavior extends PushNotificationsBehavior { _: IosProvider =>
   override def persistenceId: String = "IosNotification"
@@ -40,6 +43,6 @@ trait AndroidAndIosNotificationsBehavior extends PushNotificationsBehavior {
 
 trait FcmAndApnsNotificationsBehavior
     extends AndroidAndIosNotificationsBehavior
-    with FcmAndApnsProvider
+    with FcmAndApnsProvider { _: InternalConfig => }
 
-object FcmAndApnsNotificationsBehavior extends FcmAndApnsNotificationsBehavior
+object FcmAndApnsNotificationsBehavior extends FcmAndApnsNotificationsBehavior with DefaultConfig

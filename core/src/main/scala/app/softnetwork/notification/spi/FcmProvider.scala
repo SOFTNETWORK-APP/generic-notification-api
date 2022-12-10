@@ -2,7 +2,7 @@ package app.softnetwork.notification.spi
 
 import java.io.{File => JFile, FileInputStream}
 import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.config.{FcmConfig, PushSettings}
+import app.softnetwork.notification.config.{FcmConfig, InternalConfig, PushSettings}
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.messaging.{
   AndroidConfig,
@@ -24,12 +24,13 @@ import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
-trait FcmProvider extends AndroidProvider with StrictLogging {
+trait FcmProvider extends AndroidProvider with PushSettings with StrictLogging {
+  _: InternalConfig =>
   final override def pushToAndroid(payload: PushPayload, devices: Seq[String])(implicit
     system: ActorSystem[_]
   ): Seq[NotificationStatusResult] = {
     val config =
-      PushSettings.AppConfigs.get(payload.app).map(_.fcm).getOrElse(PushSettings.DefaultConfig.fcm)
+      AppConfigs.get(payload.app).map(_.fcm).getOrElse(DefaultConfig.fcm)
     val firebaseMessaging: FirebaseMessaging = messaging(payload.app, config)
     fcm(config, firebaseMessaging, payload, devices, Seq.empty)
   }

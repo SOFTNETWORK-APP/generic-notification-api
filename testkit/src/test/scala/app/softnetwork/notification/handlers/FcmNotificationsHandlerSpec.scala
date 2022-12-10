@@ -3,7 +3,7 @@ package app.softnetwork.notification.handlers
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.eventstream.EventStream.Subscribe
-import app.softnetwork.notification.api.{NotificationClient, NotificationGrpcServer}
+import app.softnetwork.notification.api.NotificationClient
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.FcmNotificationsTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -12,9 +12,8 @@ import org.softnetwork.notification.model.{BasicDevice, NotificationStatus, Plat
 /** Created by smanciot on 07/12/2022.
   */
 class FcmNotificationsHandlerSpec
-    extends FcmMockNotificationsHandler
+    extends FcmNotificationsHandler
     with AnyWordSpecLike
-    with NotificationGrpcServer[Push]
     with FcmNotificationsTestKit {
 
   val subject = "test"

@@ -3,7 +3,7 @@ package app.softnetwork.notification.spi
 import akka.Done
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.config.MailSettings
+import app.softnetwork.notification.config.{InternalConfig, MailSettings}
 import app.softnetwork.persistence.typed._
 import com.dumbster.smtp.SimpleSmtpServer
 import com.typesafe.scalalogging.StrictLogging
@@ -11,13 +11,13 @@ import com.typesafe.scalalogging.StrictLogging
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-trait SmtpMockServer extends StrictLogging {
+trait SmtpMockServer extends MailSettings with StrictLogging { _: InternalConfig =>
 
   val name: String = "smtp"
 
   implicit def system: ActorSystem[_]
 
-  lazy val smtpPort: Int = MailSettings.MailConfig.port
+  lazy val smtpPort: Int = MailConfig.port
 
   def start(): Boolean = {
     Try(SimpleSmtpServer.start(smtpPort)) match {
@@ -37,14 +37,6 @@ trait SmtpMockServer extends StrictLogging {
       case Failure(f) =>
         logger.error(f.getMessage, f)
         false
-    }
-  }
-}
-
-object SmtpMockServer {
-  def apply(sys: ActorSystem[_]): SmtpMockServer = {
-    new SmtpMockServer {
-      override implicit def system: ActorSystem[_] = sys
     }
   }
 }

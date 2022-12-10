@@ -2,7 +2,7 @@ package app.softnetwork.notification.handlers
 
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.eventstream.EventStream.Subscribe
-import app.softnetwork.notification.api.{NotificationClient, NotificationGrpcServer}
+import app.softnetwork.notification.api.NotificationClient
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.ApnsNotificationsTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -13,7 +13,6 @@ import org.softnetwork.notification.model.{BasicDevice, NotificationStatus, Plat
 class ApnsNotificationsHandlerSpec
     extends ApnsNotificationsHandler
     with AnyWordSpecLike
-    with NotificationGrpcServer[Push]
     with ApnsNotificationsTestKit {
 
   val subject = "test"

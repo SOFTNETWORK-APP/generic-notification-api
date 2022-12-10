@@ -3,9 +3,9 @@ package app.softnetwork.notification.config
 import configs.Configs
 
 import scala.collection.JavaConverters._
-import scala.language.implicitConversions
+import scala.language.{implicitConversions, reflectiveCalls}
 
-trait PushSettings extends NotificationSettings {
+trait PushSettings extends NotificationSettings { _: InternalConfig =>
 
   lazy val DefaultConfig: PushConfig =
     Configs[PushConfig].get(config, "notification.push").toEither match {
@@ -23,4 +23,4 @@ trait PushSettings extends NotificationSettings {
     .toMap
 }
 
-object PushSettings extends PushSettings
+object PushSettings extends PushSettings with DefaultConfig
