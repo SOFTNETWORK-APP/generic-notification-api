@@ -18,7 +18,7 @@ import app.softnetwork.notification.persistence.typed.{
 }
 import app.softnetwork.notification.spi.SmtpMockServer
 import app.softnetwork.persistence.query.InMemoryJournalProvider
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 import org.scalatest.Suite
 import org.softnetwork.notification.model.Mail
 
@@ -42,7 +42,7 @@ trait SimpleMailNotificationsTestKit
       new SmtpMockServer with InternalConfig {
         override implicit def system: ActorSystem[_] = typedSystem()
 
-        override lazy val config: Config = akkaConfig.withFallback(ConfigFactory.load())
+        override lazy val config: Config = internalConfig
       }.start()
     )
   }
@@ -50,7 +50,7 @@ trait SimpleMailNotificationsTestKit
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Mail]] = _ =>
     Seq(
       new SimpleMailNotificationsBehavior with InternalConfig {
-        override lazy val config: Config = akkaConfig.withFallback(ConfigFactory.load())
+        override lazy val config: Config = internalConfig
       }
     )
 

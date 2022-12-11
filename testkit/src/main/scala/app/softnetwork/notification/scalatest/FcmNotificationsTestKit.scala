@@ -28,7 +28,7 @@ trait FcmNotificationsTestKit extends NotificationTestKit[Push] with Notificatio
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>
     Seq(
       new FcmNotificationsBehavior with FcmMockProvider with InternalConfig {
-        override def config: Config = akkaConfig.withFallback(ConfigFactory.load())
+        override def config: Config = internalConfig
       }
     )
 

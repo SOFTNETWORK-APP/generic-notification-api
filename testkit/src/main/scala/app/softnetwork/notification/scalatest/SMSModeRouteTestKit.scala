@@ -15,7 +15,7 @@ import app.softnetwork.notification.persistence.typed.{
 }
 import app.softnetwork.notification.spi.SMSModeService
 import app.softnetwork.persistence.query.InMemoryJournalProvider
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 import org.scalatest.Suite
 import org.softnetwork.notification.model.SMS
 
@@ -31,7 +31,7 @@ trait SMSModeRouteTestKit extends NotificationRouteTestKit[SMS] { _: Suite =>
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[SMS]] = _ =>
     Seq(
       new SMSModeNotificationsBehavior with InternalConfig {
-        lazy val config: Config = akkaConfig.withFallback(ConfigFactory.load())
+        lazy val config: Config = internalConfig
       }
     )
 

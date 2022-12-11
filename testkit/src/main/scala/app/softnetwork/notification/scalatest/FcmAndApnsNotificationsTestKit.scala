@@ -18,7 +18,7 @@ import app.softnetwork.notification.persistence.typed.{
 }
 import app.softnetwork.notification.spi.{ApnsMockServer, FcmMockAndApnsProvider}
 import app.softnetwork.persistence.query.InMemoryJournalProvider
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 import org.scalatest.Suite
 import org.softnetwork.notification.model.Push
 
@@ -38,7 +38,7 @@ trait FcmAndApnsNotificationsTestKit
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>
     Seq(
       new FcmAndApnsNotificationsBehavior with FcmMockAndApnsProvider with InternalConfig {
-        override def config: Config = akkaConfig.withFallback(ConfigFactory.load())
+        override def config: Config = internalConfig
       }
     )
 

@@ -4,6 +4,7 @@ import app.softnetwork.notification.config.NotificationSettings.NotificationConf
 import app.softnetwork.notification.launch.NotificationGuardian
 import app.softnetwork.notification.model.Notification
 import app.softnetwork.scheduler.scalatest.SchedulerTestKit
+import com.typesafe.config.Config
 import org.scalatest.Suite
 
 trait NotificationTestKit[T <: Notification] extends SchedulerTestKit with NotificationGuardian[T] {
@@ -13,5 +14,7 @@ trait NotificationTestKit[T <: Notification] extends SchedulerTestKit with Notif
     *   roles associated with this node
     */
   override def roles: Seq[String] = super.roles :+ NotificationConfig.akkaNodeRole
+
+  lazy val internalConfig: Config = config
 
 }
