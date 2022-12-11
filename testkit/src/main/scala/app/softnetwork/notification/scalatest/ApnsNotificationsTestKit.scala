@@ -6,6 +6,7 @@ import app.softnetwork.notification.api.{
   NotificationGrpcServer,
   NotificationServer
 }
+import app.softnetwork.notification.config.InternalConfig
 import app.softnetwork.notification.handlers.ApnsNotificationsHandler
 import app.softnetwork.notification.persistence.query.{
   NotificationCommandProcessorStream,
@@ -17,16 +18,27 @@ import app.softnetwork.notification.persistence.typed.{
 }
 import app.softnetwork.notification.spi.ApnsMockServer
 import app.softnetwork.persistence.query.InMemoryJournalProvider
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.Suite
 import org.softnetwork.notification.model.Push
+
+import java.net.ServerSocket
 
 trait ApnsNotificationsTestKit
     extends NotificationsWithMockServerTestKit[Push]
     with NotificationGrpcServer[Push]
-    with ApnsMockServer { _: Suite =>
+    with ApnsMockServer
+    with InternalConfig { _: Suite =>
+
+  override lazy val additionalConfig: String = grpcConfig +
+    s"""
+      |notification.push.mock.apns.port = ${new ServerSocket(0).getLocalPort}
+      |""".stripMargin
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>
-    Seq(ApnsNotificationsBehavior)
+    Seq(new ApnsNotificationsBehavior with InternalConfig {
+      override def config: Config = akkaConfig.withFallback(ConfigFactory.load())
+    })
 
   override def scheduler2NotificationProcessorStream
     : ActorSystem[_] => Option[Scheduler2NotificationProcessorStream] =

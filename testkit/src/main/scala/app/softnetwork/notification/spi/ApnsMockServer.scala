@@ -1,7 +1,7 @@
 package app.softnetwork.notification.spi
 
 import akka.Done
-import app.softnetwork.notification.config.{ApnsConfig, PushSettings}
+import app.softnetwork.notification.config.{ApnsConfig, InternalConfig, PushSettings}
 import com.eatthepath.pushy.apns.server.{
   AcceptAllPushNotificationHandlerFactory,
   MockApnsServer,
@@ -15,10 +15,9 @@ import scala.concurrent.Future
 import scala.language.reflectiveCalls
 import scala.util.{Failure, Success, Try}
 
-trait ApnsMockServer extends NotificationMockServer {
+trait ApnsMockServer extends PushSettings with NotificationMockServer { _: InternalConfig =>
 
-  lazy val apnsConfig: ApnsConfig =
-    PushSettings.AppConfigs.getOrElse("mock", PushSettings.DefaultConfig).apns
+  lazy val apnsConfig: ApnsConfig = AppConfigs.getOrElse("mock", PushSettings.DefaultConfig).apns
 
   lazy val apnsPort: Int = apnsConfig.port.getOrElse {
     import java.net.ServerSocket

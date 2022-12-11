@@ -32,9 +32,11 @@ trait IosNotificationsBehavior extends PushNotificationsBehavior { _: IosProvide
   override def persistenceId: String = "IosNotification"
 }
 
-trait ApnsNotificationsBehavior extends IosNotificationsBehavior with ApnsProvider
+trait ApnsNotificationsBehavior extends IosNotificationsBehavior with ApnsProvider {
+  _: InternalConfig =>
+}
 
-object ApnsNotificationsBehavior extends ApnsNotificationsBehavior
+object ApnsNotificationsBehavior extends ApnsNotificationsBehavior with DefaultConfig
 
 trait AndroidAndIosNotificationsBehavior extends PushNotificationsBehavior {
   _: AndroidAndIosProvider =>

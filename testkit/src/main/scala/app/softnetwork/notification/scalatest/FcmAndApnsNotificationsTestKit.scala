@@ -22,10 +22,18 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.Suite
 import org.softnetwork.notification.model.Push
 
+import java.net.ServerSocket
+
 trait FcmAndApnsNotificationsTestKit
     extends NotificationsWithMockServerTestKit[Push]
     with NotificationGrpcServer[Push]
-    with ApnsMockServer { _: Suite =>
+    with ApnsMockServer
+    with InternalConfig { _: Suite =>
+
+  override lazy val additionalConfig: String = grpcConfig +
+    s"""
+       |notification.push.mock.apns.port = ${new ServerSocket(0).getLocalPort}
+       |""".stripMargin
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>
     Seq(
