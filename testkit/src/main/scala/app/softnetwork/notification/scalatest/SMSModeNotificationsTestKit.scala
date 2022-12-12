@@ -16,7 +16,6 @@ import app.softnetwork.notification.persistence.typed.{
   NotificationBehavior,
   SMSModeNotificationsBehavior
 }
-import app.softnetwork.notification.spi.SMSMockServer
 import app.softnetwork.persistence.query.InMemoryJournalProvider
 import com.typesafe.config.Config
 import org.scalatest.Suite
@@ -35,13 +34,15 @@ trait SMSModeNotificationsTestKit
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    assert(new SMSMockServer with InternalConfig {
-      override implicit def system: ActorSystem[_] = typedSystem()
+    assert(
+      new SMSMockServer with InternalConfig {
+        override implicit def system: ActorSystem[_] = typedSystem()
 
-      override def serverPort: Int = smsPort
+        override def serverPort: Int = smsPort
 
-      override def config: Config = internalConfig
-    }.initMockServer())
+        override def config: Config = internalConfig
+      }.initMockServer()
+    )
   }
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[SMS]] = _ =>

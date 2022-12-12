@@ -1,4 +1,4 @@
-package app.softnetwork.notification.spi
+package app.softnetwork.notification.scalatest
 
 import akka.Done
 import app.softnetwork.notification.config.{ApnsConfig, InternalConfig, PushSettings}
@@ -9,12 +9,12 @@ import com.eatthepath.pushy.apns.server.{
   PushNotificationHandlerFactory
 }
 
-import scala.compat.java8.FutureConverters._
+import scala.compat.java8.FutureConverters.toScala
 import scala.concurrent.Future
-import scala.language.reflectiveCalls
 import scala.util.{Failure, Success, Try}
 
-trait ApnsMockServer extends PushSettings with NotificationMockServer { _: InternalConfig =>
+trait ApnsMockServer extends PushSettings with NotificationMockServer {
+  _: InternalConfig =>
 
   override val name: String = "apns"
 
@@ -24,6 +24,7 @@ trait ApnsMockServer extends PushSettings with NotificationMockServer { _: Inter
 
   val SERVER_CERTIFICATES_FILENAME: String = "security/server-certs.pem"
   val SERVER_KEY_FILENAME: String = "security/server-key.pem"
+  val SERVER_KEY_PASSWORD: Option[String] = None
 
   def handler: PushNotificationHandlerFactory = new AcceptAllPushNotificationHandlerFactory
 
@@ -33,7 +34,7 @@ trait ApnsMockServer extends PushSettings with NotificationMockServer { _: Inter
         .setServerCredentials(
           getClass.getClassLoader.getResourceAsStream(SERVER_CERTIFICATES_FILENAME),
           getClass.getClassLoader.getResourceAsStream(SERVER_KEY_FILENAME),
-          null
+          SERVER_KEY_PASSWORD.orNull
         )
         .setTrustedClientCertificateChain(
           getClass.getClassLoader.getResourceAsStream(apnsConfig.truststore.orNull)

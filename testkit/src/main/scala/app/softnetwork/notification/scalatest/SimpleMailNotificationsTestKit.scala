@@ -16,7 +16,6 @@ import app.softnetwork.notification.persistence.typed.{
   NotificationBehavior,
   SimpleMailNotificationsBehavior
 }
-import app.softnetwork.notification.spi.SmtpMockServer
 import app.softnetwork.persistence.query.InMemoryJournalProvider
 import com.typesafe.config.Config
 import org.scalatest.Suite

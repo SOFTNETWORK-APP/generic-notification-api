@@ -16,7 +16,7 @@ import app.softnetwork.notification.persistence.typed.{
   FcmAndApnsNotificationsBehavior,
   NotificationBehavior
 }
-import app.softnetwork.notification.spi.{ApnsMockServer, ApnsToken, FcmMockAndApnsProvider}
+import app.softnetwork.notification.spi.FcmMockAndApnsProvider
 import app.softnetwork.persistence.query.InMemoryJournalProvider
 import com.typesafe.config.Config
 import org.scalatest.Suite

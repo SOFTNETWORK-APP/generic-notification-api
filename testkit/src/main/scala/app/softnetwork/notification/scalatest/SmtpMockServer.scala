@@ -1,4 +1,4 @@
-package app.softnetwork.notification.spi
+package app.softnetwork.notification.scalatest
 
 import akka.Done
 import akka.actor.typed.ActorSystem
@@ -8,7 +8,8 @@ import com.dumbster.smtp.SimpleSmtpServer
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-trait SmtpMockServer extends NotificationMockServer with MailSettings { _: InternalConfig =>
+trait SmtpMockServer extends NotificationMockServer with MailSettings {
+  _: InternalConfig =>
 
   val name: String = "smtp"
 

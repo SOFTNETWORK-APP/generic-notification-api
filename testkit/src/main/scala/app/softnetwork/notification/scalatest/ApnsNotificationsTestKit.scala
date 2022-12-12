@@ -16,7 +16,6 @@ import app.softnetwork.notification.persistence.typed.{
   ApnsNotificationsBehavior,
   NotificationBehavior
 }
-import app.softnetwork.notification.spi.{ApnsMockServer, ApnsToken}
 import app.softnetwork.persistence.query.InMemoryJournalProvider
 import com.typesafe.config.Config
 import org.scalatest.Suite

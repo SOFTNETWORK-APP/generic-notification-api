@@ -1,6 +1,6 @@
-package app.softnetwork.notification.spi
+package app.softnetwork.notification.scalatest
 
-import java.util.Random
+import java.security.SecureRandom
 
 trait ApnsToken {
 
@@ -8,7 +8,7 @@ trait ApnsToken {
 
   def generateRandomDeviceToken: String = {
     val tokenBytes = new Array[Byte](TOKEN_LENGTH)
-    new Random().nextBytes(tokenBytes)
+    new SecureRandom().nextBytes(tokenBytes)
     val builder = new StringBuilder(TOKEN_LENGTH * 2)
     for (b <- tokenBytes) {
       builder.append("%02x".format(b))

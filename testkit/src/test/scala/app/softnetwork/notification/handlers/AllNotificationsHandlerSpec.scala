@@ -2,21 +2,18 @@ package app.softnetwork.notification.handlers
 
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.eventstream.EventStream.Subscribe
-import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.api.{NotificationClient, NotificationGrpcServer}
+import app.softnetwork.notification.api.NotificationClient
 import org.scalatest.wordspec.AnyWordSpecLike
 import app.softnetwork.notification.config.MailSettings
 import app.softnetwork.notification.message._
-import app.softnetwork.notification.model.Notification
 import org.softnetwork.notification.model.{From, Mail, Push, SMS}
 import app.softnetwork.notification.scalatest.AllNotificationsTestKit
 
 /** Created by smanciot on 14/04/2020.
   */
 class AllNotificationsHandlerSpec
-    extends MockAllNotificationsHandler
+    extends AllNotificationsHandler
     with AnyWordSpecLike
-    with NotificationGrpcServer[Notification]
     with AllNotificationsTestKit {
 
   lazy val from: String = MailSettings.MailConfig.username
@@ -44,8 +41,6 @@ class AllNotificationsHandlerSpec
       .withSubject(subject)
       .withMessage(message)
 
-  implicit lazy val system: ActorSystem[Nothing] = typedSystem()
-
   val probe: TestProbe[Schedule4NotificationTriggered] =
     createTestProbe[Schedule4NotificationTriggered]()
   system.eventStream.tell(Subscribe(probe.ref))
@@ -60,7 +55,7 @@ class AllNotificationsHandlerSpec
         case n: NotificationAdded =>
           n.uuid shouldBe uuid
           assert(
-            probe.receiveMessage().schedule.uuid == s"MockNotification#$uuid#NotificationTimerKey"
+            probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey"
           )
         case _ => fail()
       }
@@ -72,7 +67,7 @@ class AllNotificationsHandlerSpec
         case n: NotificationAdded =>
           n.uuid shouldBe uuid
           assert(
-            probe.receiveMessage().schedule.uuid == s"MockNotification#$uuid#NotificationTimerKey"
+            probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey"
           )
           this ? (uuid, RemoveNotification(uuid)) await {
             case _: NotificationRemoved.type => succeed
@@ -140,19 +135,19 @@ class AllNotificationsHandlerSpec
     "add mail" in {
       val uuid = "mail"
       assert(client.addMail(generateMail(uuid)) complete ())
-      assert(probe.receiveMessage().schedule.uuid == s"MockNotification#$uuid#NotificationTimerKey")
+      assert(probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey")
     }
 
     "add sms" in {
       val uuid = "sms"
       assert(client.addSMS(generateSMS(uuid)) complete ())
-      assert(probe.receiveMessage().schedule.uuid == s"MockNotification#$uuid#NotificationTimerKey")
+      assert(probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey")
     }
 
     "add push" in {
       val uuid = "push"
       assert(client.addPush(generatePush(uuid)) complete ())
-// FIXME      assert(probe.receiveMessage().schedule.uuid == s"MockNotification#$uuid#NotificationTimerKey")
+      assert(probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey")
     }
   }
 }

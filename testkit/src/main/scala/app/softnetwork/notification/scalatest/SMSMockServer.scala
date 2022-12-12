@@ -1,4 +1,4 @@
-package app.softnetwork.notification.spi
+package app.softnetwork.notification.scalatest
 
 import akka.Done
 import akka.actor.typed.ActorSystem
@@ -18,7 +18,8 @@ trait SMSMockServer
     extends AbstractHttpServer
     with NotificationMockServer
     with SMSSettings
-    with StrictLogging { _: InternalConfig =>
+    with StrictLogging {
+  _: InternalConfig =>
 
   val name: String = "sms"
 

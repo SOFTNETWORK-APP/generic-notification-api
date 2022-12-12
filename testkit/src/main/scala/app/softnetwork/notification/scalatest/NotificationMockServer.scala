@@ -1,4 +1,4 @@
-package app.softnetwork.notification.spi
+package app.softnetwork.notification.scalatest
 
 import akka.Done
 import akka.actor.CoordinatedShutdown
