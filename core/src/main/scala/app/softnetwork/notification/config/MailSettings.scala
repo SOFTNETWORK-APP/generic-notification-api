@@ -2,7 +2,9 @@ package app.softnetwork.notification.config
 
 import configs.Configs
 
-trait MailSettings extends NotificationSettings {
+import scala.language.reflectiveCalls
+
+trait MailSettings extends NotificationSettings { _: InternalConfig =>
 
   lazy val MailConfig: MailConfig =
     Configs[MailConfig].get(config, "notification.mail").toEither match {
@@ -13,4 +15,4 @@ trait MailSettings extends NotificationSettings {
     }
 }
 
-object MailSettings extends MailSettings
+object MailSettings extends MailSettings with DefaultConfig

@@ -1,15 +1,11 @@
 package app.softnetwork.notification.config
 
-import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
 import configs.Configs
 
-import scala.language.implicitConversions
+import scala.language.{implicitConversions, reflectiveCalls}
 
-trait NotificationSettings extends StrictLogging {
-
-  lazy val config: Config = ConfigFactory.load()
-
+trait NotificationSettings extends StrictLogging { _: InternalConfig =>
   lazy val NotificationConfig: NotificationConfig =
     Configs[NotificationConfig].get(config, "notification").toEither match {
       case Left(configError) =>
@@ -20,4 +16,4 @@ trait NotificationSettings extends StrictLogging {
 
 }
 
-object NotificationSettings extends NotificationSettings
+object NotificationSettings extends NotificationSettings with DefaultConfig

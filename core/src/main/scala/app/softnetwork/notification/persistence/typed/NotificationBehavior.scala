@@ -9,13 +9,11 @@ import org.slf4j.Logger
 import org.softnetwork.akka.message.SchedulerEvents.SchedulerEventWithCommand
 import app.softnetwork.scheduler.message.{AddSchedule, RemoveSchedule}
 import org.softnetwork.akka.model.Schedule
+import app.softnetwork.persistence.now
 import app.softnetwork.persistence.typed._
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.model._
-import app.softnetwork.notification.spi.{
-  DefaultMailAndSMSAndFcmAndIosProvider,
-  NotificationProvider
-}
+import app.softnetwork.notification.spi.NotificationProvider
 import org.softnetwork.notification.message._
 import org.softnetwork.notification.model._
 import app.softnetwork.scheduler.config.{Settings => SchedulerSettings}
@@ -25,7 +23,7 @@ import scala.language.{implicitConversions, postfixOps}
 
 /** Created by smanciot on 13/04/2020.
   */
-sealed trait NotificationBehavior[T <: Notification]
+trait NotificationBehavior[T <: Notification]
     extends EntityBehavior[NotificationCommand, T, NotificationEvent, NotificationCommandResult]
     with NotificationProvider {
 
@@ -138,11 +136,22 @@ sealed trait NotificationBehavior[T <: Notification]
           case Some(notification) =>
             import notification._
             status match {
-              case Sent      => Effect.none.thenRun(_ => NotificationSent(entityId) ~> replyTo)
-              case Delivered => Effect.none.thenRun(_ => NotificationDelivered(entityId) ~> replyTo)
-              case Rejected  => Effect.none.thenRun(_ => NotificationRejected(entityId) ~> replyTo)
+              case Sent =>
+                Effect.none.thenRun(_ =>
+                  NotificationSent(entityId, notification.results) ~> replyTo
+                )
+              case Delivered =>
+                Effect.none.thenRun(_ =>
+                  NotificationDelivered(entityId, notification.results) ~> replyTo
+                )
+              case Rejected =>
+                Effect.none.thenRun(_ =>
+                  NotificationRejected(entityId, notification.results) ~> replyTo
+                )
               case Undelivered =>
-                Effect.none.thenRun(_ => NotificationUndelivered(entityId) ~> replyTo)
+                Effect.none.thenRun(_ =>
+                  NotificationUndelivered(entityId, notification.results) ~> replyTo
+                )
               case _ => ackNotification(entityId, notification, replyTo) // Pending
             }
           case _ => Effect.none.thenRun(_ => NotificationNotFound ~> replyTo)
@@ -218,7 +227,9 @@ sealed trait NotificationBehavior[T <: Notification]
           notificationTimerKey
         )
       )
-    } else if (maxTries > 0 && nbTries < maxTries) {
+    } else if (
+      maxTries > 0 && (nbTries < maxTries || (nbTries == maxTries && (status.isPending || status.isUnknownNotificationStatus)))
+    ) {
       ScheduleForNotificationAdded(
         AddSchedule(
           Schedule(persistenceId, entityId, notificationTimerKey, delay)
@@ -279,11 +290,11 @@ sealed trait NotificationBehavior[T <: Notification]
           .thenRun(_ =>
             {
               notificationAck.status match {
-                case Rejected    => NotificationRejected(_uuid)
-                case Undelivered => NotificationUndelivered(_uuid)
-                case Sent        => NotificationSent(_uuid)
-                case Delivered   => NotificationDelivered(_uuid)
-                case _           => NotificationPending(_uuid)
+                case Rejected    => NotificationRejected(_uuid, notificationAck.results)
+                case Undelivered => NotificationUndelivered(_uuid, notificationAck.results)
+                case Sent        => NotificationSent(_uuid, notificationAck.results)
+                case Delivered   => NotificationDelivered(_uuid, notificationAck.results)
+                case _           => NotificationPending(_uuid, notificationAck.results)
               }
             }
             ~> replyTo
@@ -302,9 +313,8 @@ sealed trait NotificationBehavior[T <: Notification]
   ): Effect[NotificationEvent, Option[T]] = {
     import notification._
     val maybeAckWithNumberOfRetries: Option[(NotificationAck, Int)] = status match {
-      case Sent      => None
-      case Delivered => None
-      case Pending =>
+      case Sent | Delivered => None
+      case Pending | UnknownNotificationStatus =>
         notification.deferred match {
           case Some(deferred) if deferred.after(new Date()) =>
             None // the notification is still deferred
@@ -333,7 +343,7 @@ sealed trait NotificationBehavior[T <: Notification]
       case _ =>
         // Undelivered or Rejected
         if (maxTries > 0 && nbTries >= maxTries) {
-          None
+          Some((NotificationAck(notification.ackUuid, notification.results, now()), 1))
         } else {
           log.info(
             "Sending {}#{} in {} status to {} recipients",
@@ -384,11 +394,11 @@ sealed trait NotificationBehavior[T <: Notification]
       .thenRun(_ =>
         {
           updatedNotification.status match {
-            case Rejected    => NotificationRejected(entityId)
-            case Undelivered => NotificationUndelivered(entityId)
-            case Sent        => NotificationSent(entityId)
-            case Delivered   => NotificationDelivered(entityId)
-            case _           => NotificationPending(entityId)
+            case Rejected    => NotificationRejected(entityId, updatedNotification.results)
+            case Undelivered => NotificationUndelivered(entityId, updatedNotification.results)
+            case Sent        => NotificationSent(entityId, updatedNotification.results)
+            case Delivered   => NotificationDelivered(entityId, updatedNotification.results)
+            case _           => NotificationPending(entityId, updatedNotification.results)
           }
         }
         ~> replyTo
@@ -396,11 +406,3 @@ sealed trait NotificationBehavior[T <: Notification]
   }
 
 }
-
-trait AllNotificationsBehavior
-    extends NotificationBehavior[Notification]
-    with DefaultMailAndSMSAndFcmAndIosProvider {
-  override val persistenceId = "Notification"
-}
-
-object AllNotificationsBehavior extends AllNotificationsBehavior

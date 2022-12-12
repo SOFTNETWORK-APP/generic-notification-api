@@ -1,67 +1,76 @@
 package app.softnetwork.notification.scalatest
 
+import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.testkit.InMemoryPersistenceScalatestRouteTest
-import app.softnetwork.api.server.ApiRoutes
-import app.softnetwork.notification.api.NotificationGrpcServices
+import akka.actor.typed.eventstream.EventStream.Subscribe
+import app.softnetwork.notification.api.NotificationClient
+import app.softnetwork.notification.config.MailSettings
 import app.softnetwork.notification.config.NotificationSettings.NotificationConfig
-import app.softnetwork.notification.handlers.MockNotificationHandler
 import app.softnetwork.notification.launch.NotificationGuardian
+import app.softnetwork.notification.message.Schedule4NotificationTriggered
 import app.softnetwork.notification.model.Notification
-import app.softnetwork.notification.persistence.query.{
-  NotificationCommandProcessorStream,
-  Scheduler2NotificationProcessorStream
-}
-import app.softnetwork.notification.persistence.typed.{
-  MockAllNotificationsBehavior,
-  NotificationBehavior
-}
-import app.softnetwork.persistence.query.InMemoryJournalProvider
 import app.softnetwork.scheduler.scalatest.SchedulerTestKit
+import com.typesafe.config.Config
 import org.scalatest.Suite
+import org.softnetwork.notification.model.{BasicDevice, From, Mail, Platform, Push, SMS}
 
-trait NotificationTestKit extends SchedulerTestKit with NotificationGuardian { _: Suite =>
+import java.net.ServerSocket
+
+trait NotificationTestKit[T <: Notification]
+    extends SchedulerTestKit
+    with NotificationGuardian[T]
+    with ApnsToken {
+  _: Suite =>
+
+  implicit lazy val asystem: ActorSystem[_] = typedSystem()
 
   /** @return
     *   roles associated with this node
     */
   override def roles: Seq[String] = super.roles :+ NotificationConfig.akkaNodeRole
 
-  override def notificationBehavior: ActorSystem[_] => Option[NotificationBehavior[Notification]] =
-    _ => Some(MockAllNotificationsBehavior)
+  lazy val internalConfig: Config = config
 
-  override def scheduler2NotificationProcessorStream
-    : ActorSystem[_] => Option[Scheduler2NotificationProcessorStream] =
-    sys =>
-      Some(
-        new Scheduler2NotificationProcessorStream
-          with MockNotificationHandler
-          with InMemoryJournalProvider {
-          override val tag: String = s"${MockAllNotificationsBehavior.persistenceId}-scheduler"
-          override protected val forTests: Boolean = true
-          override implicit def system: ActorSystem[_] = sys
-        }
-      )
+  def availablePort: Int = {
+    val socket = new ServerSocket(0)
+    val port = socket.getLocalPort
+    socket.close()
+    port
+  }
 
-  override def notificationCommandProcessorStream
-    : ActorSystem[_] => Option[NotificationCommandProcessorStream] =
-    sys =>
-      Some(
-        new NotificationCommandProcessorStream
-          with MockNotificationHandler
-          with InMemoryJournalProvider {
-          override val forTests: Boolean = true
-          override implicit def system: ActorSystem[_] = sys
-        }
-      )
-}
+  val subject = "test"
+  val message = "message"
 
-trait NotificationRouteTestKit
-    extends InMemoryPersistenceScalatestRouteTest
-    with ApiRoutes
-    with NotificationTestKit
-    with NotificationGrpcServices { _: Suite =>
+  protected def generateMail(uuid: String): Mail =
+    Mail.defaultInstance
+      .withUuid(uuid)
+      .withFrom(From(MailSettings.MailConfig.username, None))
+      .withTo(Seq("nobody@gmail.com"))
+      .withSubject(subject)
+      .withMessage(message)
 
-  override lazy val additionalConfig: String = grpcConfig
+  protected def generateSMS(uuid: String): SMS =
+    SMS.defaultInstance
+      .withUuid(uuid)
+      .withSubject(subject)
+      .withMessage(message)
+      .withTo(Seq(uuid))
 
+  protected def generatePush(uuid: String, devices: BasicDevice*): Push =
+    Push.defaultInstance
+      .withUuid(uuid)
+      .withSubject(subject)
+      .withMessage(message)
+      .withDevices(devices)
+      .withApp("mock")
+
+  val iosDevice: BasicDevice = BasicDevice(generateRandomDeviceToken, Platform.IOS)
+
+  val androidDevice: BasicDevice = BasicDevice("test-token-android", Platform.ANDROID)
+
+  val probe: TestProbe[Schedule4NotificationTriggered] =
+    createTestProbe[Schedule4NotificationTriggered]()
+  asystem.eventStream.tell(Subscribe(probe.ref))
+
+  lazy val client: NotificationClient = NotificationClient(asystem)
 }

@@ -73,8 +73,10 @@ object NotificationAckDecorator {
       NotificationStatus.Pending
     } else if (distinct.contains(NotificationStatus.Sent)) {
       NotificationStatus.Sent
-    } else {
+    } else if (distinct.contains(NotificationStatus.Delivered)) {
       NotificationStatus.Delivered
+    } else {
+      NotificationStatus.UnknownNotificationStatus
     }
   }
 }

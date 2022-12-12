@@ -1,3 +1,7 @@
 package app.softnetwork.notification.spi
 
-trait FcmAndApnsProvider extends AndroidAndIosProvider with FcmProvider with ApnsProvider
+import app.softnetwork.notification.config.InternalConfig
+
+trait FcmAndApnsProvider extends AndroidAndIosProvider with FcmProvider with ApnsProvider {
+  _: InternalConfig =>
+}

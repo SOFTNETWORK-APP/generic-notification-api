@@ -38,6 +38,7 @@ message NotificationStatusResult {
     required string recipient = 1;
     required NotificationStatus status = 2;
     optional string error = 3;
+    optional string uuid = 4;
 }
 
 message NotificationAck {

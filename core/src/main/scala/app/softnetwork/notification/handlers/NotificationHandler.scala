@@ -11,6 +11,10 @@ import scala.reflect.ClassTag
 /** Created by smanciot on 14/04/2020.
   */
 
+trait NotificationHandler extends EntityPattern[NotificationCommand, NotificationCommandResult] {
+  _: CommandTypeKey[NotificationCommand] =>
+}
+
 trait AllNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
   override def TypeKey(implicit
     tTag: ClassTag[NotificationCommand]
@@ -18,6 +22,49 @@ trait AllNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
     AllNotificationsBehavior.TypeKey
 }
 
-trait NotificationHandler
-    extends EntityPattern[NotificationCommand, NotificationCommandResult]
-    with AllNotificationsTypeKey
+trait AllNotificationsHandler extends NotificationHandler with AllNotificationsTypeKey
+
+trait ApnsNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
+  override def TypeKey(implicit
+    tTag: ClassTag[NotificationCommand]
+  ): EntityTypeKey[NotificationCommand] =
+    ApnsNotificationsBehavior.TypeKey
+}
+
+trait ApnsNotificationsHandler extends NotificationHandler with ApnsNotificationsTypeKey
+
+trait FcmNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
+  override def TypeKey(implicit
+    tTag: ClassTag[NotificationCommand]
+  ): EntityTypeKey[NotificationCommand] =
+    FcmNotificationsBehavior.TypeKey
+}
+
+trait FcmNotificationsHandler extends NotificationHandler with FcmNotificationsTypeKey
+
+trait FcmAndApnsNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
+  override def TypeKey(implicit
+    tTag: ClassTag[NotificationCommand]
+  ): EntityTypeKey[NotificationCommand] =
+    FcmAndApnsNotificationsBehavior.TypeKey
+}
+
+trait FcmAndApnsNotificationsHandler extends NotificationHandler with FcmAndApnsNotificationsTypeKey
+
+trait SimpleMailNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
+  override def TypeKey(implicit
+    tTag: ClassTag[NotificationCommand]
+  ): EntityTypeKey[NotificationCommand] =
+    SimpleMailNotificationsBehavior.TypeKey
+}
+
+trait SimpleMailNotificationsHandler extends NotificationHandler with SimpleMailNotificationsTypeKey
+
+trait SMSModeNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
+  override def TypeKey(implicit
+    tTag: ClassTag[NotificationCommand]
+  ): EntityTypeKey[NotificationCommand] =
+    SMSModeNotificationsBehavior.TypeKey
+}
+
+trait SMSModeNotificationsHandler extends NotificationHandler with SMSModeNotificationsTypeKey

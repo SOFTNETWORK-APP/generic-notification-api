@@ -2,7 +2,7 @@ package app.softnetwork.notification.spi
 
 import java.io.{File => JFile, FileInputStream}
 import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.config.{FcmConfig, PushSettings}
+import app.softnetwork.notification.config.{FcmConfig, InternalConfig, PushSettings}
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.firebase.messaging.{
   AndroidConfig,
@@ -24,16 +24,59 @@ import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
-trait FcmProvider extends AndroidProvider with StrictLogging {
-  override def pushToAndroid(payload: PushPayload, devices: Seq[String])(implicit
+trait FcmProvider extends AndroidProvider with PushSettings with StrictLogging {
+  _: InternalConfig =>
+  final override def pushToAndroid(payload: PushPayload, devices: Seq[String])(implicit
     system: ActorSystem[_]
   ): Seq[NotificationStatusResult] = {
-    fcm(payload, devices, Seq.empty)
+    val config =
+      AppConfigs.get(payload.app).map(_.fcm).getOrElse(DefaultConfig.fcm)
+    val firebaseMessaging: FirebaseMessaging = messaging(payload.app, config)
+    fcm(config, firebaseMessaging, payload, devices, Seq.empty)
+  }
+
+  protected def credentials(
+    config: FcmConfig
+  ): GoogleCredentials =
+    config.googleCredentials match {
+      case Some(googleCredentials) if googleCredentials.trim.nonEmpty =>
+        GoogleCredentials.fromStream(new FileInputStream(new JFile(googleCredentials)))
+      case _ => GoogleCredentials.getApplicationDefault()
+    }
+
+  protected def additionalOptions(
+    config: FcmConfig
+  ): FirebaseOptions.Builder => FirebaseOptions.Builder = builder => {
+    builder.setDatabaseUrl(config.databaseUrl)
+  }
+
+  final protected def app(key: String, config: FcmConfig): FirebaseApp = {
+    Try(
+      FirebaseApp.getInstance(key)
+    ) match {
+      case Success(value) => value
+      case Failure(f) =>
+        logger.info(
+          s"${f.getMessage} -> initializing Firebase Application for $key with $config"
+        )
+        FirebaseApp.initializeApp(
+          additionalOptions(config)(
+            FirebaseOptions.builder().setCredentials(credentials(config))
+          ).build,
+          key
+        )
+    }
+  }
+
+  protected def messaging(key: String, config: FcmConfig): FirebaseMessaging = {
+    FirebaseMessaging.getInstance(app(key, config))
   }
 
   @tailrec
   private[this] def fcm(
-    notification: PushPayload,
+    config: FcmConfig,
+    messaging: FirebaseMessaging,
+    payload: PushPayload,
     devices: Seq[String],
     status: Seq[NotificationStatusResult]
   ): Seq[NotificationStatusResult] = {
@@ -46,22 +89,19 @@ trait FcmProvider extends AndroidProvider with StrictLogging {
         else
           devices
 
-      val _config = config(notification.app)
-      val _app = app(notification.app, _config)
-
       logger.info(
-        s"""FCM -> about to send notification ${notification.title}
-           |\tfor ${notification.app}
-           |\tvia url ${_config.databaseUrl}
+        s"""FCM -> about to send notification ${payload.title}
+           |\tfor ${payload.app}
+           |\tvia url ${config.databaseUrl}
            |\tto token(s) [${tokens.mkString(",")}]
-           |\tusing credentials ${_config.googleCredentials.getOrElse(
+           |\tusing credentials ${config.googleCredentials.getOrElse(
           sys.env.get("GOOGLE_APPLICATION_CREDENTIALS")
         )}""".stripMargin
       )
 
       val results: Seq[NotificationStatusResult] =
         Try(
-          FirebaseMessaging.getInstance(_app).sendMulticast(notification)
+          messaging.sendMulticast(payload)
         ) match {
           case Success(s) =>
             val results: Seq[NotificationStatusResult] = s
@@ -74,7 +114,7 @@ trait FcmProvider extends AndroidProvider with StrictLogging {
             )
         }
       if (nbDevices > bulkSize) {
-        fcm(notification, devices.drop(bulkSize), status ++ results)
+        fcm(config, messaging, payload, devices.drop(bulkSize), status ++ results)
       } else {
         status ++ results
       }
@@ -87,41 +127,6 @@ trait FcmProvider extends AndroidProvider with StrictLogging {
 }
 
 object FcmProvider {
-
-  private[notification] def app(key: String, fcmConfig: FcmConfig): FirebaseApp = {
-    Try(
-      FirebaseApp.getInstance(key)
-    ) match {
-      case Success(app) => app
-      case Failure(f)   =>
-//        logger.info(
-//          s"${f.getMessage} -> initializing Firebase Application for $key with $fcmConfig"
-//        )
-        FirebaseApp.initializeApp(
-          clientCredentials(fcmConfig)(FirebaseOptions.builder())
-            .setDatabaseUrl(fcmConfig.databaseUrl)
-            .build(),
-          key
-        )
-    }
-  }
-
-  private[notification] def config(key: String): FcmConfig = {
-    PushSettings.AppConfigs.get(key).map(_.fcm).getOrElse(PushSettings.DefaultConfig.fcm)
-  }
-
-  private[notification] def clientCredentials(
-    fcmConfig: FcmConfig
-  ): FirebaseOptions.Builder => FirebaseOptions.Builder =
-    builder => {
-      fcmConfig.googleCredentials match {
-        case Some(googleCredentials) if googleCredentials.trim.nonEmpty =>
-          builder.setCredentials(
-            GoogleCredentials.fromStream(new FileInputStream(new JFile(googleCredentials)))
-          )
-        case _ => builder.setCredentials(GoogleCredentials.getApplicationDefault())
-      }
-    }
 
   implicit def toFcmPayload(
     notification: PushPayload
@@ -154,7 +159,8 @@ object FcmProvider {
           NotificationStatus.Sent
         else
           NotificationStatus.Rejected,
-        Option(r.getException).map(e => e.getMessage)
+        Option(r.getException).map(e => e.getMessage),
+        Option(r.getMessageId)
       )
   }
 }
