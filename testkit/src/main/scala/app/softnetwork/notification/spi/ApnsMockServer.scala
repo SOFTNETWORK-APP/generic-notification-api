@@ -10,19 +10,17 @@ import com.eatthepath.pushy.apns.server.{
 }
 
 import scala.compat.java8.FutureConverters._
-import java.util.Random
 import scala.concurrent.Future
 import scala.language.reflectiveCalls
 import scala.util.{Failure, Success, Try}
 
 trait ApnsMockServer extends PushSettings with NotificationMockServer { _: InternalConfig =>
 
+  override val name: String = "apns"
+
   lazy val apnsConfig: ApnsConfig = AppConfigs.getOrElse("mock", PushSettings.DefaultConfig).apns
 
-  lazy val apnsPort: Int = apnsConfig.port.getOrElse {
-    import java.net.ServerSocket
-    new ServerSocket(0).getLocalPort
-  }
+  def serverPort: Int
 
   val SERVER_CERTIFICATES_FILENAME: String = "security/server-certs.pem"
   val SERVER_KEY_FILENAME: String = "security/server-key.pem"
@@ -45,16 +43,14 @@ trait ApnsMockServer extends PushSettings with NotificationMockServer { _: Inter
     ) match {
       case Success(value) => Some(value)
       case Failure(f) =>
-        logger.error(f.getMessage, f)
+        logger.error(s"Could not start mock server $name at $serverPort -> ${f.getMessage}")
         None
     }
-
-  override val name: String = "apns"
 
   protected override def start(): Boolean = {
     maybeServer match {
       case Some(server) =>
-        toScala(server.start(apnsPort)) complete () match {
+        toScala(server.start(serverPort)) complete () match {
           case Success(value) => Option(value.toInt).isDefined
           case Failure(f) =>
             logger.error(f.getMessage, f)
@@ -69,18 +65,6 @@ trait ApnsMockServer extends PushSettings with NotificationMockServer { _: Inter
       case Some(server) => toScala(server.shutdown()) map (_ => Done)
       case _            => Future.successful(Done)
     }
-  }
-
-  val TOKEN_LENGTH: Int = 32
-
-  def generateRandomDeviceToken: String = {
-    val tokenBytes = new Array[Byte](TOKEN_LENGTH)
-    new Random().nextBytes(tokenBytes)
-    val builder = new StringBuilder(TOKEN_LENGTH * 2)
-    for (b <- tokenBytes) {
-      builder.append("%02x".format(b))
-    }
-    builder.toString
   }
 
 }

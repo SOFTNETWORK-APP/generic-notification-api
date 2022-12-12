@@ -26,10 +26,7 @@ trait SMSModeNotificationsTestKit
     extends NotificationTestKit[SMS]
     with NotificationGrpcServer[SMS] { _: Suite =>
 
-  lazy val smsPort: Int = {
-    import java.net.ServerSocket
-    new ServerSocket(0).getLocalPort
-  }
+  lazy val smsPort: Int = availablePort
 
   override lazy val additionalConfig: String = grpcConfig +
     s"""
@@ -44,7 +41,7 @@ trait SMSModeNotificationsTestKit
       override def serverPort: Int = smsPort
 
       override def config: Config = internalConfig
-    }.start())
+    }.initMockServer())
   }
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[SMS]] = _ =>

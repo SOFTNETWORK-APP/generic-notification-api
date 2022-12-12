@@ -14,24 +14,24 @@ trait SmtpMockServer extends NotificationMockServer with MailSettings { _: Inter
 
   implicit def system: ActorSystem[_]
 
-  lazy val smtpPort: Int = MailConfig.port
+  def serverPort: Int
 
   private[this] lazy val maybeServer: Option[SimpleSmtpServer] =
-    Try(SimpleSmtpServer.start(smtpPort)) match {
+    Try(SimpleSmtpServer.start(serverPort)) match {
       case Success(server) => Some(server)
       case Failure(f) =>
-        logger.error(f.getMessage, f)
+        logger.error(s"Could not start mock server $name at $serverPort -> ${f.getMessage}")
         None
     }
 
-  override def start(): Boolean = {
+  protected override def start(): Boolean = {
     maybeServer match {
       case Some(_) => true
       case _       => false
     }
   }
 
-  override def stop(): Future[Done] = {
+  protected override def stop(): Future[Done] = {
     maybeServer match {
       case Some(server) => server.stop()
       case _            =>

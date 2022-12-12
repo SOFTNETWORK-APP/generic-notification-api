@@ -7,6 +7,8 @@ import app.softnetwork.scheduler.scalatest.SchedulerTestKit
 import com.typesafe.config.Config
 import org.scalatest.Suite
 
+import java.net.ServerSocket
+
 trait NotificationTestKit[T <: Notification] extends SchedulerTestKit with NotificationGuardian[T] {
   _: Suite =>
 
@@ -16,5 +18,12 @@ trait NotificationTestKit[T <: Notification] extends SchedulerTestKit with Notif
   override def roles: Seq[String] = super.roles :+ NotificationConfig.akkaNodeRole
 
   lazy val internalConfig: Config = config
+
+  def availablePort: Int = {
+    val socket = new ServerSocket(0)
+    val port = socket.getLocalPort
+    socket.close()
+    port
+  }
 
 }

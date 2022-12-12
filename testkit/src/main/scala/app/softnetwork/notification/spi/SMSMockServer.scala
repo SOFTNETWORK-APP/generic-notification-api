@@ -56,18 +56,18 @@ trait SMSMockServer
     Try(listen(serverPort)) match {
       case Success(server) => Some(server)
       case Failure(f) =>
-        logger.error(f.getMessage, f)
+        logger.error(s"Could not start mock server $name at $serverPort -> ${f.getMessage}")
         None
     }
 
-  override def start(): Boolean = {
+  protected override def start(): Boolean = {
     maybeServer match {
       case Some(_) => true
       case _       => false
     }
   }
 
-  override def stop(): Future[Done] = {
+  protected override def stop(): Future[Done] = {
     maybeServer match {
       case Some(server) => server.shutdown()
       case _            =>

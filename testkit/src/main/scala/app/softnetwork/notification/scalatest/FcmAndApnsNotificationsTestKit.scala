@@ -16,24 +16,38 @@ import app.softnetwork.notification.persistence.typed.{
   FcmAndApnsNotificationsBehavior,
   NotificationBehavior
 }
-import app.softnetwork.notification.spi.{ApnsMockServer, FcmMockAndApnsProvider}
+import app.softnetwork.notification.spi.{ApnsMockServer, ApnsToken, FcmMockAndApnsProvider}
 import app.softnetwork.persistence.query.InMemoryJournalProvider
 import com.typesafe.config.Config
 import org.scalatest.Suite
 import org.softnetwork.notification.model.Push
 
-import java.net.ServerSocket
-
 trait FcmAndApnsNotificationsTestKit
-    extends NotificationsWithMockServerTestKit[Push]
+    extends NotificationTestKit[Push]
     with NotificationGrpcServer[Push]
-    with ApnsMockServer
-    with InternalConfig { _: Suite =>
+    with ApnsToken { _: Suite =>
+
+  implicit lazy val system: ActorSystem[_] = typedSystem()
+
+  lazy val apnsPort: Int = availablePort
 
   override lazy val additionalConfig: String = grpcConfig +
     s"""
-       |notification.push.mock.apns.port = ${new ServerSocket(0).getLocalPort}
+       |notification.push.mock.apns.port = $apnsPort
        |""".stripMargin
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    assert(
+      new ApnsMockServer with InternalConfig {
+        override implicit def system: ActorSystem[_] = typedSystem()
+
+        override def serverPort: Int = apnsPort
+
+        override lazy val config: Config = internalConfig
+      }.initMockServer()
+    )
+  }
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>
     Seq(

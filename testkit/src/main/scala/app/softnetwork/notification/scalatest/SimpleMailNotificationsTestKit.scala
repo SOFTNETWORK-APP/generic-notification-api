@@ -22,18 +22,18 @@ import com.typesafe.config.Config
 import org.scalatest.Suite
 import org.softnetwork.notification.model.Mail
 
-import java.net.ServerSocket
-
 trait SimpleMailNotificationsTestKit
     extends NotificationTestKit[Mail]
     with NotificationGrpcServer[Mail] { _: Suite =>
 
   implicit lazy val system: ActorSystem[Nothing] = typedSystem()
 
+  lazy val smtpPort: Int = availablePort
+
   override lazy val additionalConfig: String = grpcConfig +
     s"""
        |notification.mail.host = $hostname
-       |notification.mail.port = ${new ServerSocket(0).getLocalPort}
+       |notification.mail.port = $smtpPort
        |""".stripMargin
 
   override def beforeAll(): Unit = {
@@ -42,8 +42,10 @@ trait SimpleMailNotificationsTestKit
       new SmtpMockServer with InternalConfig {
         override implicit def system: ActorSystem[_] = typedSystem()
 
+        override def serverPort: Int = smtpPort
+
         override lazy val config: Config = internalConfig
-      }.start()
+      }.initMockServer()
     )
   }
 
