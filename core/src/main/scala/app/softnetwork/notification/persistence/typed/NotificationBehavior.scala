@@ -227,7 +227,9 @@ trait NotificationBehavior[T <: Notification]
           notificationTimerKey
         )
       )
-    } else if (maxTries > 0 && nbTries <= maxTries) {
+    } else if (
+      maxTries > 0 && (nbTries < maxTries || (nbTries == maxTries && (status.isPending || status.isUnknownNotificationStatus)))
+    ) {
       ScheduleForNotificationAdded(
         AddSchedule(
           Schedule(persistenceId, entityId, notificationTimerKey, delay)

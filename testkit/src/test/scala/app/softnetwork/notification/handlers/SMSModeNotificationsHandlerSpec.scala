@@ -147,8 +147,8 @@ class SMSModeNotificationsHandlerSpec
       }
     }
 
-    "add push" in {
-      val uuid = "push"
+    "add sms" in {
+      val uuid = "sms"
       assert(client.addSMS(generateSMS(uuid)) complete ())
       assert(probe.receiveMessage().schedule.uuid == s"SMSNotification#$uuid#NotificationTimerKey")
     }
