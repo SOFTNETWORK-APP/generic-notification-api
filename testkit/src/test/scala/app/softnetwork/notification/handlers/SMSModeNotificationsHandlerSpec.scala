@@ -1,13 +1,8 @@
 package app.softnetwork.notification.handlers
 
-import akka.actor.testkit.typed.scaladsl.TestProbe
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.eventstream.EventStream.Subscribe
-import app.softnetwork.notification.api.NotificationClient
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.SMSModeNotificationsTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.softnetwork.notification.model.SMS
 
 /** Created by smanciot on 07/12/2022.
   */
@@ -15,24 +10,6 @@ class SMSModeNotificationsHandlerSpec
     extends SMSModeNotificationsHandler
     with AnyWordSpecLike
     with SMSModeNotificationsTestKit {
-
-  val subject = "test"
-  val message = "message"
-
-  implicit lazy val system: ActorSystem[_] = typedSystem()
-
-  private[this] def generateSMS(uuid: String): SMS =
-    SMS.defaultInstance
-      .withUuid(uuid)
-      .withSubject(subject)
-      .withMessage(message)
-      .withTo(Seq(uuid))
-
-  val probe: TestProbe[Schedule4NotificationTriggered] =
-    createTestProbe[Schedule4NotificationTriggered]()
-  system.eventStream.tell(Subscribe(probe.ref))
-
-  lazy val client: NotificationClient = NotificationClient(system)
 
   "SMS Notification handler" must {
 

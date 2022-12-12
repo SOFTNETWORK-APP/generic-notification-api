@@ -1,13 +1,9 @@
 package app.softnetwork.notification.handlers
 
-import akka.actor.testkit.typed.scaladsl.TestProbe
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.eventstream.EventStream.Subscribe
-import app.softnetwork.notification.api.NotificationClient
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.FcmNotificationsTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.softnetwork.notification.model.{BasicDevice, NotificationStatus, Platform, Push}
+import org.softnetwork.notification.model.NotificationStatus
 
 /** Created by smanciot on 07/12/2022.
   */
@@ -15,29 +11,6 @@ class FcmNotificationsHandlerSpec
     extends FcmNotificationsHandler
     with AnyWordSpecLike
     with FcmNotificationsTestKit {
-
-  val subject = "test"
-  val message = "message"
-
-  protected def generatePush(uuid: String, devices: BasicDevice*): Push =
-    Push.defaultInstance
-      .withUuid(uuid)
-      .withSubject(subject)
-      .withMessage(message)
-      .withDevices(devices)
-      .withApp("mock")
-
-  val iosDevice: BasicDevice = BasicDevice("test-token-ios", Platform.IOS)
-
-  val androidDevice: BasicDevice = BasicDevice("test-token-android", Platform.ANDROID)
-
-  implicit lazy val system: ActorSystem[Nothing] = typedSystem()
-
-  val probe: TestProbe[Schedule4NotificationTriggered] =
-    createTestProbe[Schedule4NotificationTriggered]()
-  system.eventStream.tell(Subscribe(probe.ref))
-
-  lazy val client: NotificationClient = NotificationClient(system)
 
   "Fcm Notification handler" must {
 

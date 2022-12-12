@@ -26,8 +26,6 @@ trait ApnsNotificationsTestKit
     with NotificationGrpcServer[Push]
     with ApnsToken { _: Suite =>
 
-  implicit lazy val system: ActorSystem[_] = typedSystem()
-
   lazy val apnsPort: Int = availablePort
 
   override lazy val additionalConfig: String = grpcConfig +
@@ -39,7 +37,7 @@ trait ApnsNotificationsTestKit
     super.beforeAll()
     assert(
       new ApnsMockServer with InternalConfig {
-        override implicit def system: ActorSystem[_] = typedSystem()
+        override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = apnsPort
 

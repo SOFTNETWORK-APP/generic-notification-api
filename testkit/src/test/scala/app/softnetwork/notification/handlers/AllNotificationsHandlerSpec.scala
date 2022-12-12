@@ -1,12 +1,7 @@
 package app.softnetwork.notification.handlers
 
-import akka.actor.testkit.typed.scaladsl.TestProbe
-import akka.actor.typed.eventstream.EventStream.Subscribe
-import app.softnetwork.notification.api.NotificationClient
 import org.scalatest.wordspec.AnyWordSpecLike
-import app.softnetwork.notification.config.MailSettings
 import app.softnetwork.notification.message._
-import org.softnetwork.notification.model.{From, Mail, Push, SMS}
 import app.softnetwork.notification.scalatest.AllNotificationsTestKit
 
 /** Created by smanciot on 14/04/2020.
@@ -15,37 +10,6 @@ class AllNotificationsHandlerSpec
     extends AllNotificationsHandler
     with AnyWordSpecLike
     with AllNotificationsTestKit {
-
-  lazy val from: String = MailSettings.MailConfig.username
-  val to = Seq("nobody@gmail.com")
-  val subject = "test"
-  val message = "message"
-
-  private[this] def generateMail(uuid: String): Mail =
-    Mail.defaultInstance
-      .withUuid(uuid)
-      .withFrom(From(from, None))
-      .withTo(to)
-      .withSubject(subject)
-      .withMessage(message)
-
-  private[this] def generateSMS(uuid: String): SMS =
-    SMS.defaultInstance
-      .withUuid(uuid)
-      .withSubject(subject)
-      .withMessage(message)
-
-  private[this] def generatePush(uuid: String): Push =
-    Push.defaultInstance
-      .withUuid(uuid)
-      .withSubject(subject)
-      .withMessage(message)
-
-  val probe: TestProbe[Schedule4NotificationTriggered] =
-    createTestProbe[Schedule4NotificationTriggered]()
-  system.eventStream.tell(Subscribe(probe.ref))
-
-  lazy val client: NotificationClient = NotificationClient(system)
 
   "Notification handler" must {
 

@@ -27,8 +27,6 @@ trait AllNotificationsTestKit
     with NotificationGrpcServer[Notification]
     with ApnsToken { _: Suite =>
 
-  implicit lazy val system: ActorSystem[_] = typedSystem()
-
   lazy val apnsPort: Int = availablePort
 
   lazy val smsPort: Int = availablePort
@@ -47,7 +45,7 @@ trait AllNotificationsTestKit
     super.beforeAll()
     assert(
       new ApnsMockServer with InternalConfig {
-        override implicit def system: ActorSystem[_] = typedSystem()
+        override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = apnsPort
 
@@ -56,7 +54,7 @@ trait AllNotificationsTestKit
     )
     assert(
       new SMSMockServer with InternalConfig {
-        override implicit def system: ActorSystem[_] = typedSystem()
+        override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = smsPort
 
@@ -65,7 +63,7 @@ trait AllNotificationsTestKit
     )
     assert(
       new SmtpMockServer with InternalConfig {
-        override implicit def system: ActorSystem[_] = typedSystem()
+        override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = smtpPort
 

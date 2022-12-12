@@ -25,8 +25,6 @@ trait SimpleMailNotificationsTestKit
     extends NotificationTestKit[Mail]
     with NotificationGrpcServer[Mail] { _: Suite =>
 
-  implicit lazy val system: ActorSystem[Nothing] = typedSystem()
-
   lazy val smtpPort: Int = availablePort
 
   override lazy val additionalConfig: String = grpcConfig +
@@ -39,7 +37,7 @@ trait SimpleMailNotificationsTestKit
     super.beforeAll()
     assert(
       new SmtpMockServer with InternalConfig {
-        override implicit def system: ActorSystem[_] = typedSystem()
+        override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = smtpPort
 

@@ -36,7 +36,7 @@ trait SMSModeNotificationsTestKit
     super.beforeAll()
     assert(
       new SMSMockServer with InternalConfig {
-        override implicit def system: ActorSystem[_] = typedSystem()
+        override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = smsPort
 
