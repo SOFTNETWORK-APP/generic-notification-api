@@ -1,8 +1,11 @@
 package app.softnetwork.notification.scalatest
 
 import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.server.Route
-import app.softnetwork.notification.api.{NotificationServer, SMSModeNotificationsServer}
+import app.softnetwork.notification.api.{
+  NotificationGrpcServer,
+  NotificationServer,
+  SMSModeNotificationsServer
+}
 import app.softnetwork.notification.config.InternalConfig
 import app.softnetwork.notification.handlers.SMSModeNotificationsHandler
 import app.softnetwork.notification.persistence.query.{
@@ -13,20 +16,36 @@ import app.softnetwork.notification.persistence.typed.{
   NotificationBehavior,
   SMSModeNotificationsBehavior
 }
-import app.softnetwork.notification.spi.SMSModeService
+import app.softnetwork.notification.spi.SMSMockServer
 import app.softnetwork.persistence.query.InMemoryJournalProvider
 import com.typesafe.config.Config
 import org.scalatest.Suite
 import org.softnetwork.notification.model.SMS
 
-trait SMSModeRouteTestKit extends NotificationRouteTestKit[SMS] { _: Suite =>
+trait SMSModeNotificationsTestKit
+    extends NotificationTestKit[SMS]
+    with NotificationGrpcServer[SMS] { _: Suite =>
+
+  lazy val smsPort: Int = {
+    import java.net.ServerSocket
+    new ServerSocket(0).getLocalPort
+  }
 
   override lazy val additionalConfig: String = grpcConfig +
     s"""
-      |notification.sms.mode.base-url = http://$interface:$port
-      |""".stripMargin
+       |notification.sms.mode.base-url = "http://$interface:$smsPort"
+       |""".stripMargin
 
-  override def apiRoutes(system: ActorSystem[_]): Route = SMSModeService.route
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    assert(new SMSMockServer with InternalConfig {
+      override implicit def system: ActorSystem[_] = typedSystem()
+
+      override def serverPort: Int = smsPort
+
+      override def config: Config = internalConfig
+    }.start())
+  }
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[SMS]] = _ =>
     Seq(

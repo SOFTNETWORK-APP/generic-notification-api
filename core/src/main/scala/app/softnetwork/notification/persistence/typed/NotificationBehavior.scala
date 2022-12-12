@@ -9,6 +9,7 @@ import org.slf4j.Logger
 import org.softnetwork.akka.message.SchedulerEvents.SchedulerEventWithCommand
 import app.softnetwork.scheduler.message.{AddSchedule, RemoveSchedule}
 import org.softnetwork.akka.model.Schedule
+import app.softnetwork.persistence.now
 import app.softnetwork.persistence.typed._
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.model._
@@ -226,7 +227,7 @@ trait NotificationBehavior[T <: Notification]
           notificationTimerKey
         )
       )
-    } else if (maxTries > 0 && nbTries < maxTries) {
+    } else if (maxTries > 0 && nbTries <= maxTries) {
       ScheduleForNotificationAdded(
         AddSchedule(
           Schedule(persistenceId, entityId, notificationTimerKey, delay)
@@ -310,9 +311,8 @@ trait NotificationBehavior[T <: Notification]
   ): Effect[NotificationEvent, Option[T]] = {
     import notification._
     val maybeAckWithNumberOfRetries: Option[(NotificationAck, Int)] = status match {
-      case Sent      => None
-      case Delivered => None
-      case Pending =>
+      case Sent | Delivered => None
+      case Pending | UnknownNotificationStatus =>
         notification.deferred match {
           case Some(deferred) if deferred.after(new Date()) =>
             None // the notification is still deferred
@@ -341,7 +341,7 @@ trait NotificationBehavior[T <: Notification]
       case _ =>
         // Undelivered or Rejected
         if (maxTries > 0 && nbTries >= maxTries) {
-          None
+          Some((NotificationAck(notification.ackUuid, notification.results, now()), 1))
         } else {
           log.info(
             "Sending {}#{} in {} status to {} recipients",

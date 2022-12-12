@@ -11,6 +11,10 @@ trait SMSNotificationsBehavior extends NotificationBehavior[SMS] { _: SMSProvide
   override def send(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck = sendSMS(
     notification
   )
+
+  override def ack(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck = ackSMS(
+    notification
+  )
 }
 
 trait SMSModeNotificationsBehavior extends SMSNotificationsBehavior with SMSModeProvider {

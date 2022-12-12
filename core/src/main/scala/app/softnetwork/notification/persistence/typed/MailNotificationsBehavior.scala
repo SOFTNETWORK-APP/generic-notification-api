@@ -10,6 +10,10 @@ trait MailNotificationsBehavior extends NotificationBehavior[Mail] { _: MailProv
 
   override def send(notification: Mail)(implicit system: ActorSystem[_]): NotificationAck =
     sendMail(notification)
+
+  override def ack(notification: Mail)(implicit system: ActorSystem[_]): NotificationAck = ackMail(
+    notification
+  )
 }
 
 trait SimpleMailNotificationsBehavior extends MailNotificationsBehavior with SimpleMailProvider {

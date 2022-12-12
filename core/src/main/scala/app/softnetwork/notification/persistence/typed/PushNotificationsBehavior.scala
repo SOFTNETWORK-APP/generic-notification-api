@@ -16,6 +16,10 @@ import org.softnetwork.notification.model.{NotificationAck, Push}
 trait PushNotificationsBehavior extends NotificationBehavior[Push] { _: PushProvider =>
   override def send(notification: Push)(implicit system: ActorSystem[_]): NotificationAck =
     sendPush(notification)
+
+  override def ack(notification: Push)(implicit system: ActorSystem[_]): NotificationAck = ackPush(
+    notification
+  )
 }
 
 trait AndroidNotificationsBehavior extends PushNotificationsBehavior { _: AndroidProvider =>
