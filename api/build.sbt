@@ -23,7 +23,7 @@ dockerRepository := Some("softnetwork.jfrog.io/default-docker-local")
 
 bashScriptDefines / scriptClasspath ~= (cp => "../conf" +: cp)
 
-organization := "app.softnetwork.persistence"
+organization := "app.softnetwork.notification"
 
 name := "notification-api"
 

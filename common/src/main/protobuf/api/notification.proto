@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 import "scalapb/scalapb.proto";
-import "google/protobuf/wrappers.proto";
 import "model/notifications.proto";
 
 package app.softnetwork.notification.api;
@@ -15,6 +14,11 @@ service NotificationServiceApi {
     rpc AddMail (AddMailRequest) returns (AddNotificationResponse) {}
     rpc AddSMS (AddSMSRequest) returns (AddNotificationResponse) {}
     rpc AddPush (AddPushRequest) returns (AddNotificationResponse) {}
+    rpc RemoveNotification (RemoveNotificationRequest) returns (RemoveNotificationResponse) {}
+    rpc SendMail (SendMailRequest) returns (SendNotificationResponse) {}
+    rpc SendSMS (SendSMSRequest) returns (SendNotificationResponse) {}
+    rpc SendPush (SendPushRequest) returns (SendNotificationResponse) {}
+    rpc GetNotificationStatus (GetNotificationStatusRequest) returns (GetNotificationStatusResponse) {}
 }
 
 message AddMailRequest{
@@ -31,4 +35,36 @@ message AddPushRequest{
 
 message AddNotificationResponse{
     bool succeeded = 1;
+}
+
+message RemoveNotificationRequest{
+    string uuid = 1;
+}
+
+message RemoveNotificationResponse{
+    bool succeeded = 1;
+}
+
+message SendMailRequest{
+    org.softnetwork.notification.model.Mail mail = 1;
+}
+
+message SendSMSRequest{
+    org.softnetwork.notification.model.SMS sms = 1;
+}
+
+message SendPushRequest{
+    org.softnetwork.notification.model.Push push = 1;
+}
+
+message SendNotificationResponse{
+    repeated org.softnetwork.notification.model.NotificationStatusResult results = 1;
+}
+
+message GetNotificationStatusRequest{
+    string uuid = 1;
+}
+
+message GetNotificationStatusResponse{
+    repeated org.softnetwork.notification.model.NotificationStatusResult results = 1;
 }
