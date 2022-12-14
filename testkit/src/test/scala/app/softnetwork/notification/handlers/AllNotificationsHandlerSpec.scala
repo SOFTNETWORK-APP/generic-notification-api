@@ -4,6 +4,8 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.AllNotificationsTestKit
 
+import scala.util.{Failure, Success}
+
 /** Created by smanciot on 14/04/2020.
   */
 class AllNotificationsHandlerSpec
@@ -96,22 +98,75 @@ class AllNotificationsHandlerSpec
       }
     }
 
-    "add mail" in {
+    "add mail using client" in {
       val uuid = "mail"
       assert(client.addMail(generateMail(uuid)) complete ())
       assert(probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey")
     }
 
-    "add sms" in {
+    "send mail using client" in {
+      val uuid = "mail2"
+      val mail = generateMail(uuid)
+      client.sendMail(mail) complete () match {
+        case Success(result) =>
+          assert(result.exists(r => r.recipient == mail.to.head && r.status.isSent))
+        case Failure(_) => fail()
+      }
+    }
+
+    "remove notification using client" in {
+      assert(client.removeNotification("mail") complete ())
+    }
+
+    "add sms using client" in {
       val uuid = "sms"
       assert(client.addSMS(generateSMS(uuid)) complete ())
+      assert(
+        probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey"
+      ) // pending
+      assert(
+        probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey"
+      ) // ack
+    }
+
+    "send sms using client" in {
+      val uuid = "sms2"
+      val sms = generateSMS(uuid)
+      client.sendSMS(sms) complete () match {
+        case Success(result) =>
+          assert(result.exists(r => r.recipient == sms.to.head && r.status.isPending))
+          assert(
+            probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey"
+          ) // ack
+        case Failure(_) => fail()
+      }
+    }
+
+    "add push using client" in {
+      val uuid = "push"
+      assert(client.addPush(generatePush(uuid, androidDevice, iosDevice)) complete ())
       assert(probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey")
     }
 
-    "add push" in {
-      val uuid = "push"
-      assert(client.addPush(generatePush(uuid)) complete ())
-      assert(probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey")
+    "retrieve push notification status using client" in {
+      client.getNotificationStatus("push") complete () match {
+        case Success(result) =>
+          assert(result.exists(r => r.recipient == androidDevice.regId && r.status.isSent))
+          assert(result.exists(r => r.recipient == iosDevice.regId && r.status.isSent))
+        case Failure(_) => fail()
+      }
     }
+
+    "send push using client" in {
+      val uuid = "push2"
+      val push = generatePush(uuid, androidDevice, iosDevice)
+      client.sendPush(push) complete () match {
+        case Success(result) =>
+          assert(result.exists(r => r.recipient == androidDevice.regId && r.status.isSent))
+          assert(result.exists(r => r.recipient == iosDevice.regId && r.status.isSent))
+        case Failure(_) => fail()
+      }
+    }
+
   }
 }

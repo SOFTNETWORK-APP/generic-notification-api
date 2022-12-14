@@ -44,17 +44,21 @@ package object message {
 
   case object NotificationRemoved extends NotificationCommandResult
 
+  trait NotificationResults extends NotificationCommandResult {
+    def results: Seq[NotificationStatusResult]
+  }
+
   @SerialVersionUID(0L)
   case class NotificationSent(uuid: String, results: Seq[NotificationStatusResult])
-      extends NotificationCommandResult
+      extends NotificationResults
 
   @SerialVersionUID(0L)
   case class NotificationDelivered(uuid: String, results: Seq[NotificationStatusResult])
-      extends NotificationCommandResult
+      extends NotificationResults
 
   @SerialVersionUID(0L)
   case class NotificationPending(uuid: String, results: Seq[NotificationStatusResult])
-      extends NotificationCommandResult
+      extends NotificationResults
 
   case class Schedule4NotificationTriggered(schedule: Schedule) extends NotificationCommandResult
 
@@ -66,10 +70,12 @@ package object message {
   @SerialVersionUID(0L)
   case class NotificationUndelivered(uuid: String, results: Seq[NotificationStatusResult])
       extends NotificationErrorMessage("NotificationUndelivered")
+      with NotificationResults
 
   @SerialVersionUID(0L)
   case class NotificationRejected(uuid: String, results: Seq[NotificationStatusResult])
       extends NotificationErrorMessage("NotificationRejected")
+      with NotificationResults
 
   case object NotificationNotFound extends NotificationErrorMessage("NotificationNotFound")
 
