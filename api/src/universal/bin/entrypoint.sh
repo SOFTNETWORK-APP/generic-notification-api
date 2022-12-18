@@ -25,4 +25,4 @@ function clean() {
 
 export CLUSTER_IP=$(hostname -i | awk '{print $1}')
 
-/opt/docker/bin/persistence-notification-api -DCLUSTER_MANAGEMENT_HOST="$CLUSTER_IP"
+/opt/docker/bin/notification-api -DCLUSTER_MANAGEMENT_HOST="$CLUSTER_IP"

@@ -23,8 +23,8 @@ import com.typesafe.config.Config
 import org.scalatest.Suite
 
 trait AllNotificationsTestKit
-    extends NotificationTestKit[Notification]
-    with NotificationGrpcServer[Notification]
+    extends NotificationGrpcServer[Notification]
+    with NotificationTestKit[Notification]
     with ApnsToken { _: Suite =>
 
   lazy val apnsPort: Int = availablePort
@@ -33,7 +33,7 @@ trait AllNotificationsTestKit
 
   lazy val smtpPort: Int = availablePort
 
-  override lazy val additionalConfig: String = grpcConfig +
+  override lazy val additionalConfig: String = notificationGrpcConfig +
     s"""
        |notification.mail.host = $hostname
        |notification.mail.port = $smtpPort

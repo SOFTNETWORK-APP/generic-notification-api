@@ -22,7 +22,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.Suite
 import org.softnetwork.notification.model.Push
 
-trait FcmNotificationsTestKit extends NotificationTestKit[Push] with NotificationGrpcServer[Push] {
+trait FcmNotificationsTestKit extends NotificationGrpcServer[Push] with NotificationTestKit[Push] {
   _: Suite =>
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>

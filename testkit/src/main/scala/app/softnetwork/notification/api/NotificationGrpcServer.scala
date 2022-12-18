@@ -10,5 +10,5 @@ trait NotificationGrpcServer[T <: Notification]
     extends PersistenceScalatestGrpcTest
     with NotificationGrpcServices[T]
     with InMemoryPersistenceTestKit { _: Suite with NotificationGuardian[T] =>
-  override lazy val additionalConfig: String = grpcConfig
+  override lazy val additionalConfig: String = notificationGrpcConfig
 }

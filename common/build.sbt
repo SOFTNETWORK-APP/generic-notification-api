@@ -8,8 +8,8 @@ val guavaExclusion =  ExclusionRule(organization = "com.google.guava", name="gua
 
 libraryDependencies ++= Seq(
   "app.softnetwork.persistence" %% "persistence-kv" % Versions.genericPersistence,
-  "app.softnetwork.persistence" %% "persistence-scheduler" % Versions.genericPersistence,
-  "app.softnetwork.persistence" %% "persistence-scheduler" % Versions.genericPersistence % "protobuf",
+  "app.softnetwork.scheduler" %% "scheduler-common" % Versions.scheduler,
+  "app.softnetwork.scheduler" %% "scheduler-common" % Versions.scheduler % "protobuf",
   "app.softnetwork.api" %% "generic-server-api" % Versions.genericPersistence,
   "app.softnetwork.protobuf" %% "scalapb-extensions" % "0.1.5",
   "org.apache.commons" % "commons-email" % "1.5",

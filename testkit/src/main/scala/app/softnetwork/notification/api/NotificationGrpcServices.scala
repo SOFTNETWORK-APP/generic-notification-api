@@ -5,21 +5,29 @@ import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import app.softnetwork.api.server.GrpcServices
 import app.softnetwork.notification.launch.NotificationGuardian
 import app.softnetwork.notification.model.Notification
+import app.softnetwork.schedule.api.SchedulerServiceApiHandler
+import app.softnetwork.scheduler.api.SchedulerGrpcServices
 
 import scala.concurrent.Future
 
-trait NotificationGrpcServices[T <: Notification] extends GrpcServices {
+trait NotificationGrpcServices[T <: Notification] extends SchedulerGrpcServices {
   _: NotificationGuardian[T] =>
 
   def interface: String
 
   def port: Int
 
-  final override def grpcServices
+  override def grpcServices
     : ActorSystem[_] => Seq[PartialFunction[HttpRequest, Future[HttpResponse]]] = system =>
-    notificationServers(system).map(NotificationServiceApiHandler.partial(_)(system))
+    notificationGrpcServices(system) ++ schedulerGrpcServices(system)
 
-  def grpcConfig: String = s"""
+  def notificationGrpcServices
+    : ActorSystem[_] => Seq[PartialFunction[HttpRequest, Future[HttpResponse]]] = system =>
+    notificationServers(system).map(
+      NotificationServiceApiHandler.partial(_)(system)
+    )
+
+  def notificationGrpcConfig: String = schedulerGrpcConfig + s"""
                               |# Important: enable HTTP/2 in ActorSystem's config
                               |akka.http.server.preview.enable-http2 = on
                               |akka.grpc.client."${NotificationClient.name}"{

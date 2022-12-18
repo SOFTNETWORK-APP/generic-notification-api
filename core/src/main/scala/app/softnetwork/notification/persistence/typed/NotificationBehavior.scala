@@ -16,7 +16,7 @@ import app.softnetwork.notification.model._
 import app.softnetwork.notification.spi.NotificationProvider
 import org.softnetwork.notification.message._
 import org.softnetwork.notification.model._
-import app.softnetwork.scheduler.config.{Settings => SchedulerSettings}
+import app.softnetwork.scheduler.config.SchedulerSettings
 import org.softnetwork.notification.model.NotificationStatus._
 
 import scala.language.{implicitConversions, postfixOps}
@@ -96,7 +96,14 @@ trait NotificationBehavior[T <: Notification]
                   event,
                   ScheduleForNotificationAdded(
                     AddSchedule(
-                      Schedule(persistenceId, entityId, notificationTimerKey, delay)
+                      Schedule(
+                        persistenceId,
+                        entityId,
+                        notificationTimerKey,
+                        delay,
+                        Some(true),
+                        Some(now())
+                      )
                     )
                   )
                 )
@@ -232,7 +239,7 @@ trait NotificationBehavior[T <: Notification]
     ) {
       ScheduleForNotificationAdded(
         AddSchedule(
-          Schedule(persistenceId, entityId, notificationTimerKey, delay)
+          Schedule(persistenceId, entityId, notificationTimerKey, delay, Some(true), Some(now()))
         )
       )
     } else {

@@ -22,12 +22,12 @@ import org.scalatest.Suite
 import org.softnetwork.notification.model.SMS
 
 trait SMSModeNotificationsTestKit
-    extends NotificationTestKit[SMS]
-    with NotificationGrpcServer[SMS] { _: Suite =>
+    extends NotificationGrpcServer[SMS]
+    with NotificationTestKit[SMS] { _: Suite =>
 
   lazy val smsPort: Int = availablePort
 
-  override lazy val additionalConfig: String = grpcConfig +
+  override lazy val additionalConfig: String = notificationGrpcConfig +
     s"""
        |notification.sms.mode.base-url = "http://$interface:$smsPort"
        |""".stripMargin

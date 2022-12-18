@@ -23,13 +23,13 @@ import org.scalatest.Suite
 import org.softnetwork.notification.model.Push
 
 trait FcmAndApnsNotificationsTestKit
-    extends NotificationTestKit[Push]
-    with NotificationGrpcServer[Push]
+    extends NotificationGrpcServer[Push]
+    with NotificationTestKit[Push]
     with ApnsToken { _: Suite =>
 
   lazy val apnsPort: Int = availablePort
 
-  override lazy val additionalConfig: String = grpcConfig +
+  override lazy val additionalConfig: String = notificationGrpcConfig +
     s"""
        |notification.push.mock.apns.port = $apnsPort
        |""".stripMargin
