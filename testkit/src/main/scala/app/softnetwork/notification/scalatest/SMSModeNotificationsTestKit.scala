@@ -41,7 +41,7 @@ trait SMSModeNotificationsTestKit
         override def serverPort: Int = smsPort
 
         override def config: Config = internalConfig
-      }.initMockServer()
+      }.init()
     )
   }
 

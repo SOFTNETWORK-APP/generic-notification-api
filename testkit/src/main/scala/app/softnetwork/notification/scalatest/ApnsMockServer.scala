@@ -1,6 +1,7 @@
 package app.softnetwork.notification.scalatest
 
 import akka.Done
+import app.softnetwork.api.server.scalatest.MockServer
 import app.softnetwork.notification.config.{ApnsConfig, InternalConfig, PushSettings}
 import com.eatthepath.pushy.apns.server.{
   AcceptAllPushNotificationHandlerFactory,
@@ -13,7 +14,7 @@ import scala.compat.java8.FutureConverters.toScala
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-trait ApnsMockServer extends PushSettings with NotificationMockServer {
+trait ApnsMockServer extends PushSettings with MockServer {
   _: InternalConfig =>
 
   override val name: String = "apns"

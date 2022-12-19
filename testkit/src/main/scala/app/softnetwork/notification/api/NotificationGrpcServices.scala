@@ -2,20 +2,15 @@ package app.softnetwork.notification.api
 
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import app.softnetwork.api.server.GrpcServices
+import app.softnetwork.api.server.scalatest.ServerTestKit
 import app.softnetwork.notification.launch.NotificationGuardian
 import app.softnetwork.notification.model.Notification
-import app.softnetwork.schedule.api.SchedulerServiceApiHandler
 import app.softnetwork.scheduler.api.SchedulerGrpcServices
 
 import scala.concurrent.Future
 
 trait NotificationGrpcServices[T <: Notification] extends SchedulerGrpcServices {
-  _: NotificationGuardian[T] =>
-
-  def interface: String
-
-  def port: Int
+  _: NotificationGuardian[T] with ServerTestKit =>
 
   override def grpcServices
     : ActorSystem[_] => Seq[PartialFunction[HttpRequest, Future[HttpResponse]]] = system =>

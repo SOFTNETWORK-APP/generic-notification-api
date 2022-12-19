@@ -2,6 +2,7 @@ package app.softnetwork.notification.api
 
 import akka.actor.typed.ActorSystem
 import akka.grpc.GrpcClientSettings
+import app.softnetwork.api.server.client.{GrpcClient, GrpcClientFactory}
 import org.softnetwork.notification.model.{Mail, NotificationStatusResult, Push, SMS}
 
 import scala.concurrent.Future

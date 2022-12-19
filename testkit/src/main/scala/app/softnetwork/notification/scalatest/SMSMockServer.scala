@@ -2,6 +2,7 @@ package app.softnetwork.notification.scalatest
 
 import akka.Done
 import akka.actor.typed.ActorSystem
+import app.softnetwork.api.server.scalatest.MockServer
 import app.softnetwork.notification.config.{InternalConfig, SMSSettings}
 import app.softnetwork.persistence.generateUUID
 import com.typesafe.scalalogging.StrictLogging
@@ -14,11 +15,7 @@ import org.rapidoid.net.impl.RapidoidHelper
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-trait SMSMockServer
-    extends AbstractHttpServer
-    with NotificationMockServer
-    with SMSSettings
-    with StrictLogging {
+trait SMSMockServer extends AbstractHttpServer with MockServer with SMSSettings with StrictLogging {
   _: InternalConfig =>
 
   val name: String = "sms"

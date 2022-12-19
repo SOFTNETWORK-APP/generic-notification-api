@@ -50,7 +50,7 @@ trait AllNotificationsTestKit
         override def serverPort: Int = apnsPort
 
         override lazy val config: Config = internalConfig
-      }.initMockServer()
+      }.init()
     )
     assert(
       new SMSMockServer with InternalConfig {
@@ -59,7 +59,7 @@ trait AllNotificationsTestKit
         override def serverPort: Int = smsPort
 
         override def config: Config = internalConfig
-      }.initMockServer()
+      }.init()
     )
     assert(
       new SmtpMockServer with InternalConfig {
@@ -68,7 +68,7 @@ trait AllNotificationsTestKit
         override def serverPort: Int = smtpPort
 
         override lazy val config: Config = internalConfig
-      }.initMockServer()
+      }.init()
     )
   }
 

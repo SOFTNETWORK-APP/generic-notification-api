@@ -42,7 +42,7 @@ trait ApnsNotificationsTestKit
         override def serverPort: Int = apnsPort
 
         override lazy val config: Config = internalConfig
-      }.initMockServer()
+      }.init()
     )
   }
 

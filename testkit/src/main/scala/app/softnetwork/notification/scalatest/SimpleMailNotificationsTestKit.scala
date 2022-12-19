@@ -42,7 +42,7 @@ trait SimpleMailNotificationsTestKit
         override def serverPort: Int = smtpPort
 
         override lazy val config: Config = internalConfig
-      }.initMockServer()
+      }.init()
     )
   }
 

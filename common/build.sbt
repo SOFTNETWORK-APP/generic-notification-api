@@ -10,7 +10,7 @@ libraryDependencies ++= Seq(
   "app.softnetwork.persistence" %% "persistence-kv" % Versions.genericPersistence,
   "app.softnetwork.scheduler" %% "scheduler-common" % Versions.scheduler,
   "app.softnetwork.scheduler" %% "scheduler-common" % Versions.scheduler % "protobuf",
-  "app.softnetwork.api" %% "generic-server-api" % Versions.genericPersistence,
+  "app.softnetwork.api" %% "generic-server-api" % Versions.server,
   "app.softnetwork.protobuf" %% "scalapb-extensions" % "0.1.5",
   "org.apache.commons" % "commons-email" % "1.5",
   "com.google.auth" % "google-auth-library-oauth2-http" % "0.20.0" excludeAll guavaExclusion,
