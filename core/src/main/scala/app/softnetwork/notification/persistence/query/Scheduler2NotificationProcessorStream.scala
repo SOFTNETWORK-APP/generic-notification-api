@@ -15,8 +15,6 @@ trait Scheduler2NotificationProcessorStream
     extends Scheduler2EntityProcessorStream[NotificationCommand, NotificationCommandResult] {
   _: JournalProvider with NotificationHandler =>
 
-  protected val forTests = false
-
   override protected def triggerSchedule(schedule: Schedule): Future[Boolean] = {
     !?(TriggerSchedule4Notification(schedule)) map {
       case result: Schedule4NotificationTriggered =>

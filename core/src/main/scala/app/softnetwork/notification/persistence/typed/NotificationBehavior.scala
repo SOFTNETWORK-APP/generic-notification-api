@@ -102,7 +102,8 @@ trait NotificationBehavior[T <: Notification]
                         notificationTimerKey,
                         delay,
                         Some(true),
-                        Some(now())
+                        Some(now()),
+                        None
                       )
                     )
                   )
@@ -239,7 +240,15 @@ trait NotificationBehavior[T <: Notification]
     ) {
       ScheduleForNotificationAdded(
         AddSchedule(
-          Schedule(persistenceId, entityId, notificationTimerKey, delay, Some(true), Some(now()))
+          Schedule(
+            persistenceId,
+            entityId,
+            notificationTimerKey,
+            delay,
+            Some(true),
+            Some(now()),
+            None
+          )
         )
       )
     } else {

@@ -59,7 +59,7 @@ trait ApnsNotificationsTestKit
           with ApnsNotificationsHandler
           with InMemoryJournalProvider {
           override val tag: String = s"${ApnsNotificationsBehavior.persistenceId}-scheduler"
-          override protected val forTests: Boolean = true
+          override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }
       )

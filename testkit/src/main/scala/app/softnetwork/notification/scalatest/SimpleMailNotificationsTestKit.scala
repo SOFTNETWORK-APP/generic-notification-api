@@ -61,7 +61,7 @@ trait SimpleMailNotificationsTestKit
           with SimpleMailNotificationsHandler
           with InMemoryJournalProvider {
           override val tag: String = s"${SimpleMailNotificationsBehavior.persistenceId}-scheduler"
-          override protected val forTests: Boolean = true
+          override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }
       )

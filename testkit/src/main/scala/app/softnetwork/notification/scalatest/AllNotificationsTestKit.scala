@@ -86,7 +86,7 @@ trait AllNotificationsTestKit
           with AllNotificationsHandler
           with InMemoryJournalProvider {
           override val tag: String = s"${AllNotificationsBehavior.persistenceId}-scheduler"
-          override protected val forTests: Boolean = true
+          override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }
       )

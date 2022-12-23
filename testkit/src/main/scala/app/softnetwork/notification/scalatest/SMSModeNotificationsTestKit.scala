@@ -60,7 +60,7 @@ trait SMSModeNotificationsTestKit
           with SMSModeNotificationsHandler
           with InMemoryJournalProvider {
           override val tag: String = s"${SMSModeNotificationsBehavior.persistenceId}-scheduler"
-          override protected val forTests: Boolean = true
+          override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }
       )

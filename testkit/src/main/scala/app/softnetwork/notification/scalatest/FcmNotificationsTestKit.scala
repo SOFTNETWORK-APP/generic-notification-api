@@ -18,7 +18,7 @@ import app.softnetwork.notification.persistence.typed.{
 }
 import app.softnetwork.notification.spi.FcmMockProvider
 import app.softnetwork.persistence.query.InMemoryJournalProvider
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 import org.scalatest.Suite
 import org.softnetwork.notification.model.Push
 
@@ -40,7 +40,7 @@ trait FcmNotificationsTestKit extends NotificationGrpcServer[Push] with Notifica
           with FcmNotificationsHandler
           with InMemoryJournalProvider {
           override val tag: String = s"${FcmNotificationsBehavior.persistenceId}-scheduler"
-          override protected val forTests: Boolean = true
+          override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }
       )
