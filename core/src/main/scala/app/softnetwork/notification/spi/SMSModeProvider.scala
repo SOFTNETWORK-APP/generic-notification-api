@@ -5,7 +5,7 @@ import app.softnetwork.notification.config.{InternalConfig, SMSMode, SMSSettings
 import app.softnetwork.persistence.now
 import com.typesafe.scalalogging.StrictLogging
 import org.apache.commons.text.StringEscapeUtils
-import org.softnetwork.notification.model.{
+import app.softnetwork.notification.model.{
   NotificationAck,
   NotificationStatus,
   NotificationStatusResult,

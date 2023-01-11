@@ -6,7 +6,7 @@ import app.softnetwork.api.server.launch.HealthCheckApplication
 import app.softnetwork.notification.api.NotificationServiceApiHandler
 import app.softnetwork.notification.model.Notification
 import app.softnetwork.persistence.query.SchemaProvider
-import app.softnetwork.schedule.api.SchedulerServiceApiHandler
+import app.softnetwork.scheduler.api.SchedulerServiceApiHandler
 
 import scala.concurrent.Future
 

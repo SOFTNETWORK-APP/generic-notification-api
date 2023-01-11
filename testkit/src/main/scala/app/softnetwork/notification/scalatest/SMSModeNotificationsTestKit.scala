@@ -17,9 +17,10 @@ import app.softnetwork.notification.persistence.typed.{
   SMSModeNotificationsBehavior
 }
 import app.softnetwork.persistence.query.InMemoryJournalProvider
+import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
-import org.softnetwork.notification.model.SMS
+import app.softnetwork.notification.model.SMS
 
 trait SMSModeNotificationsTestKit
     extends NotificationGrpcServer[SMS]
@@ -59,7 +60,8 @@ trait SMSModeNotificationsTestKit
         new Scheduler2NotificationProcessorStream
           with SMSModeNotificationsHandler
           with InMemoryJournalProvider {
-          override val tag: String = s"${SMSModeNotificationsBehavior.persistenceId}-scheduler"
+          override val tag: String =
+            SchedulerSettings.tag(SMSModeNotificationsBehavior.persistenceId)
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }

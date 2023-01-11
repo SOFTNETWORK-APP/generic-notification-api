@@ -18,9 +18,10 @@ import app.softnetwork.notification.persistence.typed.{
 }
 import app.softnetwork.notification.spi.FcmMockAndApnsProvider
 import app.softnetwork.persistence.query.InMemoryJournalProvider
+import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
-import org.softnetwork.notification.model.Push
+import app.softnetwork.notification.model.Push
 
 trait FcmAndApnsNotificationsTestKit
     extends NotificationGrpcServer[Push]
@@ -62,7 +63,7 @@ trait FcmAndApnsNotificationsTestKit
           with FcmAndApnsNotificationsHandler
           with InMemoryJournalProvider {
           override val tag: String =
-            s"${FcmAndApnsNotificationsBehavior.persistenceId}-scheduler"
+            SchedulerSettings.tag(FcmAndApnsNotificationsBehavior.persistenceId)
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }

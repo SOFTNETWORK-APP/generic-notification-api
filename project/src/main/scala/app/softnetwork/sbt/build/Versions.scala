@@ -4,7 +4,7 @@ object Versions {
 
   val genericPersistence = "0.2.5.15"
 
-  val scheduler = "0.1.4"
+  val scheduler = "0.2.0"
 
   val server = "0.2.6.2"
 

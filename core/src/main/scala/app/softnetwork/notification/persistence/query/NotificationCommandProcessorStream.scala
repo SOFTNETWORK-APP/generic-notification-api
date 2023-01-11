@@ -6,18 +6,12 @@ import akka.persistence.typed.PersistenceId
 import app.softnetwork.notification.config.NotificationSettings
 import app.softnetwork.notification.handlers.NotificationHandler
 import app.softnetwork.notification.message.{
-  AddNotification,
   NotificationAdded,
-  NotificationRemoved,
-  RemoveNotification
+  NotificationCommandEvent,
+  NotificationRemoved
 }
 import app.softnetwork.persistence.query.{EventProcessorStream, JournalProvider}
-import org.softnetwork.notification.message.{
-  AddNotificationCommandEvent,
-  NotificationCommandEvent,
-  RemoveNotificationCommandEvent,
-  WrapNotificationCommandEvent
-}
+import app.softnetwork.notification.message.NotificationCommandEvent
 
 import scala.concurrent.Future
 
@@ -49,30 +43,27 @@ trait NotificationCommandProcessorStream extends EventProcessorStream[Notificati
     sequenceNr: Long
   ): Future[Done] = {
     event match {
-      case evt: WrapNotificationCommandEvent => processEvent(evt.event, persistenceId, sequenceNr)
-      case evt: AddNotificationCommandEvent =>
-        val command = AddNotification(evt.notification)
-        !?(command) map {
-          case _: NotificationAdded =>
-            if (forTests) system.eventStream.tell(Publish(event))
-            Done
-          case other =>
+      case evt: NotificationCommandEvent =>
+        evt.command match {
+          case Some(command) =>
+            !?(command) map {
+              case _: NotificationAdded =>
+                if (forTests) system.eventStream.tell(Publish(event))
+                Done
+              case NotificationRemoved =>
+                if (forTests) system.eventStream.tell(Publish(event))
+                Done
+              case other =>
+                logger.error(
+                  s"$platformEventProcessorId - command $command returns unexpectedly ${other.getClass}"
+                )
+                Done
+            }
+          case _ =>
             logger.error(
-              s"$platformEventProcessorId - command $command returns unexpectedly ${other.getClass}"
+              s"$platformEventProcessorId - no command"
             )
-            Done
-        }
-      case evt: RemoveNotificationCommandEvent =>
-        val command = RemoveNotification(evt.uuid)
-        !?(command) map {
-          case NotificationRemoved =>
-            if (forTests) system.eventStream.tell(Publish(event))
-            Done
-          case other =>
-            logger.error(
-              s"$platformEventProcessorId - command $command returns unexpectedly ${other.getClass}"
-            )
-            Done
+            Future.successful(Done)
         }
       case other =>
         logger.warn(s"$platformEventProcessorId does not support event [${other.getClass}]")

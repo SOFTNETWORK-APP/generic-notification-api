@@ -12,7 +12,7 @@ import app.softnetwork.notification.model.Notification
 import app.softnetwork.scheduler.scalatest.SchedulerTestKit
 import com.typesafe.config.Config
 import org.scalatest.Suite
-import org.softnetwork.notification.model.{BasicDevice, From, Mail, Platform, Push, SMS}
+import app.softnetwork.notification.model.{BasicDevice, From, Mail, Platform, Push, SMS}
 
 import java.net.ServerSocket
 
@@ -62,7 +62,7 @@ trait NotificationTestKit[T <: Notification]
       .withSubject(subject)
       .withMessage(message)
       .withDevices(devices)
-      .withApp("mock")
+      .withApplication("mock")
 
   val iosDevice: BasicDevice = BasicDevice(generateRandomDeviceToken, Platform.IOS)
 

@@ -11,7 +11,7 @@ import app.softnetwork.notification.spi.{
   IosProvider,
   PushProvider
 }
-import org.softnetwork.notification.model.{NotificationAck, Push}
+import app.softnetwork.notification.model.{NotificationAck, Push}
 
 trait PushNotificationsBehavior extends NotificationBehavior[Push] { _: PushProvider =>
   override def send(notification: Push)(implicit system: ActorSystem[_]): NotificationAck =

@@ -22,15 +22,15 @@ service NotificationServiceApi {
 }
 
 message AddMailRequest{
-    org.softnetwork.notification.model.Mail mail = 1;
+    app.softnetwork.notification.model.Mail mail = 1;
 }
 
 message AddSMSRequest{
-    org.softnetwork.notification.model.SMS sms = 1;
+    app.softnetwork.notification.model.SMS sms = 1;
 }
 
 message AddPushRequest{
-    org.softnetwork.notification.model.Push push = 1;
+    app.softnetwork.notification.model.Push push = 1;
 }
 
 message AddNotificationResponse{
@@ -46,19 +46,19 @@ message RemoveNotificationResponse{
 }
 
 message SendMailRequest{
-    org.softnetwork.notification.model.Mail mail = 1;
+    app.softnetwork.notification.model.Mail mail = 1;
 }
 
 message SendSMSRequest{
-    org.softnetwork.notification.model.SMS sms = 1;
+    app.softnetwork.notification.model.SMS sms = 1;
 }
 
 message SendPushRequest{
-    org.softnetwork.notification.model.Push push = 1;
+    app.softnetwork.notification.model.Push push = 1;
 }
 
 message SendNotificationResponse{
-    repeated org.softnetwork.notification.model.NotificationStatusResult results = 1;
+    repeated app.softnetwork.notification.model.NotificationStatusResult results = 1;
 }
 
 message GetNotificationStatusRequest{
@@ -66,5 +66,5 @@ message GetNotificationStatusRequest{
 }
 
 message GetNotificationStatusResponse{
-    repeated org.softnetwork.notification.model.NotificationStatusResult results = 1;
+    repeated app.softnetwork.notification.model.NotificationStatusResult results = 1;
 }

@@ -13,7 +13,7 @@ import com.google.firebase.messaging.{
 }
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
 import com.typesafe.scalalogging.StrictLogging
-import org.softnetwork.notification.model.{
+import app.softnetwork.notification.model.{
   NotificationStatus,
   NotificationStatusResult,
   PushPayload
@@ -30,8 +30,8 @@ trait FcmProvider extends AndroidProvider with PushSettings with StrictLogging {
     system: ActorSystem[_]
   ): Seq[NotificationStatusResult] = {
     val config =
-      AppConfigs.get(payload.app).map(_.fcm).getOrElse(DefaultConfig.fcm)
-    val firebaseMessaging: FirebaseMessaging = messaging(payload.app, config)
+      AppConfigs.get(payload.application).map(_.fcm).getOrElse(DefaultConfig.fcm)
+    val firebaseMessaging: FirebaseMessaging = messaging(payload.application, config)
     fcm(config, firebaseMessaging, payload, devices, Seq.empty)
   }
 
@@ -91,7 +91,7 @@ trait FcmProvider extends AndroidProvider with PushSettings with StrictLogging {
 
       logger.info(
         s"""FCM -> about to send notification ${payload.title}
-           |\tfor ${payload.app}
+           |\tfor ${payload.application}
            |\tvia url ${config.databaseUrl}
            |\tto token(s) [${tokens.mkString(",")}]
            |\tusing credentials ${config.googleCredentials.getOrElse(

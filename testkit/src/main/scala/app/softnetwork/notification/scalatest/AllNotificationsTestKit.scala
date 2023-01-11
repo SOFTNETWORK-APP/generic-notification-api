@@ -19,6 +19,7 @@ import app.softnetwork.notification.persistence.typed.{
 }
 import app.softnetwork.notification.spi.FcmMockProvider
 import app.softnetwork.persistence.query.InMemoryJournalProvider
+import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
 
@@ -85,7 +86,7 @@ trait AllNotificationsTestKit
         new Scheduler2NotificationProcessorStream
           with AllNotificationsHandler
           with InMemoryJournalProvider {
-          override val tag: String = s"${AllNotificationsBehavior.persistenceId}-scheduler"
+          override val tag: String = SchedulerSettings.tag(AllNotificationsBehavior.persistenceId)
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }

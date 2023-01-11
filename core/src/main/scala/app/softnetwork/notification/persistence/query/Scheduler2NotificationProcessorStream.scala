@@ -1,7 +1,7 @@
 package app.softnetwork.notification.persistence.query
 
 import akka.actor.typed.eventstream.EventStream.Publish
-import org.softnetwork.akka.model.Schedule
+import app.softnetwork.scheduler.model.Schedule
 import app.softnetwork.persistence.query.JournalProvider
 import app.softnetwork.scheduler.persistence.query.Scheduler2EntityProcessorStream
 import app.softnetwork.notification.handlers.NotificationHandler

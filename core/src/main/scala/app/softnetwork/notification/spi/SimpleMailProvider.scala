@@ -7,8 +7,8 @@ import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.config.{InternalConfig, MailConfig, MailSettings}
 import com.typesafe.scalalogging.StrictLogging
 import org.apache.commons.mail._
-import org.softnetwork.notification.model.MailType._
-import org.softnetwork.notification.model._
+import app.softnetwork.notification.model.MailType._
+import app.softnetwork.notification.model._
 
 import java.util.Date
 import javax.activation.FileDataSource

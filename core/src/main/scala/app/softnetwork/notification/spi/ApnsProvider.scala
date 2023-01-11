@@ -12,7 +12,7 @@ import com.eatthepath.pushy.apns.util.{
   SimpleApnsPushNotification
 }
 import com.typesafe.scalalogging.StrictLogging
-import org.softnetwork.notification.model.{
+import app.softnetwork.notification.model.{
   NotificationStatus,
   NotificationStatusResult,
   PushPayload
@@ -31,17 +31,17 @@ trait ApnsProvider extends IosProvider with PushSettings with Completion with St
     system: ActorSystem[_]
   ): Seq[NotificationStatusResult] = {
     val config: ApnsConfig =
-      configs.get(payload.app) match {
+      configs.get(payload.application) match {
         case Some(config) => config
         case _ =>
-          val apnsConfig: ApnsConfig = AppConfigs.get(payload.app).map(_.apns) match {
+          val apnsConfig: ApnsConfig = AppConfigs.get(payload.application).map(_.apns) match {
             case Some(apnsConfig) => apnsConfig
             case _                => DefaultConfig.apns
           }
-          configs = configs + (payload.app -> apnsConfig)
+          configs = configs + (payload.application -> apnsConfig)
           apnsConfig
       }
-    apns(config, client(payload.app, config), payload, devices, Seq.empty)
+    apns(config, client(payload.application, config), payload, devices, Seq.empty)
   }
 
   private[this] var clients: Map[String, ApnsClient] = Map.empty
@@ -121,7 +121,7 @@ trait ApnsProvider extends IosProvider with PushSettings with Completion with St
 
       logger.info(
         s"""APNS -> about to send notification ${payload.title}
-           |\tfor ${payload.app}
+           |\tfor ${payload.application}
            |\tvia topic ${config.topic}
            |\tto token(s) [${tos.mkString(",")}]
            |\tusing keystore ${config.keystore.path}""".stripMargin

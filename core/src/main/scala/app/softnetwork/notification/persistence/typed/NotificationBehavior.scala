@@ -6,25 +6,33 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.persistence.typed.scaladsl.Effect
 import app.softnetwork.notification.config.NotificationSettings
 import org.slf4j.Logger
-import org.softnetwork.akka.message.SchedulerEvents.SchedulerEventWithCommand
+import app.softnetwork.scheduler.message.SchedulerEvents.{
+  ExternalEntityToSchedulerEvent,
+  ExternalSchedulerEvent,
+  SchedulerEventWithCommand
+}
 import app.softnetwork.scheduler.message.{AddSchedule, RemoveSchedule}
-import org.softnetwork.akka.model.Schedule
+import app.softnetwork.scheduler.model.Schedule
 import app.softnetwork.persistence.now
 import app.softnetwork.persistence.typed._
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.model._
 import app.softnetwork.notification.spi.NotificationProvider
-import org.softnetwork.notification.message._
-import org.softnetwork.notification.model._
+import app.softnetwork.notification.model._
 import app.softnetwork.scheduler.config.SchedulerSettings
-import org.softnetwork.notification.model.NotificationStatus._
+import app.softnetwork.notification.model.NotificationStatus._
 
 import scala.language.{implicitConversions, postfixOps}
 
 /** Created by smanciot on 13/04/2020.
   */
 trait NotificationBehavior[T <: Notification]
-    extends EntityBehavior[NotificationCommand, T, NotificationEvent, NotificationCommandResult]
+    extends EntityBehavior[
+      NotificationCommand,
+      T,
+      ExternalSchedulerEvent,
+      NotificationCommandResult
+    ]
     with NotificationProvider {
 
   override type N = T
@@ -47,7 +55,7 @@ trait NotificationBehavior[T <: Notification]
     * @return
     *   event tags
     */
-  override protected def tagEvent(entityId: String, event: NotificationEvent): Set[String] = {
+  override protected def tagEvent(entityId: String, event: ExternalSchedulerEvent): Set[String] = {
     event match {
       case _: SchedulerEventWithCommand =>
         Set(
@@ -75,7 +83,9 @@ trait NotificationBehavior[T <: Notification]
     command: NotificationCommand,
     replyTo: Option[ActorRef[NotificationCommandResult]],
     timers: TimerScheduler[NotificationCommand]
-  )(implicit context: ActorContext[NotificationCommand]): Effect[NotificationEvent, Option[T]] = {
+  )(implicit
+    context: ActorContext[NotificationCommand]
+  ): Effect[ExternalSchedulerEvent, Option[T]] = {
     implicit val log: Logger = context.log
     implicit val system: ActorSystem[Nothing] = context.system
 
@@ -84,26 +94,28 @@ trait NotificationBehavior[T <: Notification]
       case cmd: AddNotification[T] =>
         import cmd._
         (notification match {
-          case n: Mail => Some(MailRecordedEvent(n))
-          case n: SMS  => Some(SMSRecordedEvent(n))
-          case n: Push => Some(PushRecordedEvent(n))
+          case n: Mail => Some(NotificationRecordedEvent.Wrapped.Mail(n))
+          case n: SMS  => Some(NotificationRecordedEvent.Wrapped.Sms(n))
+          case n: Push => Some(NotificationRecordedEvent.Wrapped.Push(n))
           case _       => None
         }) match {
           case Some(event) =>
             Effect
               .persist(
                 List(
-                  event,
-                  ScheduleForNotificationAdded(
-                    AddSchedule(
-                      Schedule(
-                        persistenceId,
-                        entityId,
-                        notificationTimerKey,
-                        delay,
-                        Some(true),
-                        Some(now()),
-                        None
+                  NotificationRecordedEvent(event),
+                  ExternalEntityToSchedulerEvent(
+                    ExternalEntityToSchedulerEvent.Wrapped.AddSchedule(
+                      AddSchedule(
+                        Schedule(
+                          persistenceId,
+                          entityId,
+                          notificationTimerKey,
+                          delay,
+                          Some(true),
+                          Some(now()),
+                          None
+                        )
                       )
                     )
                   )
@@ -120,11 +132,13 @@ trait NotificationBehavior[T <: Notification]
               NotificationRemovedEvent(
                 entityId
               ),
-              ScheduleForNotificationRemoved(
-                RemoveSchedule(
-                  persistenceId,
-                  entityId,
-                  notificationTimerKey
+              ExternalEntityToSchedulerEvent(
+                ExternalEntityToSchedulerEvent.Wrapped.RemoveSchedule(
+                  RemoveSchedule(
+                    persistenceId,
+                    entityId,
+                    notificationTimerKey
+                  )
                 )
               )
             )
@@ -180,11 +194,13 @@ trait NotificationBehavior[T <: Notification]
           case _ => // should never be the case
             Effect
               .persist(
-                ScheduleForNotificationRemoved(
-                  RemoveSchedule(
-                    persistenceId,
-                    entityId,
-                    notificationTimerKey
+                ExternalEntityToSchedulerEvent(
+                  ExternalEntityToSchedulerEvent.Wrapped.RemoveSchedule(
+                    RemoveSchedule(
+                      persistenceId,
+                      entityId,
+                      notificationTimerKey
+                    )
                   )
                 )
               )
@@ -202,20 +218,24 @@ trait NotificationBehavior[T <: Notification]
     * @return
     *   new state
     */
-  override def handleEvent(state: Option[T], event: NotificationEvent)(implicit
+  override def handleEvent(state: Option[T], event: ExternalSchedulerEvent)(implicit
     context: ActorContext[_]
   ): Option[T] = {
     import context._
     event match {
-      case evt: NotificationRecordedEvent[T] =>
-        log.info(
-          "Recording {}#{} in {} status with {} acknowledgment",
-          persistenceId,
-          evt.uuid,
-          evt.notification.status.name,
-          evt.notification.results
-        )
-        Some(evt.notification)
+      case evt: NotificationRecordedEvent =>
+        evt.notification match {
+          case Some(notification) =>
+            log.info(
+              "Recording {}#{} in {} status with {} acknowledgment",
+              persistenceId,
+              notification.uuid,
+              notification.status.name,
+              notification.results
+            )
+            Some(notification.asInstanceOf[T])
+          case _ => None
+        }
 
       case evt: NotificationRemovedEvent =>
         log.info(s"Removing $persistenceId#${evt.uuid}")
@@ -225,38 +245,47 @@ trait NotificationBehavior[T <: Notification]
     }
   }
 
-  private[this] def scheduledNotificationEvent(entityId: String, notification: T) = {
+  private[this] def scheduledNotificationEvent(
+    entityId: String,
+    notification: T
+  ): ExternalEntityToSchedulerEvent = {
     import notification._
     if (status.isSent || status.isDelivered) { // the notification has been sent/delivered - the schedule should be removed
-      ScheduleForNotificationRemoved(
-        RemoveSchedule(
-          persistenceId,
-          entityId,
-          notificationTimerKey
+      ExternalEntityToSchedulerEvent(
+        ExternalEntityToSchedulerEvent.Wrapped.RemoveSchedule(
+          RemoveSchedule(
+            persistenceId,
+            entityId,
+            notificationTimerKey
+          )
         )
       )
     } else if (
       maxTries > 0 && (nbTries < maxTries || (nbTries == maxTries && (status.isPending || status.isUnknownNotificationStatus)))
     ) {
-      ScheduleForNotificationAdded(
-        AddSchedule(
-          Schedule(
-            persistenceId,
-            entityId,
-            notificationTimerKey,
-            delay,
-            Some(true),
-            Some(now()),
-            None
+      ExternalEntityToSchedulerEvent(
+        ExternalEntityToSchedulerEvent.Wrapped.AddSchedule(
+          AddSchedule(
+            Schedule(
+              persistenceId,
+              entityId,
+              notificationTimerKey,
+              delay,
+              Some(true),
+              Some(now()),
+              None
+            )
           )
         )
       )
     } else {
-      ScheduleForNotificationRemoved(
-        RemoveSchedule(
-          persistenceId,
-          entityId,
-          notificationTimerKey
+      ExternalEntityToSchedulerEvent(
+        ExternalEntityToSchedulerEvent.Wrapped.RemoveSchedule(
+          RemoveSchedule(
+            persistenceId,
+            entityId,
+            notificationTimerKey
+          )
         )
       )
     }
@@ -266,7 +295,7 @@ trait NotificationBehavior[T <: Notification]
     _uuid: String,
     notification: T,
     replyTo: Option[ActorRef[NotificationCommandResult]]
-  )(implicit log: Logger, system: ActorSystem[_]): Effect[NotificationEvent, Option[T]] = {
+  )(implicit log: Logger, system: ActorSystem[_]): Effect[ExternalSchedulerEvent, Option[T]] = {
     import notification._
     val notificationAck: NotificationAck = ackUuid match {
       case Some(_) =>
@@ -288,21 +317,21 @@ trait NotificationBehavior[T <: Notification]
     (notification match {
       case n: Mail =>
         Some(
-          MailRecordedEvent(n.copyWithAck(notificationAck).asInstanceOf[Mail])
+          NotificationRecordedEvent.Wrapped.Mail(n.copyWithAck(notificationAck).asInstanceOf[Mail])
         )
       case n: SMS =>
         Some(
-          SMSRecordedEvent(n.copyWithAck(notificationAck).asInstanceOf[SMS])
+          NotificationRecordedEvent.Wrapped.Sms(n.copyWithAck(notificationAck).asInstanceOf[SMS])
         )
       case n: Push =>
         Some(
-          PushRecordedEvent(n.copyWithAck(notificationAck).asInstanceOf[Push])
+          NotificationRecordedEvent.Wrapped.Push(n.copyWithAck(notificationAck).asInstanceOf[Push])
         )
       case _ => None
     }) match {
       case Some(event) =>
         Effect
-          .persist(event)
+          .persist(NotificationRecordedEvent(event))
           .thenRun(_ =>
             {
               notificationAck.status match {
@@ -326,7 +355,7 @@ trait NotificationBehavior[T <: Notification]
   )(implicit
     log: Logger,
     system: ActorSystem[_]
-  ): Effect[NotificationEvent, Option[T]] = {
+  ): Effect[ExternalSchedulerEvent, Option[T]] = {
     import notification._
     val maybeAckWithNumberOfRetries: Option[(NotificationAck, Int)] = status match {
       case Sent | Delivered => None
@@ -383,24 +412,30 @@ trait NotificationBehavior[T <: Notification]
         case _ => notification
       }
 
-    val event: Option[NotificationEvent] =
+    val event: Option[NotificationRecordedEvent] =
       notification match {
         case _: Mail =>
           Some(
-            MailRecordedEvent(updatedNotification.asInstanceOf[Mail])
+            NotificationRecordedEvent(
+              NotificationRecordedEvent.Wrapped.Mail(updatedNotification.asInstanceOf[Mail])
+            )
           )
         case _: SMS =>
           Some(
-            SMSRecordedEvent(updatedNotification.asInstanceOf[SMS])
+            NotificationRecordedEvent(
+              NotificationRecordedEvent.Wrapped.Sms(updatedNotification.asInstanceOf[SMS])
+            )
           )
         case _: Push =>
           Some(
-            PushRecordedEvent(updatedNotification.asInstanceOf[Push])
+            NotificationRecordedEvent(
+              NotificationRecordedEvent.Wrapped.Push(updatedNotification.asInstanceOf[Push])
+            )
           )
         case _ => None
       }
 
-    val events: List[NotificationEvent] =
+    val events: List[ExternalSchedulerEvent] =
       List(event).flatten :+ scheduledNotificationEvent(
         entityId,
         updatedNotification.asInstanceOf[T]

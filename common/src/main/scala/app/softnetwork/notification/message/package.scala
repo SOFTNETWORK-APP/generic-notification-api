@@ -1,9 +1,9 @@
 package app.softnetwork.notification
 
 import app.softnetwork.persistence.message._
-import org.softnetwork.akka.model.Schedule
+import app.softnetwork.scheduler.model.Schedule
 import app.softnetwork.notification.model.Notification
-import org.softnetwork.notification.model.NotificationStatusResult
+import app.softnetwork.notification.model.NotificationStatusResult
 
 /** Created by smanciot on 15/04/2020.
   */
@@ -89,4 +89,30 @@ package object message {
 
   case object Schedule4NotificationNotTriggered
       extends NotificationErrorMessage("Schedule4NotificationNotTriggered")
+
+  trait NotificationRecordedEventDecorator { _: NotificationRecordedEvent =>
+    def notification: Option[Notification] =
+      wrapped match {
+        case r: NotificationRecordedEvent.Wrapped.Mail => Some(r.value)
+        case r: NotificationRecordedEvent.Wrapped.Sms  => Some(r.value)
+        case r: NotificationRecordedEvent.Wrapped.Push => Some(r.value)
+        case _                                         => None
+      }
+  }
+
+  trait ExternalEntityToNotificationEventDecorator extends NotificationCommandEvent {
+    _: ExternalEntityToNotificationEvent =>
+    override def command: Option[NotificationCommand] =
+      wrapped match {
+        case r: ExternalEntityToNotificationEvent.Wrapped.AddMail =>
+          Some(AddNotification(r.value.notification))
+        case r: ExternalEntityToNotificationEvent.Wrapped.AddSMS =>
+          Some(AddNotification(r.value.notification))
+        case r: ExternalEntityToNotificationEvent.Wrapped.AddPush =>
+          Some(AddNotification(r.value.notification))
+        case r: ExternalEntityToNotificationEvent.Wrapped.RemoveNotification =>
+          Some(RemoveNotification(r.value.uuid))
+        case _ => None
+      }
+  }
 }
