@@ -3,7 +3,7 @@ package app.softnetwork.notification.handlers
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.ApnsNotificationsTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.softnetwork.notification.model.NotificationStatus
+import app.softnetwork.notification.model.NotificationStatus
 
 /** Created by smanciot on 07/12/2022.
   */

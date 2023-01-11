@@ -2,44 +2,32 @@ syntax = "proto2";
 
 import "scalapb/scalapb.proto";
 import "model/notifications.proto";
-import "message/schedule.proto";
 
-package org.softnetwork.notification.message;
+package app.softnetwork.notification.message;
 
 option (scalapb.options) = {
     single_file: true
     flat_package: true
     import: "app.softnetwork.persistence.message._"
-    import: "org.softnetwork.akka.message.SchedulerEvents._"
     import: "app.softnetwork.persistence.model._"
-    import: "app.softnetwork.notification.message._"
+    import: "app.softnetwork.scheduler.message.SchedulerEvents._"
     import: "app.softnetwork.notification.model._"
-    import: "org.softnetwork.notification.model._"
-    preamble: "sealed trait NotificationEvent extends Event{def uuid: String}"
-    preamble: "sealed trait NotificationRecordedEvent[T<:Notification] extends NotificationEvent{def notification: T; val uuid = notification.uuid}"
-    preamble: "sealed trait NotificationToSchedulerEvent extends SchedulerEventWithCommand with NotificationEvent with Entity {val uuid = ALL_KEY}"
-    preamble: "trait NotificationCommandEvent extends NotificationEvent"
-    preamble: "trait AddNotificationCommandEvent extends NotificationCommandEvent {def notification: Notification; val uuid = notification.uuid}"
-    preamble: "trait WrapNotificationCommandEvent extends NotificationCommandEvent {def event: NotificationCommandEvent; lazy val uuid = event.uuid}"
+    preamble: "sealed trait NotificationEvent extends ExternalSchedulerEvent"
+    preamble: "trait ExternalNotificationEvent extends NotificationEvent"
+    preamble: "trait NotificationCommandEvent extends ExternalNotificationEvent {def command: Option[NotificationCommand]}"
+    preamble: "trait AddNotificationCommandEvent extends ExternalNotificationEvent {def notification: Notification}"
     preserve_unknown_fields: false
 };
 
-message MailRecordedEvent{
+message NotificationRecordedEvent {
     option (scalapb.message).extends = "ProtobufEvent";
-    option (scalapb.message).extends = "NotificationRecordedEvent[Mail]";
-    required org.softnetwork.notification.model.Mail notification = 1;
-}
-
-message SMSRecordedEvent{
-    option (scalapb.message).extends = "ProtobufEvent";
-    option (scalapb.message).extends = "NotificationRecordedEvent[SMS]";
-    required org.softnetwork.notification.model.SMS notification = 1;
-}
-
-message PushRecordedEvent{
-    option (scalapb.message).extends = "ProtobufEvent";
-    option (scalapb.message).extends = "NotificationRecordedEvent[Push]";
-    required org.softnetwork.notification.model.Push notification = 1;
+    option (scalapb.message).extends = "NotificationEvent";
+    option (scalapb.message).extends = "NotificationRecordedEventDecorator";
+    oneof wrapped {
+        app.softnetwork.notification.model.Mail mail = 1;
+        app.softnetwork.notification.model.SMS sms = 2;
+        app.softnetwork.notification.model.Push push = 3;
+    }
 }
 
 message NotificationRemovedEvent{
@@ -48,38 +36,38 @@ message NotificationRemovedEvent{
     required string uuid = 1;
 }
 
-message ScheduleForNotificationAdded{
+message ExternalEntityToNotificationEvent{
     option (scalapb.message).extends = "ProtobufEvent";
-    option (scalapb.message).extends = "NotificationToSchedulerEvent";
-    required app.softnetwork.scheduler.message.AddSchedule command = 1;
-}
-
-message ScheduleForNotificationRemoved{
-    option (scalapb.message).extends = "ProtobufEvent";
-    option (scalapb.message).extends = "NotificationToSchedulerEvent";
-    required app.softnetwork.scheduler.message.RemoveSchedule command = 1;
+    option (scalapb.message).extends = "NotificationEvent";
+    option (scalapb.message).extends = "ExternalEntityToNotificationEventDecorator";
+    oneof wrapped {
+        app.softnetwork.notification.message.AddMailCommandEvent addMail = 1;
+        app.softnetwork.notification.message.AddSMSCommandEvent addSMS = 2;
+        app.softnetwork.notification.message.AddPushCommandEvent addPush = 3;
+        app.softnetwork.notification.message.RemoveNotificationCommandEvent removeNotification = 4;
+    }
 }
 
 message AddMailCommandEvent{
     option (scalapb.message).extends = "ProtobufEvent";
     option (scalapb.message).extends = "AddNotificationCommandEvent";
-    required org.softnetwork.notification.model.Mail notification = 1;
+    required app.softnetwork.notification.model.Mail notification = 1;
 }
 
 message AddSMSCommandEvent{
     option (scalapb.message).extends = "ProtobufEvent";
     option (scalapb.message).extends = "AddNotificationCommandEvent";
-    required org.softnetwork.notification.model.SMS notification = 1;
+    required app.softnetwork.notification.model.SMS notification = 1;
 }
 
 message AddPushCommandEvent{
     option (scalapb.message).extends = "ProtobufEvent";
     option (scalapb.message).extends = "AddNotificationCommandEvent";
-    required org.softnetwork.notification.model.Push notification = 1;
+    required app.softnetwork.notification.model.Push notification = 1;
 }
 
 message RemoveNotificationCommandEvent{
     option (scalapb.message).extends = "ProtobufEvent";
-    option (scalapb.message).extends = "NotificationCommandEvent";
+    option (scalapb.message).extends = "ExternalNotificationEvent";
     required string uuid = 1;
 }

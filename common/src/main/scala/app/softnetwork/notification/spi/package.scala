@@ -2,7 +2,7 @@ package app.softnetwork.notification
 
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.model.Notification
-import org.softnetwork.notification.model.{
+import app.softnetwork.notification.model.{
   Mail,
   NotificationAck,
   NotificationStatus,
@@ -52,8 +52,10 @@ package object spi {
 
   implicit def toPushPayload(notification: Push): PushPayload = {
     PushPayload.defaultInstance
-      .withApp(
-        notification.app.getOrElse(notification.from.alias.getOrElse(notification.from.value))
+      .withApplication(
+        notification.application.getOrElse(
+          notification.from.alias.getOrElse(notification.from.value)
+        )
       )
       .withTitle(notification.subject)
       .withBody(notification.message)

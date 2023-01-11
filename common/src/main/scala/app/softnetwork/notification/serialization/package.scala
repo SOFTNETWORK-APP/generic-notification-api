@@ -4,7 +4,7 @@ import app.softnetwork.protobuf.ScalaPBSerializers
 import ScalaPBSerializers.GeneratedEnumSerializer
 import app.softnetwork.serialization._
 import org.json4s.Formats
-import org.softnetwork.notification.model.{MailType, NotificationStatus, NotificationType, Platform}
+import app.softnetwork.notification.model.{MailType, NotificationStatus, NotificationType, Platform}
 
 import scala.language.implicitConversions
 

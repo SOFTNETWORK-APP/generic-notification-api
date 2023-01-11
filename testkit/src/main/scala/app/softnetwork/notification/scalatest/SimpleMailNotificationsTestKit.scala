@@ -17,9 +17,10 @@ import app.softnetwork.notification.persistence.typed.{
   SimpleMailNotificationsBehavior
 }
 import app.softnetwork.persistence.query.InMemoryJournalProvider
+import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
-import org.softnetwork.notification.model.Mail
+import app.softnetwork.notification.model.Mail
 
 trait SimpleMailNotificationsTestKit
     extends NotificationGrpcServer[Mail]
@@ -60,7 +61,8 @@ trait SimpleMailNotificationsTestKit
         new Scheduler2NotificationProcessorStream
           with SimpleMailNotificationsHandler
           with InMemoryJournalProvider {
-          override val tag: String = s"${SimpleMailNotificationsBehavior.persistenceId}-scheduler"
+          override val tag: String =
+            SchedulerSettings.tag(SimpleMailNotificationsBehavior.persistenceId)
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }

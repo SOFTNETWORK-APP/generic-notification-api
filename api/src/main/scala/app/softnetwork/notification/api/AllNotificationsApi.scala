@@ -14,6 +14,7 @@ import app.softnetwork.notification.persistence.typed.{
 }
 import app.softnetwork.persistence.jdbc.query.{JdbcJournalProvider, JdbcSchema, JdbcSchemaProvider}
 import app.softnetwork.scheduler.api.SchedulerApi
+import app.softnetwork.scheduler.config.SchedulerSettings
 
 trait AllNotificationsApi extends SchedulerApi with NotificationApplication[Notification] {
 
@@ -28,7 +29,7 @@ trait AllNotificationsApi extends SchedulerApi with NotificationApplication[Noti
           with AllNotificationsHandler
           with JdbcJournalProvider
           with JdbcSchemaProvider {
-          override val tag = s"${AllNotificationsBehavior.persistenceId}-scheduler"
+          override val tag: String = SchedulerSettings.tag(AllNotificationsBehavior.persistenceId)
           override lazy val schemaType: JdbcSchema.SchemaType = jdbcSchemaType
           override implicit val system: ActorSystem[_] = sys
         }

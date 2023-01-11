@@ -5,7 +5,7 @@ import "model/platform.proto";
 import "model/notificationType.proto";
 import "google/protobuf/timestamp.proto";
 
-package org.softnetwork.notification.model;
+package app.softnetwork.notification.model;
 
 option (scalapb.options) = {
     single_file: true
@@ -14,7 +14,6 @@ option (scalapb.options) = {
     import: "app.softnetwork.persistence.model._"
     import: "app.softnetwork.serialization._"
     import: "app.softnetwork.protobuf.ScalaPBTypeMappers._"
-    import: "app.softnetwork.notification.model._"
     preserve_unknown_fields: false
 };
 
@@ -133,12 +132,12 @@ message Push{
     required string id = 21 [default = ""];
     required int32 badge = 22 [default = 0];
     optional string sound = 23;
-    optional string app = 24;
+    optional string application = 24;
 }
 
 message PushPayload{
     option (scalapb.message).extends = "ProtobufDomainObject";
-    required string app = 1;
+    required string application = 1;
     required string title = 2;
     required string body = 3;
     required int32 badge = 4 [default = 0];

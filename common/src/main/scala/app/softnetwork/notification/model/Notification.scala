@@ -4,7 +4,7 @@ import java.util.Date
 
 import app.softnetwork.persistence.model.State
 
-import org.softnetwork.notification.model._
+import app.softnetwork.notification.model._
 
 import scala.language.reflectiveCalls
 

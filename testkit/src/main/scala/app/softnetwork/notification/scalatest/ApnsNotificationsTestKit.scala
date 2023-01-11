@@ -17,9 +17,10 @@ import app.softnetwork.notification.persistence.typed.{
   NotificationBehavior
 }
 import app.softnetwork.persistence.query.InMemoryJournalProvider
+import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
-import org.softnetwork.notification.model.Push
+import app.softnetwork.notification.model.Push
 
 trait ApnsNotificationsTestKit
     extends NotificationGrpcServer[Push]
@@ -58,7 +59,7 @@ trait ApnsNotificationsTestKit
         new Scheduler2NotificationProcessorStream
           with ApnsNotificationsHandler
           with InMemoryJournalProvider {
-          override val tag: String = s"${ApnsNotificationsBehavior.persistenceId}-scheduler"
+          override val tag: String = SchedulerSettings.tag(ApnsNotificationsBehavior.persistenceId)
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }

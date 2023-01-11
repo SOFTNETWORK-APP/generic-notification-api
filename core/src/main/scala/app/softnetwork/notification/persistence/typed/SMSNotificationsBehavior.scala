@@ -3,7 +3,7 @@ package app.softnetwork.notification.persistence.typed
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.config.{DefaultConfig, InternalConfig}
 import app.softnetwork.notification.spi.{SMSModeProvider, SMSProvider}
-import org.softnetwork.notification.model.{NotificationAck, SMS}
+import app.softnetwork.notification.model.{NotificationAck, SMS}
 
 trait SMSNotificationsBehavior extends NotificationBehavior[SMS] { _: SMSProvider =>
   override def persistenceId: String = "SMSNotification"
