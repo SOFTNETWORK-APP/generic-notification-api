@@ -81,5 +81,5 @@ trait NotificationTestKit[T <: Notification]
 
   override def eventProcessorStreams: ActorSystem[_] => Seq[EventProcessorStream[_]] = sys =>
     schedulerEventProcessorStreams(sys) ++
-      notificationEventProcessorStreams(sys)
+    notificationEventProcessorStreams(sys)
 }

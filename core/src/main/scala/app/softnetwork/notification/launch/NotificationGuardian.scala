@@ -3,7 +3,10 @@ package app.softnetwork.notification.launch
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.api.NotificationServer
 import app.softnetwork.notification.model.Notification
-import app.softnetwork.notification.persistence.query.{NotificationCommandProcessorStream, Scheduler2NotificationProcessorStream}
+import app.softnetwork.notification.persistence.query.{
+  NotificationCommandProcessorStream,
+  Scheduler2NotificationProcessorStream
+}
 import app.softnetwork.notification.persistence.typed.NotificationBehavior
 import app.softnetwork.persistence.launch.{PersistenceGuardian, PersistentEntity}
 import app.softnetwork.persistence.query.{EventProcessorStream, SchemaProvider}
@@ -11,7 +14,8 @@ import com.typesafe.scalalogging.StrictLogging
 
 import scala.language.implicitConversions
 
-trait NotificationGuardian[T <: Notification] extends PersistenceGuardian with StrictLogging { _: SchemaProvider =>
+trait NotificationGuardian[T <: Notification] extends PersistenceGuardian with StrictLogging {
+  _: SchemaProvider =>
 
   import app.softnetwork.persistence.launch.PersistenceGuardian._
 
@@ -22,7 +26,8 @@ trait NotificationGuardian[T <: Notification] extends PersistenceGuardian with S
 
   /** initialize all entities
     */
-  override def entities: ActorSystem[_] => Seq[PersistentEntity[_, _, _, _]] = sys => notificationEntities(sys)
+  override def entities: ActorSystem[_] => Seq[PersistentEntity[_, _, _, _]] = sys =>
+    notificationEntities(sys)
 
   def scheduler2NotificationProcessorStream
     : ActorSystem[_] => Option[Scheduler2NotificationProcessorStream] = _ => None
@@ -32,7 +37,7 @@ trait NotificationGuardian[T <: Notification] extends PersistenceGuardian with S
 
   def notificationEventProcessorStreams: ActorSystem[_] => Seq[EventProcessorStream[_]] = sys =>
     Seq(scheduler2NotificationProcessorStream(sys)).flatten ++
-      Seq(notificationCommandProcessorStream(sys)).flatten
+    Seq(notificationCommandProcessorStream(sys)).flatten
 
   /** initialize all event processor streams
     */
