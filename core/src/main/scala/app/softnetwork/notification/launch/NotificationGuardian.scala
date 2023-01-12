@@ -8,14 +8,14 @@ import app.softnetwork.notification.persistence.query.{
   Scheduler2NotificationProcessorStream
 }
 import app.softnetwork.notification.persistence.typed.NotificationBehavior
-import app.softnetwork.persistence.launch.PersistentEntity
+import app.softnetwork.persistence.launch.{PersistenceGuardian, PersistentEntity}
 import app.softnetwork.persistence.query.{EventProcessorStream, SchemaProvider}
-import app.softnetwork.scheduler.launch.SchedulerGuardian
-import app.softnetwork.scheduler.persistence.query.Scheduler2EntityProcessorStream
+import com.typesafe.scalalogging.StrictLogging
 
 import scala.language.implicitConversions
 
-trait NotificationGuardian[T <: Notification] extends SchedulerGuardian { _: SchemaProvider =>
+trait NotificationGuardian[T <: Notification] extends PersistenceGuardian with StrictLogging {
+  _: SchemaProvider =>
 
   import app.softnetwork.persistence.launch.PersistenceGuardian._
 
@@ -27,31 +27,21 @@ trait NotificationGuardian[T <: Notification] extends SchedulerGuardian { _: Sch
   /** initialize all entities
     */
   override def entities: ActorSystem[_] => Seq[PersistentEntity[_, _, _, _]] = sys =>
-    schedulerEntities(sys) ++ notificationEntities(sys)
+    notificationEntities(sys)
 
   def scheduler2NotificationProcessorStream
     : ActorSystem[_] => Option[Scheduler2NotificationProcessorStream] = _ => None
-
-  override def scheduler2EntityProcessorStreams
-    : ActorSystem[_] => Seq[Scheduler2EntityProcessorStream[_, _]] = sys =>
-    scheduler2NotificationProcessorStream(sys) match {
-      case Some(value) => Seq(value)
-      case _           => Seq.empty
-    }
 
   def notificationCommandProcessorStream
     : ActorSystem[_] => Option[NotificationCommandProcessorStream] = _ => None
 
   def notificationEventProcessorStreams: ActorSystem[_] => Seq[EventProcessorStream[_]] = sys =>
-    notificationCommandProcessorStream(sys) match {
-      case Some(value) => Seq(value)
-      case _           => Seq.empty
-    }
+    Seq(scheduler2NotificationProcessorStream(sys)).flatten ++
+    Seq(notificationCommandProcessorStream(sys)).flatten
 
   /** initialize all event processor streams
     */
   override def eventProcessorStreams: ActorSystem[_] => Seq[EventProcessorStream[_]] = sys =>
-    schedulerEventProcessorStreams(sys) ++
     notificationEventProcessorStreams(sys)
 
   /** initialize all notification servers

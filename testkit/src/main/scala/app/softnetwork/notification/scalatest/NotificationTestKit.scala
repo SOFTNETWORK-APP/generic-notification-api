@@ -13,6 +13,8 @@ import app.softnetwork.scheduler.scalatest.SchedulerTestKit
 import com.typesafe.config.Config
 import org.scalatest.Suite
 import app.softnetwork.notification.model.{BasicDevice, From, Mail, Platform, Push, SMS}
+import app.softnetwork.persistence.launch.PersistentEntity
+import app.softnetwork.persistence.query.EventProcessorStream
 
 import java.net.ServerSocket
 
@@ -73,4 +75,11 @@ trait NotificationTestKit[T <: Notification]
   asystem.eventStream.tell(Subscribe(probe.ref))
 
   lazy val client: NotificationClient = NotificationClient(asystem)
+
+  override def entities: ActorSystem[_] => Seq[PersistentEntity[_, _, _, _]] = sys =>
+    schedulerEntities(sys) ++ notificationEntities(sys)
+
+  override def eventProcessorStreams: ActorSystem[_] => Seq[EventProcessorStream[_]] = sys =>
+    schedulerEventProcessorStreams(sys) ++
+    notificationEventProcessorStreams(sys)
 }

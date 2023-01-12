@@ -6,11 +6,12 @@ import app.softnetwork.api.server.scalatest.ServerTestKit
 import app.softnetwork.notification.launch.NotificationGuardian
 import app.softnetwork.notification.model.Notification
 import app.softnetwork.scheduler.api.SchedulerGrpcServices
+import app.softnetwork.scheduler.launch.SchedulerGuardian
 
 import scala.concurrent.Future
 
 trait NotificationGrpcServices[T <: Notification] extends SchedulerGrpcServices {
-  _: NotificationGuardian[T] with ServerTestKit =>
+  _: NotificationGuardian[T] with SchedulerGuardian with ServerTestKit =>
 
   override def grpcServices
     : ActorSystem[_] => Seq[PartialFunction[HttpRequest, Future[HttpResponse]]] = system =>

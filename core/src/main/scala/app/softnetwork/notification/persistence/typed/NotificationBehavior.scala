@@ -18,7 +18,6 @@ import app.softnetwork.persistence.typed._
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.model._
 import app.softnetwork.notification.spi.NotificationProvider
-import app.softnetwork.notification.model._
 import app.softnetwork.scheduler.config.SchedulerSettings
 import app.softnetwork.notification.model.NotificationStatus._
 
