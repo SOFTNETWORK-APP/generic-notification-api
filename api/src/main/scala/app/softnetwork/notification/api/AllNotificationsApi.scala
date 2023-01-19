@@ -12,11 +12,13 @@ import app.softnetwork.notification.persistence.typed.{
   AllNotificationsBehavior,
   NotificationBehavior
 }
+import app.softnetwork.persistence.jdbc.query.JdbcSchema.SchemaType
 import app.softnetwork.persistence.jdbc.query.{JdbcJournalProvider, JdbcSchema, JdbcSchemaProvider}
-import app.softnetwork.scheduler.api.SchedulerApi
 import app.softnetwork.scheduler.config.SchedulerSettings
 
-trait AllNotificationsApi extends SchedulerApi with NotificationApplication[Notification] {
+trait AllNotificationsApi extends NotificationApplication[Notification] with JdbcSchemaProvider {
+
+  def internalSchemaType: SchemaType = this.schemaType
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Notification]] =
     _ => Seq(AllNotificationsBehavior)
@@ -30,7 +32,7 @@ trait AllNotificationsApi extends SchedulerApi with NotificationApplication[Noti
           with JdbcJournalProvider
           with JdbcSchemaProvider {
           override val tag: String = SchedulerSettings.tag(AllNotificationsBehavior.persistenceId)
-          override lazy val schemaType: JdbcSchema.SchemaType = jdbcSchemaType
+          override lazy val schemaType: JdbcSchema.SchemaType = internalSchemaType
           override implicit val system: ActorSystem[_] = sys
         }
       )
@@ -43,7 +45,7 @@ trait AllNotificationsApi extends SchedulerApi with NotificationApplication[Noti
           with AllNotificationsHandler
           with JdbcJournalProvider
           with JdbcSchemaProvider {
-          override lazy val schemaType: JdbcSchema.SchemaType = jdbcSchemaType
+          override lazy val schemaType: JdbcSchema.SchemaType = internalSchemaType
           override implicit def system: ActorSystem[_] = sys
         }
       )
