@@ -1,6 +1,8 @@
 import app.softnetwork.sbt.build._
 import com.typesafe.sbt.packager.docker._
 
+app.softnetwork.sbt.build.Publication.settings
+
 Compile / mainClass := Some("app.softnetwork.notification.api.AllNotificationsPostgresLauncher")
 
 dockerBaseImage := "openjdk:8"

@@ -34,7 +34,7 @@ trait SimpleMailProvider extends MailProvider with MailSettings with StrictLoggi
           .setHtmlMsg(notification.richMessage.getOrElse(notification.message))
           .setTextMsg(notification.message)
       case MultiPart =>
-        val multipart = new MultiPartEmail()
+        val multipart = new HtmlEmail()
         val attachments = notification.attachments.toList ++ {
           notification.attachment match {
             case Some(attachment) => List(attachment)
@@ -49,7 +49,10 @@ trait SimpleMailProvider extends MailProvider with MailSettings with StrictLoggi
             EmailAttachment.ATTACHMENT
           )
         })
-        multipart.setMsg(notification.richMessage.getOrElse(notification.message))
+        multipart
+          .setHtmlMsg(notification.richMessage.getOrElse(notification.message))
+          .setTextMsg(notification.message)
+
       case _ => new SimpleEmail().setMsg(notification.message)
     }
 
