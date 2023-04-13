@@ -1,8 +1,11 @@
 package app.softnetwork.notification.handlers
 
 import app.softnetwork.notification.message._
+import app.softnetwork.notification.model.Attachment
 import app.softnetwork.notification.scalatest.SimpleMailNotificationsTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
+
+import java.nio.file.Paths
 
 /** Created by smanciot on 14/04/2020.
   */
@@ -11,11 +14,33 @@ class SimpleMailNotificationsHandlerSpec
     with AnyWordSpecLike
     with SimpleMailNotificationsTestKit {
 
+  var attachment: Attachment = _
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    attachment = generateAttachment(
+      "avatar.png",
+      Paths.get(Thread.currentThread().getContextClassLoader.getResource("avatar.png").getPath)
+    )
+  }
+
   "Simple Mail Notification handler" must {
 
     "add notification" in {
       val uuid = "add"
       this ? (uuid, AddNotification(generateMail(uuid))) await {
+        case n: NotificationAdded =>
+          n.uuid shouldBe uuid
+          assert(
+            probe.receiveMessage().schedule.uuid == s"MailNotification#$uuid#NotificationTimerKey"
+          )
+        case _ => fail()
+      }
+    }
+
+    "add notification with attachment(s)" in {
+      val uuid = "addWithAttachments"
+      this ? (uuid, AddNotification(generateMail(uuid, Seq(attachment)))) await {
         case n: NotificationAdded =>
           n.uuid shouldBe uuid
           assert(
@@ -46,6 +71,15 @@ class SimpleMailNotificationsHandlerSpec
       this ? (uuid, SendNotification(generateMail(uuid))) await {
         case n: NotificationSent =>
           assert(n.uuid == uuid)
+        case _ => fail()
+      }
+    }
+
+    "send notification with attachment(s)" in {
+      val uuid = "sendWithAttachments"
+      this ? (uuid, SendNotification(generateMail(uuid, Seq(attachment)))) await {
+        case n: NotificationSent =>
+          n.uuid shouldBe uuid
         case _ => fail()
       }
     }

@@ -8,15 +8,15 @@ import app.softnetwork.notification.config.MailSettings
 import app.softnetwork.notification.config.NotificationSettings.NotificationConfig
 import app.softnetwork.notification.launch.NotificationGuardian
 import app.softnetwork.notification.message.Schedule4NotificationTriggered
-import app.softnetwork.notification.model.Notification
+import app.softnetwork.notification.model.{Attachment, BasicDevice, From, Mail, Notification, Platform, Push, SMS}
 import app.softnetwork.scheduler.scalatest.SchedulerTestKit
 import com.typesafe.config.Config
 import org.scalatest.Suite
-import app.softnetwork.notification.model.{BasicDevice, From, Mail, Platform, Push, SMS}
 import app.softnetwork.persistence.launch.PersistentEntity
 import app.softnetwork.persistence.query.EventProcessorStream
 
 import java.net.ServerSocket
+import java.nio.file.{Files, Path}
 
 trait NotificationTestKit[T <: Notification]
     extends SchedulerTestKit
@@ -43,13 +43,19 @@ trait NotificationTestKit[T <: Notification]
   val subject = "test"
   val message = "message"
 
-  protected def generateMail(uuid: String): Mail =
+  protected def generateAttachment(name: String, path: Path): Attachment = {
+    val bytes = Files.readAllBytes(path)
+    Attachment(name, path.toString, bytes)
+  }
+
+  protected def generateMail(uuid: String, attachments: Seq[Attachment] = Seq.empty): Mail =
     Mail.defaultInstance
       .withUuid(uuid)
       .withFrom(From(MailSettings.MailConfig.username, None))
       .withTo(Seq("nobody@gmail.com"))
       .withSubject(subject)
       .withMessage(message)
+      .withAttachments(attachments)
 
   protected def generateSMS(uuid: String): SMS =
     SMS.defaultInstance

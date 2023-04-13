@@ -56,9 +56,12 @@ message BasicDevice{
 
 message Attachment{
     option (scalapb.message).extends = "ProtobufDomainObject";
+    option (scalapb.message).extends = "AttachmentDecorator";
+    option (scalapb.message).companion_extends = "AttachmentCompanion";
     required string name = 1;
     required string path = 2;
     optional string description = 3;
+    optional bytes bytes = 4;
 }
 
 enum MailType{

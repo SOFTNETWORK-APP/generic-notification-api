@@ -11,7 +11,6 @@ import app.softnetwork.notification.model.MailType._
 import app.softnetwork.notification.model._
 
 import java.util.Date
-import javax.activation.FileDataSource
 import scala.util.{Failure, Success, Try}
 
 /** From https://gist.github.com/mariussoutier/3436111
@@ -43,7 +42,7 @@ trait SimpleMailProvider extends MailProvider with MailSettings with StrictLoggi
         }
         attachments.foreach(attachment => {
           multipart.attach(
-            new FileDataSource(attachment.path),
+            attachment.dataSource,
             attachment.name,
             attachment.description.orNull,
             EmailAttachment.ATTACHMENT
