@@ -16,11 +16,12 @@ import app.softnetwork.notification.persistence.typed.{
   NotificationBehavior,
   SMSModeNotificationsBehavior
 }
-import app.softnetwork.persistence.query.InMemoryJournalProvider
+import app.softnetwork.persistence.query.{InMemoryJournalProvider, InMemoryOffsetProvider}
 import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
 import app.softnetwork.notification.model.SMS
+import org.slf4j.{Logger, LoggerFactory}
 
 trait SMSModeNotificationsTestKit
     extends NotificationGrpcServer[SMS]
@@ -37,6 +38,7 @@ trait SMSModeNotificationsTestKit
     super.beforeAll()
     assert(
       new SMSMockServer with InternalConfig {
+        lazy val log: Logger = LoggerFactory getLogger getClass.getName
         override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = smsPort
@@ -59,7 +61,9 @@ trait SMSModeNotificationsTestKit
       Some(
         new Scheduler2NotificationProcessorStream
           with SMSModeNotificationsHandler
-          with InMemoryJournalProvider {
+          with InMemoryJournalProvider
+          with InMemoryOffsetProvider {
+          lazy val log: Logger = LoggerFactory getLogger getClass.getName
           override val tag: String =
             SchedulerSettings.tag(SMSModeNotificationsBehavior.persistenceId)
           override val forTests: Boolean = true
@@ -73,7 +77,9 @@ trait SMSModeNotificationsTestKit
       Some(
         new NotificationCommandProcessorStream
           with SMSModeNotificationsHandler
-          with InMemoryJournalProvider {
+          with InMemoryJournalProvider
+          with InMemoryOffsetProvider {
+          lazy val log: Logger = LoggerFactory getLogger getClass.getName
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }

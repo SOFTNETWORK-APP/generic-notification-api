@@ -4,6 +4,7 @@ import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.ApnsNotificationsTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
 import app.softnetwork.notification.model.NotificationStatus
+import org.slf4j.{Logger, LoggerFactory}
 
 /** Created by smanciot on 07/12/2022.
   */
@@ -11,6 +12,8 @@ class ApnsNotificationsHandlerSpec
     extends ApnsNotificationsHandler
     with AnyWordSpecLike
     with ApnsNotificationsTestKit {
+
+  lazy val log: Logger = LoggerFactory getLogger getClass.getName
 
   "Apns Notification handler" must {
 

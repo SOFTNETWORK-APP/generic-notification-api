@@ -17,11 +17,12 @@ import app.softnetwork.notification.persistence.typed.{
   NotificationBehavior
 }
 import app.softnetwork.notification.spi.FcmMockProvider
-import app.softnetwork.persistence.query.InMemoryJournalProvider
+import app.softnetwork.persistence.query.{InMemoryJournalProvider, InMemoryOffsetProvider}
 import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
 import app.softnetwork.notification.model.Push
+import org.slf4j.{Logger, LoggerFactory}
 
 trait FcmNotificationsTestKit extends NotificationGrpcServer[Push] with NotificationTestKit[Push] {
   _: Suite =>
@@ -39,7 +40,9 @@ trait FcmNotificationsTestKit extends NotificationGrpcServer[Push] with Notifica
       Some(
         new Scheduler2NotificationProcessorStream
           with FcmNotificationsHandler
-          with InMemoryJournalProvider {
+          with InMemoryJournalProvider
+          with InMemoryOffsetProvider {
+          lazy val log: Logger = LoggerFactory getLogger getClass.getName
           override val tag: String = SchedulerSettings.tag(FcmNotificationsBehavior.persistenceId)
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
@@ -52,7 +55,9 @@ trait FcmNotificationsTestKit extends NotificationGrpcServer[Push] with Notifica
       Some(
         new NotificationCommandProcessorStream
           with FcmNotificationsHandler
-          with InMemoryJournalProvider {
+          with InMemoryJournalProvider
+          with InMemoryOffsetProvider {
+          lazy val log: Logger = LoggerFactory getLogger getClass.getName
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }

@@ -18,10 +18,11 @@ import app.softnetwork.notification.persistence.typed.{
   NotificationBehavior
 }
 import app.softnetwork.notification.spi.FcmMockProvider
-import app.softnetwork.persistence.query.InMemoryJournalProvider
+import app.softnetwork.persistence.query.{InMemoryJournalProvider, InMemoryOffsetProvider}
 import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
+import org.slf4j.{Logger, LoggerFactory}
 
 trait AllNotificationsTestKit
     extends NotificationGrpcServer[Notification]
@@ -46,6 +47,7 @@ trait AllNotificationsTestKit
     super.beforeAll()
     assert(
       new ApnsMockServer with InternalConfig {
+        lazy val log: Logger = LoggerFactory getLogger getClass.getName
         override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = apnsPort
@@ -55,6 +57,7 @@ trait AllNotificationsTestKit
     )
     assert(
       new SMSMockServer with InternalConfig {
+        lazy val log: Logger = LoggerFactory getLogger getClass.getName
         override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = smsPort
@@ -64,6 +67,7 @@ trait AllNotificationsTestKit
     )
     assert(
       new SmtpMockServer with InternalConfig {
+        lazy val log: Logger = LoggerFactory getLogger getClass.getName
         override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = smtpPort
@@ -85,7 +89,9 @@ trait AllNotificationsTestKit
       Some(
         new Scheduler2NotificationProcessorStream
           with AllNotificationsHandler
-          with InMemoryJournalProvider {
+          with InMemoryJournalProvider
+          with InMemoryOffsetProvider {
+          lazy val log: Logger = LoggerFactory getLogger getClass.getName
           override val tag: String = SchedulerSettings.tag(AllNotificationsBehavior.persistenceId)
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
@@ -98,7 +104,9 @@ trait AllNotificationsTestKit
       Some(
         new NotificationCommandProcessorStream
           with AllNotificationsHandler
-          with InMemoryJournalProvider {
+          with InMemoryJournalProvider
+          with InMemoryOffsetProvider {
+          lazy val log: Logger = LoggerFactory getLogger getClass.getName
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }

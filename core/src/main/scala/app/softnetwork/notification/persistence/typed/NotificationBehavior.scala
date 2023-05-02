@@ -1,6 +1,5 @@
 package app.softnetwork.notification.persistence.typed
 
-import java.util.Date
 import akka.actor.typed.scaladsl.{ActorContext, TimerScheduler}
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.persistence.typed.scaladsl.Effect
@@ -21,6 +20,7 @@ import app.softnetwork.notification.spi.NotificationProvider
 import app.softnetwork.scheduler.config.SchedulerSettings
 import app.softnetwork.notification.model.NotificationStatus._
 
+import java.time.Instant
 import scala.language.{implicitConversions, postfixOps}
 
 /** Created by smanciot on 13/04/2020.
@@ -309,9 +309,9 @@ trait NotificationBehavior[T <: Notification]
             ack(
               notification
             ) // we only call the provider api if the notification is pending
-          case _ => NotificationAck(ackUuid, results, new Date())
+          case _ => NotificationAck(ackUuid, results, Instant.now())
         }
-      case _ => NotificationAck(None, results, new Date())
+      case _ => NotificationAck(None, results, Instant.now())
     }
     (notification match {
       case n: Mail =>
@@ -360,7 +360,7 @@ trait NotificationBehavior[T <: Notification]
       case Sent | Delivered => None
       case Pending | UnknownNotificationStatus =>
         notification.deferred match {
-          case Some(deferred) if deferred.after(new Date()) =>
+          case Some(deferred) if deferred.isAfter(Instant.now()) =>
             None // the notification is still deferred
           case _ =>
             if (nbTries > 0) { // the notification has already been sent at least one time, waiting for an acknowledgement
@@ -387,7 +387,7 @@ trait NotificationBehavior[T <: Notification]
       case _ =>
         // Undelivered or Rejected
         if (maxTries > 0 && nbTries >= maxTries) {
-          Some((NotificationAck(notification.ackUuid, notification.results, now()), 1))
+          Some((NotificationAck(notification.ackUuid, notification.results, Instant.now()), 1))
         } else {
           log.info(
             "Sending {}#{} in {} status to {} recipients",
@@ -435,7 +435,24 @@ trait NotificationBehavior[T <: Notification]
       }
 
     val events: List[ExternalSchedulerEvent] =
-      List(event).flatten :+ scheduledNotificationEvent(
+      List(event).flatten ++ {
+        if (
+          (updatedNotification.status.isSent || updatedNotification.status.isDelivered)
+          && updatedNotification.removeOnSuccess.getOrElse(false)
+        ) {
+          List(NotificationRemovedEvent(entityId))
+        } else if (
+          !updatedNotification.status.isSent
+          && !updatedNotification.status.isDelivered
+          && updatedNotification.maxTries > 0
+          && updatedNotification.nbTries > updatedNotification.maxTries
+          && updatedNotification.removeAfterMaxTries.getOrElse(false)
+        ) {
+          List(NotificationRemovedEvent(entityId))
+        } else {
+          List.empty
+        }
+      } :+ scheduledNotificationEvent(
         entityId,
         updatedNotification.asInstanceOf[T]
       )

@@ -10,13 +10,12 @@ import app.softnetwork.notification.message.{
   NotificationCommandEvent,
   NotificationRemoved
 }
-import app.softnetwork.persistence.query.{EventProcessorStream, JournalProvider}
-import app.softnetwork.notification.message.NotificationCommandEvent
+import app.softnetwork.persistence.query.{EventProcessorStream, JournalProvider, OffsetProvider}
 
 import scala.concurrent.Future
 
 trait NotificationCommandProcessorStream extends EventProcessorStream[NotificationCommandEvent] {
-  _: JournalProvider with NotificationHandler =>
+  _: JournalProvider with OffsetProvider with NotificationHandler =>
 
   override lazy val tag: String =
     NotificationSettings.NotificationConfig.eventStreams.externalToNotificationTag
@@ -54,19 +53,19 @@ trait NotificationCommandProcessorStream extends EventProcessorStream[Notificati
                 if (forTests) system.eventStream.tell(Publish(event))
                 Done
               case other =>
-                logger.error(
+                log.error(
                   s"$platformEventProcessorId - command $command returns unexpectedly ${other.getClass}"
                 )
                 Done
             }
           case _ =>
-            logger.error(
+            log.error(
               s"$platformEventProcessorId - no command"
             )
             Future.successful(Done)
         }
       case other =>
-        logger.warn(s"$platformEventProcessorId does not support event [${other.getClass}]")
+        log.warn(s"$platformEventProcessorId does not support event [${other.getClass}]")
         Future.successful(Done)
     }
   }

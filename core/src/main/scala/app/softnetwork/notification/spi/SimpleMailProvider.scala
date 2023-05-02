@@ -10,7 +10,7 @@ import org.apache.commons.mail._
 import app.softnetwork.notification.model.MailType._
 import app.softnetwork.notification.model._
 
-import java.util.Date
+import java.time.Instant
 import scala.util.{Failure, Success, Try}
 
 /** From https://gist.github.com/mariussoutier/3436111
@@ -88,7 +88,7 @@ trait SimpleMailProvider extends MailProvider with MailSettings with StrictLoggi
           notification.to.map(recipient =>
             NotificationStatusResult(recipient, NotificationStatus.Sent, None, Some(s))
           ),
-          new Date()
+          Instant.now()
         )
       case Failure(f) =>
         logger.error(f.getMessage, f)
@@ -97,7 +97,7 @@ trait SimpleMailProvider extends MailProvider with MailSettings with StrictLoggi
           notification.to.map(recipient =>
             NotificationStatusResult(recipient, NotificationStatus.Undelivered, Some(f.getMessage))
           ),
-          new Date()
+          Instant.now()
         )
     }
   }

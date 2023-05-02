@@ -8,7 +8,16 @@ import app.softnetwork.notification.config.MailSettings
 import app.softnetwork.notification.config.NotificationSettings.NotificationConfig
 import app.softnetwork.notification.launch.NotificationGuardian
 import app.softnetwork.notification.message.Schedule4NotificationTriggered
-import app.softnetwork.notification.model.{Attachment, BasicDevice, From, Mail, Notification, Platform, Push, SMS}
+import app.softnetwork.notification.model.{
+  Attachment,
+  BasicDevice,
+  From,
+  Mail,
+  Notification,
+  Platform,
+  Push,
+  SMS
+}
 import app.softnetwork.scheduler.scalatest.SchedulerTestKit
 import com.typesafe.config.Config
 import org.scalatest.Suite

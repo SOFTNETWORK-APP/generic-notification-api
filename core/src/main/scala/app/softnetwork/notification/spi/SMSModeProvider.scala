@@ -2,7 +2,6 @@ package app.softnetwork.notification.spi
 
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.config.{InternalConfig, SMSMode, SMSSettings}
-import app.softnetwork.persistence.now
 import com.typesafe.scalalogging.StrictLogging
 import org.apache.commons.text.StringEscapeUtils
 import app.softnetwork.notification.model.{
@@ -11,6 +10,8 @@ import app.softnetwork.notification.model.{
   NotificationStatusResult,
   SMS
 }
+
+import java.time.Instant
 
 trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { _: InternalConfig =>
 
@@ -42,7 +43,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                 None
               )
             ),
-            now()
+            Instant.now()
           )
         } else {
           val sendUrl =
@@ -102,7 +103,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                                 Some(smsId)
                               )
                             ),
-                            now()
+                            Instant.now()
                           )
                         case _ =>
                           new NotificationAck(
@@ -115,7 +116,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                                 Some(smsId)
                               )
                             ),
-                            now()
+                            Instant.now()
                           )
                       }
                     case l if l.size == 2 =>
@@ -128,7 +129,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                             Some(l.last.trim)
                           )
                         ),
-                        now()
+                        Instant.now()
                       )
                     case _ =>
                       new NotificationAck(
@@ -140,7 +141,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                             None
                           )
                         ),
-                        now()
+                        Instant.now()
                       )
                   }
 
@@ -155,7 +156,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                         Some(f.getMessage)
                       )
                     ),
-                    now()
+                    Instant.now()
                   )
               }
 
@@ -169,7 +170,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                     None
                   )
                 ),
-                now()
+                Instant.now()
               )
           }
 
@@ -186,7 +187,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
               None
             )
           ),
-          now()
+          Instant.now()
         )
     }
   }
@@ -225,7 +226,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                 // numéro_destinataire statut | numéro_destinataire statut | ...
                 responseData.split("\\|").toList match {
                   case Nil =>
-                    NotificationAck(Some(uuid), results, new Date())
+                    NotificationAck(Some(uuid), results, Instant.now())
                   case l =>
                     NotificationAck(
                       Some(uuid),
@@ -269,19 +270,19 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                           Some(uuid)
                         )
                       }),
-                      new Date()
+                      Instant.now()
                     )
                 }
 
               case Failure(f) =>
                 logger.error(f.getMessage, f)
-                NotificationAck(Some(uuid), results, new Date())
+                NotificationAck(Some(uuid), results, Instant.now())
             }
 
-          case _ => NotificationAck(Some(uuid), results, new Date())
+          case _ => NotificationAck(Some(uuid), results, Instant.now())
         }
 
-      case None => NotificationAck(Some(uuid), results, new Date())
+      case None => NotificationAck(Some(uuid), results, Instant.now())
     }
   }
 }

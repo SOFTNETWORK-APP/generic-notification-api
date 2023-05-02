@@ -13,6 +13,7 @@ import app.softnetwork.notification.model.{
   SMS
 }
 
+import java.time.Instant
 import java.util.Date
 import scala.language.implicitConversions
 
@@ -26,7 +27,7 @@ package object spi {
     def !(notification: N)(implicit system: ActorSystem[_]): NotificationAck = send(notification)
 
     def ack(notification: N)(implicit system: ActorSystem[_]): NotificationAck =
-      NotificationAck(notification.ackUuid, notification.results, new Date())
+      NotificationAck(notification.ackUuid, notification.results, Instant.now())
 
     def ?(notification: N)(implicit system: ActorSystem[_]): NotificationAck = ack(notification)
   }
@@ -34,20 +35,20 @@ package object spi {
   trait MailProvider {
     def sendMail(notification: Mail)(implicit system: ActorSystem[_]): NotificationAck
     def ackMail(notification: Mail)(implicit system: ActorSystem[_]): NotificationAck =
-      NotificationAck(notification.ackUuid, notification.results, new Date())
+      NotificationAck(notification.ackUuid, notification.results, Instant.now())
   }
 
   trait SMSProvider {
     def sendSMS(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck
     def ackSMS(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck =
-      NotificationAck(notification.ackUuid, notification.results, new Date())
+      NotificationAck(notification.ackUuid, notification.results, Instant.now())
   }
 
   trait PushProvider {
     def bulkSize = 100
     def sendPush(notification: Push)(implicit system: ActorSystem[_]): NotificationAck
     def ackPush(notification: Push)(implicit system: ActorSystem[_]): NotificationAck =
-      NotificationAck(notification.ackUuid, notification.results, new Date())
+      NotificationAck(notification.ackUuid, notification.results, Instant.now())
   }
 
   implicit def toPushPayload(notification: Push): PushPayload = {
@@ -83,7 +84,7 @@ package object spi {
               Some(s"${d.platform.name} device not handled by AndroidProvider")
             )
           ),
-        new Date()
+        Instant.now()
       )
     }
   }
@@ -108,7 +109,7 @@ package object spi {
               Some(s"${d.platform.name} device not handled by IosProvider")
             )
           ),
-        new Date()
+        Instant.now()
       )
     }
   }
@@ -126,7 +127,7 @@ package object spi {
           notification,
           android.map(_.regId)
         ).distinct,
-        new Date()
+        Instant.now()
       )
     }
   }
@@ -144,7 +145,7 @@ package object spi {
       case mail: Mail => sendMail(mail)
       case sms: SMS   => sendSMS(sms)
       case push: Push => sendPush(push)
-      case _          => NotificationAck(notification.ackUuid, notification.results, new Date())
+      case _          => NotificationAck(notification.ackUuid, notification.results, Instant.now())
     }
 
     override def ack(notification: Notification)(implicit system: ActorSystem[_]): NotificationAck =
@@ -152,7 +153,7 @@ package object spi {
         case mail: Mail => ackMail(mail)
         case sms: SMS   => ackSMS(sms)
         case push: Push => ackPush(push)
-        case _          => NotificationAck(notification.ackUuid, notification.results, new Date())
+        case _ => NotificationAck(notification.ackUuid, notification.results, Instant.now())
       }
   }
 

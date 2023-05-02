@@ -1,19 +1,16 @@
 package app.softnetwork.notification.model
 
-import java.util.Date
-
 import app.softnetwork.persistence.model.State
 
-import app.softnetwork.notification.model._
-
+import java.time.Instant
 import scala.language.reflectiveCalls
 
 /** Created by smanciot on 14/04/2018.
   */
 trait Notification extends State with NotificationDecorator {
   def uuid: String
-  def createdDate: Date
-  def lastUpdated: Date
+  def createdDate: Instant
+  def lastUpdated: Instant
   def from: From
   def to: Seq[String]
   def subject: String
@@ -21,13 +18,16 @@ trait Notification extends State with NotificationDecorator {
   def `type`: NotificationType
   def maxTries: Int
   def nbTries: Int
-  def deferred: Option[Date]
+  def deferred: Option[Instant]
 
   def ackUuid: Option[String]
   def status: NotificationStatus
 
   def results: Seq[NotificationStatusResult]
 
+  def removeOnSuccess: Option[Boolean] = None
+
+  def removeAfterMaxTries: Option[Boolean] = None
 }
 
 trait NotificationDecorator { _: Notification =>
@@ -42,7 +42,7 @@ trait NotificationDecorator { _: Notification =>
 
   def withResults(results: Seq[NotificationStatusResult]): Notification with NotificationDecorator
 
-  def withLastUpdated(lastUpdated: Date): Notification with NotificationDecorator
+  def withLastUpdated(lastUpdated: Instant): Notification with NotificationDecorator
 
   def incNbTries(): Notification with NotificationDecorator = withNbTries(nbTries + 1)
 

@@ -17,11 +17,12 @@ import app.softnetwork.notification.persistence.typed.{
   NotificationBehavior
 }
 import app.softnetwork.notification.spi.FcmMockAndApnsProvider
-import app.softnetwork.persistence.query.InMemoryJournalProvider
+import app.softnetwork.persistence.query.{InMemoryJournalProvider, InMemoryOffsetProvider}
 import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
 import app.softnetwork.notification.model.Push
+import org.slf4j.{Logger, LoggerFactory}
 
 trait FcmAndApnsNotificationsTestKit
     extends NotificationGrpcServer[Push]
@@ -39,6 +40,7 @@ trait FcmAndApnsNotificationsTestKit
     super.beforeAll()
     assert(
       new ApnsMockServer with InternalConfig {
+        lazy val log: Logger = LoggerFactory getLogger getClass.getName
         override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = apnsPort
@@ -61,7 +63,9 @@ trait FcmAndApnsNotificationsTestKit
       Some(
         new Scheduler2NotificationProcessorStream
           with FcmAndApnsNotificationsHandler
-          with InMemoryJournalProvider {
+          with InMemoryJournalProvider
+          with InMemoryOffsetProvider {
+          lazy val log: Logger = LoggerFactory getLogger getClass.getName
           override val tag: String =
             SchedulerSettings.tag(FcmAndApnsNotificationsBehavior.persistenceId)
           override val forTests: Boolean = true
@@ -75,7 +79,9 @@ trait FcmAndApnsNotificationsTestKit
       Some(
         new NotificationCommandProcessorStream
           with FcmAndApnsNotificationsHandler
-          with InMemoryJournalProvider {
+          with InMemoryJournalProvider
+          with InMemoryOffsetProvider {
+          lazy val log: Logger = LoggerFactory getLogger getClass.getName
           override val forTests: Boolean = true
           override implicit def system: ActorSystem[_] = sys
         }

@@ -4,6 +4,7 @@ import app.softnetwork.notification.message._
 import app.softnetwork.notification.model.Attachment
 import app.softnetwork.notification.scalatest.SimpleMailNotificationsTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.slf4j.{Logger, LoggerFactory}
 
 import java.nio.file.Paths
 
@@ -13,6 +14,8 @@ class SimpleMailNotificationsHandlerSpec
     extends SimpleMailNotificationsHandler
     with AnyWordSpecLike
     with SimpleMailNotificationsTestKit {
+
+  lazy val log: Logger = LoggerFactory getLogger getClass.getName
 
   var attachment: Attachment = _
 

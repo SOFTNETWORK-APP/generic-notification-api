@@ -9,13 +9,12 @@ import app.softnetwork.notification.persistence.query.{
 }
 import app.softnetwork.notification.persistence.typed.NotificationBehavior
 import app.softnetwork.persistence.launch.{PersistenceGuardian, PersistentEntity}
-import app.softnetwork.persistence.query.{EventProcessorStream, SchemaProvider}
+import app.softnetwork.persistence.query.EventProcessorStream
 import com.typesafe.scalalogging.StrictLogging
 
 import scala.language.implicitConversions
 
 trait NotificationGuardian[T <: Notification] extends PersistenceGuardian with StrictLogging {
-  _: SchemaProvider =>
 
   import app.softnetwork.persistence.launch.PersistenceGuardian._
 
