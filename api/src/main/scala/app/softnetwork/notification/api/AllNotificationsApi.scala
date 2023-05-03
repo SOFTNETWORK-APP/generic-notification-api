@@ -32,7 +32,7 @@ trait AllNotificationsApi extends NotificationApplication[Notification] {
           override def config: Config = AllNotificationsApi.this.config
 
           override val tag: String = SchedulerSettings.tag(AllNotificationsBehavior.persistenceId)
-          override implicit val system: ActorSystem[_] = sys
+          override implicit def system: ActorSystem[_] = sys
         }
       )
 
