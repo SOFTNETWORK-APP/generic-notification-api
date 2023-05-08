@@ -13,10 +13,11 @@ import app.softnetwork.notification.persistence.typed.{
   NotificationBehavior
 }
 import app.softnetwork.persistence.jdbc.query.{JdbcJournalProvider, JdbcOffsetProvider}
+import app.softnetwork.persistence.jdbc.schema.JdbcSchemaProvider
 import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 
-trait AllNotificationsApi extends NotificationApplication[Notification] {
+trait AllNotificationsApi extends NotificationApplication[Notification] with JdbcSchemaProvider {
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Notification]] =
     _ => Seq(AllNotificationsBehavior)
