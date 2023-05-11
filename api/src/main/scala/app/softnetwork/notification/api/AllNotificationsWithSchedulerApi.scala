@@ -4,11 +4,13 @@ import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
 import app.softnetwork.persistence.launch.PersistentEntity
 import app.softnetwork.persistence.query.EventProcessorStream
+import app.softnetwork.persistence.schema.SchemaProvider
 import app.softnetwork.scheduler.api.{SchedulerApi, SchedulerServiceApiHandler}
 
 import scala.concurrent.Future
 
 trait AllNotificationsWithSchedulerApi extends AllNotificationsApi with SchedulerApi {
+  _: SchemaProvider =>
 
   override def entities: ActorSystem[_] => Seq[PersistentEntity[_, _, _, _]] = sys =>
     schedulerEntities(sys) ++ notificationEntities(sys)
