@@ -4,7 +4,9 @@ import app.softnetwork.persistence.jdbc.schema.{JdbcSchemaProvider, JdbcSchemaTy
 import app.softnetwork.persistence.schema.SchemaType
 import org.slf4j.{Logger, LoggerFactory}
 
-object AllNotificationsPostgresLauncher extends AllNotificationsApi with JdbcSchemaProvider {
+object AllNotificationsWithSwaggerSchedulerPostgresLauncher
+    extends AllNotificationsWithSwaggerSchedulerApi
+    with JdbcSchemaProvider {
 
   lazy val log: Logger = LoggerFactory getLogger getClass.getName
 
