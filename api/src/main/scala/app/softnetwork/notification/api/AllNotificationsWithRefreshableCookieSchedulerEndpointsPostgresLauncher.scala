@@ -7,7 +7,7 @@ import app.softnetwork.session.service.SessionEndpoints
 import com.softwaremill.session.CsrfCheckHeaderAndForm
 import org.slf4j.{Logger, LoggerFactory}
 
-object AllNotificationsWithSchedulerOneOffHeaderPostgresLauncher
+object AllNotificationsWithRefreshableCookieSchedulerEndpointsPostgresLauncher
     extends AllNotificationsWithSchedulerEndpointsApi
     with JdbcSchemaProvider
     with CsrfCheckHeaderAndForm {
@@ -17,5 +17,5 @@ object AllNotificationsWithSchedulerOneOffHeaderPostgresLauncher
   override def schemaType: SchemaType = JdbcSchemaTypes.Postgres
 
   override def sessionEndpoints: ActorSystem[_] => SessionEndpoints = system =>
-    SessionEndpoints.oneOffHeader(system, checkHeaderAndForm)
+    SessionEndpoints.refreshableCookie(system, checkHeaderAndForm)
 }

@@ -7,7 +7,7 @@ import app.softnetwork.session.service.SessionEndpoints
 import com.softwaremill.session.CsrfCheckHeaderAndForm
 import org.slf4j.{Logger, LoggerFactory}
 
-object AllNotificationsWithSchedulerRefreshableHeaderPostgresLauncher
+object AllNotificationsWithRefreshableHeaderSchedulerEndpointsPostgresLauncher
     extends AllNotificationsWithSchedulerEndpointsApi
     with JdbcSchemaProvider
     with CsrfCheckHeaderAndForm {
