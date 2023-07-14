@@ -11,7 +11,7 @@ libraryDependencies ++= Seq(
   "app.softnetwork.scheduler" %% "scheduler-common" % Versions.scheduler,
   "app.softnetwork.scheduler" %% "scheduler-common" % Versions.scheduler % "protobuf",
   "app.softnetwork.api" %% "generic-server-api" % Versions.genericPersistence,
-  "app.softnetwork.protobuf" %% "scalapb-extensions" % "0.1.6",
+  "app.softnetwork.protobuf" %% "scalapb-extensions" % "0.1.7",
   "org.apache.commons" % "commons-email" % "1.5",
   "com.google.auth" % "google-auth-library-oauth2-http" % "0.20.0" excludeAll guavaExclusion,
   "io.opencensus" % "opencensus-contrib-http-util" % "0.24.0" excludeAll(guavaExclusion, ExclusionRule(organization = "io.grpc", name="grpc-context")),
