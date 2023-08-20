@@ -1,5 +1,3 @@
-import app.softnetwork.sbt.build._
-
 organization := "app.softnetwork.notification"
 
 name := "notification-common"

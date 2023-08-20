@@ -1,5 +1,3 @@
-import app.softnetwork.sbt.build._
-
 Test / parallelExecution := false
 
 organization := "app.softnetwork.notification"
@@ -10,5 +8,6 @@ libraryDependencies ++= Seq(
   "app.softnetwork.scheduler" %% "scheduler-testkit" % Versions.scheduler,
   "app.softnetwork.api" %% "generic-server-api-testkit" % Versions.genericPersistence,
   "com.github.kirviq" % "dumbster" % "1.7.1",
-  "org.rapidoid" % "rapidoid-http-server" % "5.5.5"
+  "org.rapidoid" % "rapidoid-http-server" % "5.5.5",
+  "org.scalatest" %% "scalatest" % Versions.scalatest
 )

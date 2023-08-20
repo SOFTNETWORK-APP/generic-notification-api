@@ -1,39 +1,10 @@
-import sbt.Resolver
-
-import Common._
-import app.softnetwork.sbt.build._
-
-/////////////////////////////////
-// Defaults
-/////////////////////////////////
-
-app.softnetwork.sbt.build.Publication.settings
-
-/////////////////////////////////
-// Useful aliases
-/////////////////////////////////
-
-addCommandAlias("cd", "project") // navigate the projects
-
-addCommandAlias("cc", ";clean;compile") // clean and compile
-
-addCommandAlias("pl", ";clean;publishLocal") // clean and publish locally
-
-addCommandAlias("pr", ";clean;publish") // clean and publish globally
-
-addCommandAlias("pld", ";clean;local:publishLocal;dockerComposeUp") // clean and publish/launch the docker environment
-
-addCommandAlias("dct", ";dockerComposeTest") // navigate the projects
-
-ThisBuild / shellPrompt := prompt
-
 ThisBuild / organization := "app.softnetwork"
 
 name := "notification"
 
-ThisBuild / version := "0.3.5"
+ThisBuild / version := "0.4.0"
 
-ThisBuild / scalaVersion := "2.12.15"
+ThisBuild / scalaVersion := "2.12.18"
 
 ThisBuild / scalacOptions ++= Seq("-deprecation", "-feature", "-target:jvm-1.8")
 
@@ -65,7 +36,7 @@ lazy val common = project.in(file("common"))
 
 lazy val core = project.in(file("core"))
   .configs(IntegrationTest)
-  .settings(Defaults.itSettings, BuildInfoSettings.settings)
+  .settings(Defaults.itSettings, app.softnetwork.Info.infoSettings)
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(
     common % "compile->compile;test->test;it->it"
@@ -81,8 +52,8 @@ lazy val testkit = project.in(file("testkit"))
 
 lazy val api = project.in(file("api"))
   .configs(IntegrationTest)
-  .settings(Defaults.itSettings, BuildInfoSettings.settings)
-  .enablePlugins(DockerComposePlugin, DockerPlugin, JavaAppPackaging, BuildInfoPlugin)
+  .settings(Defaults.itSettings)
+  .enablePlugins(DockerPlugin, JavaAppPackaging)
   .dependsOn(
     core % "compile->compile;test->test;it->it"
   )

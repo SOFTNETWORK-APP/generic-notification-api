@@ -1,12 +1,10 @@
 package app.softnetwork.notification.launch
 
 import akka.actor.typed.ActorSystem
+import app.softnetwork.notification.NotificationCoreBuildInfo
 import app.softnetwork.notification.api.NotificationServer
 import app.softnetwork.notification.model.Notification
-import app.softnetwork.notification.persistence.query.{
-  NotificationCommandProcessorStream,
-  Scheduler2NotificationProcessorStream
-}
+import app.softnetwork.notification.persistence.query.{NotificationCommandProcessorStream, Scheduler2NotificationProcessorStream}
 import app.softnetwork.notification.persistence.typed.NotificationBehavior
 import app.softnetwork.persistence.launch.{PersistenceGuardian, PersistentEntity}
 import app.softnetwork.persistence.query.EventProcessorStream
@@ -48,4 +46,7 @@ trait NotificationGuardian[T <: Notification] extends PersistenceGuardian with S
   /** initialize all notification servers
     */
   def notificationServers: ActorSystem[_] => Seq[NotificationServer]
+
+  override def systemVersion(): String =
+    sys.env.getOrElse("VERSION", NotificationCoreBuildInfo.version)
 }

@@ -2,7 +2,7 @@ package app.softnetwork.notification.api
 
 import app.softnetwork.persistence.schema.SchemaProvider
 import app.softnetwork.scheduler.api.SchedulerEndpointsApi
-import com.softwaremill.session.CsrfCheck
+import app.softnetwork.session.CsrfCheck
 
 trait AllNotificationsWithSchedulerEndpointsApi
     extends AllNotificationsWithSchedulerApi
