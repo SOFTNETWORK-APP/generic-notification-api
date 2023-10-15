@@ -1,13 +1,11 @@
 package app.softnetwork.notification.api
 
-import akka.actor.typed.ActorSystem
 import app.softnetwork.persistence.jdbc.schema.{JdbcSchemaProvider, JdbcSchemaTypes}
 import app.softnetwork.persistence.schema.SchemaType
 import app.softnetwork.session.CsrfCheckHeader
-import app.softnetwork.session.service.SessionEndpoints
 import org.slf4j.{Logger, LoggerFactory}
 
-object AllNotificationsWithRefreshableHeaderSchedulerEndpointsPostgresLauncher
+object AllNotificationsWithSchedulerEndpointsPostgresLauncher
     extends AllNotificationsWithSchedulerEndpointsApi
     with JdbcSchemaProvider
     with CsrfCheckHeader {
@@ -16,6 +14,4 @@ object AllNotificationsWithRefreshableHeaderSchedulerEndpointsPostgresLauncher
 
   override def schemaType: SchemaType = JdbcSchemaTypes.Postgres
 
-  override def sessionEndpoints: ActorSystem[_] => SessionEndpoints = system =>
-    SessionEndpoints.refreshableHeader(system, checkHeaderAndForm)
 }
