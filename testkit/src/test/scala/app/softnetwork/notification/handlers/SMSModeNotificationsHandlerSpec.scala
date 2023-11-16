@@ -2,6 +2,7 @@ package app.softnetwork.notification.handlers
 
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.SMSModeNotificationsTestKit
+import app.softnetwork.session.service.BasicSessionMaterials
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -10,7 +11,8 @@ import org.slf4j.{Logger, LoggerFactory}
 class SMSModeNotificationsHandlerSpec
     extends SMSModeNotificationsHandler
     with AnyWordSpecLike
-    with SMSModeNotificationsTestKit {
+    with SMSModeNotificationsTestKit
+    with BasicSessionMaterials {
 
   lazy val log: Logger = LoggerFactory getLogger getClass.getName
 

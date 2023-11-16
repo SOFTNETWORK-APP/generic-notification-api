@@ -22,12 +22,13 @@ import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
 import app.softnetwork.notification.model.Push
+import app.softnetwork.session.service.SessionMaterials
 import org.slf4j.{Logger, LoggerFactory}
 
 trait FcmAndApnsNotificationsTestKit
     extends NotificationGrpcServer[Push]
     with NotificationTestKit[Push]
-    with ApnsToken { _: Suite =>
+    with ApnsToken { _: Suite with SessionMaterials =>
 
   lazy val apnsPort: Int = availablePort
 
@@ -41,7 +42,7 @@ trait FcmAndApnsNotificationsTestKit
     assert(
       new ApnsMockServer with InternalConfig {
         lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = asystem
+        override implicit def system: ActorSystem[_] = ts
 
         override def serverPort: Int = apnsPort
 

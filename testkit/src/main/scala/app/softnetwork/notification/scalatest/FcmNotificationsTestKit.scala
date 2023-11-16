@@ -22,10 +22,11 @@ import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
 import app.softnetwork.notification.model.Push
+import app.softnetwork.session.service.SessionMaterials
 import org.slf4j.{Logger, LoggerFactory}
 
 trait FcmNotificationsTestKit extends NotificationGrpcServer[Push] with NotificationTestKit[Push] {
-  _: Suite =>
+  _: Suite with SessionMaterials =>
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>
     Seq(

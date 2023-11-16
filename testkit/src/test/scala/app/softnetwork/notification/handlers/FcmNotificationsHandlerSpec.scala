@@ -4,6 +4,7 @@ import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.FcmNotificationsTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
 import app.softnetwork.notification.model.NotificationStatus
+import app.softnetwork.session.service.BasicSessionMaterials
 import org.slf4j.{Logger, LoggerFactory}
 
 /** Created by smanciot on 07/12/2022.
@@ -11,7 +12,8 @@ import org.slf4j.{Logger, LoggerFactory}
 class FcmNotificationsHandlerSpec
     extends FcmNotificationsHandler
     with AnyWordSpecLike
-    with FcmNotificationsTestKit {
+    with FcmNotificationsTestKit
+    with BasicSessionMaterials {
 
   lazy val log: Logger = LoggerFactory getLogger getClass.getName
 
