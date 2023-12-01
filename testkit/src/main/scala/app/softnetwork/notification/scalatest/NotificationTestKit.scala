@@ -34,7 +34,7 @@ trait NotificationTestKit[T <: Notification]
     extends SchedulerTestKit
     with NotificationGuardian[T]
     with ApnsToken {
-  _: Suite with SessionMaterials =>
+  _: Suite with SessionMaterials[Session] =>
 
   override implicit def ts: ActorSystem[_] = typedSystem()
 

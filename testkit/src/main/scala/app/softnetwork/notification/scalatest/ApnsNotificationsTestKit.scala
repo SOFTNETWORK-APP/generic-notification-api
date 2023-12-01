@@ -23,11 +23,12 @@ import org.scalatest.Suite
 import app.softnetwork.notification.model.Push
 import app.softnetwork.session.service.SessionMaterials
 import org.slf4j.{Logger, LoggerFactory}
+import org.softnetwork.session.model.Session
 
 trait ApnsNotificationsTestKit
     extends NotificationGrpcServer[Push]
     with NotificationTestKit[Push]
-    with ApnsToken { _: Suite with SessionMaterials =>
+    with ApnsToken { _: Suite with SessionMaterials[Session] =>
 
   lazy val apnsPort: Int = availablePort
 

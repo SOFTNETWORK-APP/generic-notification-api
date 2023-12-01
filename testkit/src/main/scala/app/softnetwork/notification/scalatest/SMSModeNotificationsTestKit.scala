@@ -23,10 +23,11 @@ import org.scalatest.Suite
 import app.softnetwork.notification.model.SMS
 import app.softnetwork.session.service.SessionMaterials
 import org.slf4j.{Logger, LoggerFactory}
+import org.softnetwork.session.model.Session
 
 trait SMSModeNotificationsTestKit
     extends NotificationGrpcServer[SMS]
-    with NotificationTestKit[SMS] { _: Suite with SessionMaterials =>
+    with NotificationTestKit[SMS] { _: Suite with SessionMaterials[Session] =>
 
   lazy val smsPort: Int = availablePort
 

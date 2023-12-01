@@ -3,8 +3,11 @@ package app.softnetwork.notification.handlers
 import org.scalatest.wordspec.AnyWordSpecLike
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.AllNotificationsTestKit
+import app.softnetwork.session.handlers.SessionRefreshTokenDao
 import app.softnetwork.session.service.BasicSessionMaterials
+import com.softwaremill.session.RefreshTokenStorage
 import org.slf4j.{Logger, LoggerFactory}
+import org.softnetwork.session.model.Session
 
 import scala.util.{Failure, Success}
 
@@ -14,7 +17,11 @@ class AllNotificationsHandlerSpec
     extends AllNotificationsHandler
     with AnyWordSpecLike
     with AllNotificationsTestKit
-    with BasicSessionMaterials {
+    with BasicSessionMaterials[Session] {
+
+  override implicit def refreshTokenStorage: RefreshTokenStorage[Session] = SessionRefreshTokenDao(
+    ts
+  )
 
   lazy val log: Logger = LoggerFactory getLogger getClass.getName
 

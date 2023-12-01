@@ -2,9 +2,12 @@ package app.softnetwork.notification.handlers
 
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.scalatest.SMSModeNotificationsTestKit
+import app.softnetwork.session.handlers.SessionRefreshTokenDao
 import app.softnetwork.session.service.BasicSessionMaterials
+import com.softwaremill.session.RefreshTokenStorage
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.slf4j.{Logger, LoggerFactory}
+import org.softnetwork.session.model.Session
 
 /** Created by smanciot on 07/12/2022.
   */
@@ -12,7 +15,11 @@ class SMSModeNotificationsHandlerSpec
     extends SMSModeNotificationsHandler
     with AnyWordSpecLike
     with SMSModeNotificationsTestKit
-    with BasicSessionMaterials {
+    with BasicSessionMaterials[Session] {
+
+  override implicit def refreshTokenStorage: RefreshTokenStorage[Session] = SessionRefreshTokenDao(
+    ts
+  )
 
   lazy val log: Logger = LoggerFactory getLogger getClass.getName
 
