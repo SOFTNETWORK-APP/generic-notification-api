@@ -20,16 +20,14 @@ import app.softnetwork.notification.persistence.typed.{
 import app.softnetwork.notification.spi.FcmMockProvider
 import app.softnetwork.persistence.query.{InMemoryJournalProvider, InMemoryOffsetProvider}
 import app.softnetwork.scheduler.config.SchedulerSettings
-import app.softnetwork.session.service.SessionMaterials
 import com.typesafe.config.Config
 import org.scalatest.Suite
 import org.slf4j.{Logger, LoggerFactory}
-import org.softnetwork.session.model.Session
 
 trait AllNotificationsTestKit
     extends NotificationGrpcServer[Notification]
     with NotificationTestKit[Notification]
-    with ApnsToken { _: Suite with SessionMaterials[Session] =>
+    with ApnsToken { _: Suite =>
 
   lazy val apnsPort: Int = availablePort
 
@@ -50,7 +48,7 @@ trait AllNotificationsTestKit
     assert(
       new ApnsMockServer with InternalConfig {
         lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = ts
+        override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = apnsPort
 
@@ -60,7 +58,7 @@ trait AllNotificationsTestKit
     assert(
       new SMSMockServer with InternalConfig {
         lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = ts
+        override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = smsPort
 
@@ -70,7 +68,7 @@ trait AllNotificationsTestKit
     assert(
       new SmtpMockServer with InternalConfig {
         lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = ts
+        override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = smtpPort
 

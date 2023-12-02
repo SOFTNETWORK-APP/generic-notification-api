@@ -3,12 +3,8 @@ package app.softnetwork.notification.handlers
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.model.Attachment
 import app.softnetwork.notification.scalatest.SimpleMailNotificationsTestKit
-import app.softnetwork.session.handlers.SessionRefreshTokenDao
-import app.softnetwork.session.service.BasicSessionMaterials
-import com.softwaremill.session.RefreshTokenStorage
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.slf4j.{Logger, LoggerFactory}
-import org.softnetwork.session.model.Session
 
 import java.nio.file.Paths
 
@@ -17,12 +13,7 @@ import java.nio.file.Paths
 class SimpleMailNotificationsHandlerSpec
     extends SimpleMailNotificationsHandler
     with AnyWordSpecLike
-    with SimpleMailNotificationsTestKit
-    with BasicSessionMaterials[Session] {
-
-  override implicit def refreshTokenStorage: RefreshTokenStorage[Session] = SessionRefreshTokenDao(
-    ts
-  )
+    with SimpleMailNotificationsTestKit {
 
   lazy val log: Logger = LoggerFactory getLogger getClass.getName
 

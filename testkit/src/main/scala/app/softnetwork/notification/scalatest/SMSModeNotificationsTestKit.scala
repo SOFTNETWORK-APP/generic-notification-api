@@ -21,13 +21,11 @@ import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
 import app.softnetwork.notification.model.SMS
-import app.softnetwork.session.service.SessionMaterials
 import org.slf4j.{Logger, LoggerFactory}
-import org.softnetwork.session.model.Session
 
 trait SMSModeNotificationsTestKit
     extends NotificationGrpcServer[SMS]
-    with NotificationTestKit[SMS] { _: Suite with SessionMaterials[Session] =>
+    with NotificationTestKit[SMS] { _: Suite =>
 
   lazy val smsPort: Int = availablePort
 
@@ -41,7 +39,7 @@ trait SMSModeNotificationsTestKit
     assert(
       new SMSMockServer with InternalConfig {
         lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = ts
+        override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = smsPort
 

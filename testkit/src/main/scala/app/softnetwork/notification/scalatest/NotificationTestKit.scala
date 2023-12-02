@@ -24,7 +24,6 @@ import org.scalatest.Suite
 import app.softnetwork.persistence.launch.PersistentEntity
 import app.softnetwork.persistence.query.EventProcessorStream
 import app.softnetwork.session.config.Settings
-import app.softnetwork.session.service.SessionMaterials
 import org.softnetwork.session.model.Session
 
 import java.net.ServerSocket
@@ -33,10 +32,9 @@ import java.nio.file.{Files, Path}
 trait NotificationTestKit[T <: Notification]
     extends SchedulerTestKit
     with NotificationGuardian[T]
-    with ApnsToken {
-  _: Suite with SessionMaterials[Session] =>
+    with ApnsToken { _: Suite =>
 
-  override implicit def ts: ActorSystem[_] = typedSystem()
+  implicit def asystem: ActorSystem[_] = typedSystem()
 
   override protected def sessionType: Session.SessionType =
     Settings.Session.SessionContinuityAndTransport
@@ -93,9 +91,9 @@ trait NotificationTestKit[T <: Notification]
 
   val probe: TestProbe[Schedule4NotificationTriggered] =
     createTestProbe[Schedule4NotificationTriggered]()
-  ts.eventStream.tell(Subscribe(probe.ref))
+  asystem.eventStream.tell(Subscribe(probe.ref))
 
-  lazy val client: NotificationClient = NotificationClient(ts)
+  lazy val client: NotificationClient = NotificationClient(asystem)
 
   override def entities: ActorSystem[_] => Seq[PersistentEntity[_, _, _, _]] = sys =>
     schedulerEntities(sys) ++ notificationEntities(sys)

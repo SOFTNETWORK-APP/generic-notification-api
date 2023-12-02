@@ -21,13 +21,11 @@ import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 import org.scalatest.Suite
 import app.softnetwork.notification.model.Mail
-import app.softnetwork.session.service.SessionMaterials
 import org.slf4j.{Logger, LoggerFactory}
-import org.softnetwork.session.model.Session
 
 trait SimpleMailNotificationsTestKit
     extends NotificationGrpcServer[Mail]
-    with NotificationTestKit[Mail] { _: Suite with SessionMaterials[Session] =>
+    with NotificationTestKit[Mail] { _: Suite =>
 
   lazy val smtpPort: Int = availablePort
 
@@ -42,7 +40,7 @@ trait SimpleMailNotificationsTestKit
     assert(
       new SmtpMockServer with InternalConfig {
         lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = ts
+        override implicit def system: ActorSystem[_] = asystem
 
         override def serverPort: Int = smtpPort
 
