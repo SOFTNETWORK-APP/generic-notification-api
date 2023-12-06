@@ -2,7 +2,7 @@ package app.softnetwork.notification.scalatest
 
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.api.{
-  NotificationGrpcServer,
+  NotificationGrpcServerTestKit,
   NotificationServer,
   SMSModeNotificationsServer
 }
@@ -24,7 +24,7 @@ import app.softnetwork.notification.model.SMS
 import org.slf4j.{Logger, LoggerFactory}
 
 trait SMSModeNotificationsTestKit
-    extends NotificationGrpcServer[SMS]
+    extends NotificationGrpcServerTestKit[SMS]
     with NotificationTestKit[SMS] { _: Suite =>
 
   lazy val smsPort: Int = availablePort

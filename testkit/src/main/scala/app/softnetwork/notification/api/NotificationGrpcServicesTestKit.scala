@@ -1,27 +1,18 @@
 package app.softnetwork.notification.api
 
 import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
+import app.softnetwork.api.server.GrpcService
 import app.softnetwork.api.server.scalatest.ServerTestKit
 import app.softnetwork.notification.launch.NotificationGuardian
 import app.softnetwork.notification.model.Notification
-import app.softnetwork.scheduler.api.SchedulerGrpcServices
+import app.softnetwork.scheduler.api.SchedulerGrpcServicesTestKit
 import app.softnetwork.scheduler.launch.SchedulerGuardian
 
-import scala.concurrent.Future
-
-trait NotificationGrpcServices[T <: Notification] extends SchedulerGrpcServices {
+trait NotificationGrpcServicesTestKit[T <: Notification] extends SchedulerGrpcServicesTestKit {
   _: NotificationGuardian[T] with SchedulerGuardian with ServerTestKit =>
 
-  override def grpcServices
-    : ActorSystem[_] => Seq[PartialFunction[HttpRequest, Future[HttpResponse]]] = system =>
+  override def grpcServices: ActorSystem[_] => Seq[GrpcService] = system =>
     notificationGrpcServices(system) ++ schedulerGrpcServices(system)
-
-  def notificationGrpcServices
-    : ActorSystem[_] => Seq[PartialFunction[HttpRequest, Future[HttpResponse]]] = system =>
-    notificationServers(system).map(
-      NotificationServiceApiHandler.partial(_)(system)
-    )
 
   def notificationGrpcConfig: String = schedulerGrpcConfig + s"""
                               |# Important: enable HTTP/2 in ActorSystem's config

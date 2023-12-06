@@ -3,7 +3,7 @@ package app.softnetwork.notification.scalatest
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.api.{
   FcmNotificationsServer,
-  NotificationGrpcServer,
+  NotificationGrpcServerTestKit,
   NotificationServer
 }
 import app.softnetwork.notification.config.InternalConfig
@@ -24,7 +24,9 @@ import org.scalatest.Suite
 import app.softnetwork.notification.model.Push
 import org.slf4j.{Logger, LoggerFactory}
 
-trait FcmNotificationsTestKit extends NotificationGrpcServer[Push] with NotificationTestKit[Push] {
+trait FcmNotificationsTestKit
+    extends NotificationGrpcServerTestKit[Push]
+    with NotificationTestKit[Push] {
   _: Suite =>
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>

@@ -3,7 +3,7 @@ package app.softnetwork.notification.scalatest
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.api.{
   AllNotificationsServer,
-  NotificationGrpcServer,
+  NotificationGrpcServerTestKit,
   NotificationServer
 }
 import app.softnetwork.notification.config.InternalConfig
@@ -25,7 +25,7 @@ import org.scalatest.Suite
 import org.slf4j.{Logger, LoggerFactory}
 
 trait AllNotificationsTestKit
-    extends NotificationGrpcServer[Notification]
+    extends NotificationGrpcServerTestKit[Notification]
     with NotificationTestKit[Notification]
     with ApnsToken { _: Suite =>
 

@@ -2,7 +2,7 @@ package app.softnetwork.notification.scalatest
 
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.api.{
-  NotificationGrpcServer,
+  NotificationGrpcServerTestKit,
   NotificationServer,
   SimpleMailNotificationsServer
 }
@@ -24,7 +24,7 @@ import app.softnetwork.notification.model.Mail
 import org.slf4j.{Logger, LoggerFactory}
 
 trait SimpleMailNotificationsTestKit
-    extends NotificationGrpcServer[Mail]
+    extends NotificationGrpcServerTestKit[Mail]
     with NotificationTestKit[Mail] { _: Suite =>
 
   lazy val smtpPort: Int = availablePort
