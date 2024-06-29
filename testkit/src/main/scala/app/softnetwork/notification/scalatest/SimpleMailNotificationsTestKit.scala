@@ -53,6 +53,7 @@ trait SimpleMailNotificationsTestKit
     Seq(
       new SimpleMailNotificationsBehavior with InternalConfig {
         override lazy val config: Config = internalConfig
+        override def log: Logger = LoggerFactory.getLogger(this.getClass)
       }
     )
 

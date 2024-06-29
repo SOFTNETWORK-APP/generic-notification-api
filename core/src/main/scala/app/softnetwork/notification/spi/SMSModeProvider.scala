@@ -2,7 +2,6 @@ package app.softnetwork.notification.spi
 
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.config.{InternalConfig, SMSMode, SMSSettings}
-import com.typesafe.scalalogging.StrictLogging
 import org.apache.commons.text.StringEscapeUtils
 import app.softnetwork.notification.model.{
   NotificationAck,
@@ -10,10 +9,11 @@ import app.softnetwork.notification.model.{
   NotificationStatusResult,
   SMS
 }
+import org.slf4j.Logger
 
 import java.time.Instant
 
-trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { _: InternalConfig =>
+trait SMSModeProvider extends SMSProvider with SMSSettings { _: InternalConfig =>
 
   import NotificationStatus._
   import app.softnetwork.notification.config.SMSMode._
@@ -25,6 +25,8 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
   import scala.util.{Failure, Success, Try}
 
   lazy val maybeConfig: Option[SMSMode.Config] = SMSConfig.mode
+
+  def log: Logger
 
   override def sendSMS(notification: SMS)(implicit system: ActorSystem[_]): NotificationAck = {
     import notification._
@@ -67,7 +69,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                |${if (stop) "&stop=2" else ""}
                |""".stripMargin.replaceAll("\\s+", "")
 
-          logger.info(sendUrl)
+          log.info(sendUrl)
 
           val url = new URL(sendUrl)
 
@@ -86,7 +88,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                 Stream.continually(br.readLine()).takeWhile(_ != null).mkString("")
               } match {
                 case Success(responseData) =>
-                  logger.info(responseData)
+                  log.info(responseData)
                   // code_retour | description | smsID
                   responseData.split("\\|").toList match {
                     case l if l.size == 3 =>
@@ -146,7 +148,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                   }
 
                 case Failure(f) =>
-                  logger.error(f.getMessage, f)
+                  log.error(f.getMessage, f)
                   new NotificationAck(
                     None,
                     to.map(recipient =>
@@ -177,7 +179,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
         }
 
       case None =>
-        logger.error("notification.sms.mode configuration has not been defined")
+        log.error("notification.sms.mode configuration has not been defined")
         new NotificationAck(
           None,
           to.map(recipient =>
@@ -203,7 +205,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                          |accessToken=$accessToken
                          |&smsID=$uuid
                          |""".stripMargin.replaceAll("\\s+", "")
-        logger.info(ackUrl)
+        log.info(ackUrl)
 
         val url = new URL(ackUrl)
 
@@ -222,7 +224,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
               Stream.continually(br.readLine()).takeWhile(_ != null).mkString("")
             } match {
               case Success(responseData) =>
-                logger.info(responseData)
+                log.info(responseData)
                 // numéro_destinataire statut | numéro_destinataire statut | ...
                 responseData.split("\\|").toList match {
                   case Nil =>
@@ -275,7 +277,7 @@ trait SMSModeProvider extends SMSProvider with SMSSettings with StrictLogging { 
                 }
 
               case Failure(f) =>
-                logger.error(f.getMessage, f)
+                log.error(f.getMessage, f)
                 NotificationAck(Some(uuid), results, Instant.now())
             }
 

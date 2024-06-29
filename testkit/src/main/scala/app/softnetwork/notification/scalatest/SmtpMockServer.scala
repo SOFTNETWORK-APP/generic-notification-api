@@ -22,7 +22,7 @@ trait SmtpMockServer extends MockServer with MailSettings {
     Try(SimpleSmtpServer.start(serverPort)) match {
       case Success(server) => Some(server)
       case Failure(f) =>
-        logger.error(s"Could not start mock server $name at $serverPort -> ${f.getMessage}")
+        log.error(s"Could not start mock server $name at $serverPort -> ${f.getMessage}")
         None
     }
 

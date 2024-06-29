@@ -12,6 +12,7 @@ import app.softnetwork.notification.spi.{
   PushProvider
 }
 import app.softnetwork.notification.model.{NotificationAck, Push}
+import org.slf4j.{Logger, LoggerFactory}
 
 trait PushNotificationsBehavior extends NotificationBehavior[Push] { _: PushProvider =>
   override def send(notification: Push)(implicit system: ActorSystem[_]): NotificationAck =
@@ -30,7 +31,9 @@ trait FcmNotificationsBehavior extends AndroidNotificationsBehavior with FcmProv
   _: InternalConfig =>
 }
 
-object FcmNotificationsBehavior extends FcmNotificationsBehavior with DefaultConfig
+object FcmNotificationsBehavior extends FcmNotificationsBehavior with DefaultConfig {
+  override def log: Logger = LoggerFactory.getLogger(this.getClass)
+}
 
 trait IosNotificationsBehavior extends PushNotificationsBehavior { _: IosProvider =>
   override def persistenceId: String = "IosNotification"
@@ -40,7 +43,9 @@ trait ApnsNotificationsBehavior extends IosNotificationsBehavior with ApnsProvid
   _: InternalConfig =>
 }
 
-object ApnsNotificationsBehavior extends ApnsNotificationsBehavior with DefaultConfig
+object ApnsNotificationsBehavior extends ApnsNotificationsBehavior with DefaultConfig {
+  override def log: Logger = LoggerFactory.getLogger(this.getClass)
+}
 
 trait AndroidAndIosNotificationsBehavior extends PushNotificationsBehavior {
   _: AndroidAndIosProvider =>
@@ -51,4 +56,6 @@ trait FcmAndApnsNotificationsBehavior
     extends AndroidAndIosNotificationsBehavior
     with FcmAndApnsProvider { _: InternalConfig => }
 
-object FcmAndApnsNotificationsBehavior extends FcmAndApnsNotificationsBehavior with DefaultConfig
+object FcmAndApnsNotificationsBehavior extends FcmAndApnsNotificationsBehavior with DefaultConfig {
+  override def log: Logger = LoggerFactory.getLogger(this.getClass)
+}

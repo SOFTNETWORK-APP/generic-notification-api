@@ -81,6 +81,7 @@ trait AllNotificationsTestKit
     _ =>
       Seq(new AllNotificationsBehavior with FcmMockProvider with InternalConfig {
         override def config: Config = internalConfig
+        override def log: Logger = LoggerFactory.getLogger(this.getClass)
       })
 
   override def scheduler2NotificationProcessorStream

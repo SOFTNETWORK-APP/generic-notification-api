@@ -45,7 +45,7 @@ trait ApnsMockServer extends PushSettings with MockServer {
     ) match {
       case Success(value) => Some(value)
       case Failure(f) =>
-        logger.error(s"Could not start mock server $name at $serverPort -> ${f.getMessage}")
+        log.error(s"Could not start mock server $name at $serverPort -> ${f.getMessage}")
         None
     }
 
@@ -55,7 +55,7 @@ trait ApnsMockServer extends PushSettings with MockServer {
         toScala(server.start(serverPort)) complete () match {
           case Success(value) => Option(value.toInt).isDefined
           case Failure(f) =>
-            logger.error(f.getMessage, f)
+            log.error(f.getMessage, f)
             false
         }
       case None => false

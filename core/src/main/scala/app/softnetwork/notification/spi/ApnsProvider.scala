@@ -11,12 +11,12 @@ import com.eatthepath.pushy.apns.util.{
   SimpleApnsPayloadBuilder,
   SimpleApnsPushNotification
 }
-import com.typesafe.scalalogging.StrictLogging
 import app.softnetwork.notification.model.{
   NotificationStatus,
   NotificationStatusResult,
   PushPayload
 }
+import org.slf4j.Logger
 
 import java.time.Duration
 import scala.annotation.tailrec
@@ -25,8 +25,11 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.language.implicitConversions
 import scala.util.{Failure, Success}
 
-trait ApnsProvider extends IosProvider with PushSettings with Completion with StrictLogging {
+trait ApnsProvider extends IosProvider with PushSettings with Completion {
   _: InternalConfig =>
+
+  def log: Logger
+
   override def pushToIos(payload: PushPayload, devices: Seq[String])(implicit
     system: ActorSystem[_]
   ): Seq[NotificationStatusResult] = {
@@ -119,7 +122,7 @@ trait ApnsProvider extends IosProvider with PushSettings with Completion with St
         else
           devices
 
-      logger.info(
+      log.info(
         s"""APNS -> about to send notification ${payload.title}
            |\tfor ${payload.application}
            |\tvia topic ${config.topic}
@@ -138,11 +141,11 @@ trait ApnsProvider extends IosProvider with PushSettings with Completion with St
           case Success(responses) =>
             for (response <- responses) yield {
               val result: NotificationStatusResult = response
-              logger.info(s"send push to APNS -> $result")
+              log.info(s"send push to APNS -> $result")
               result
             }
           case Failure(f) =>
-            logger.error(s"send push to APNS -> ${f.getMessage}", f)
+            log.error(s"send push to APNS -> ${f.getMessage}", f)
             tos.map(to =>
               NotificationStatusResult(to, NotificationStatus.Undelivered, Some(f.getMessage))
             )
@@ -153,7 +156,7 @@ trait ApnsProvider extends IosProvider with PushSettings with Completion with St
         status ++ results
       }
     } else {
-      logger.warn("send push to APNS -> no IOS device(s)")
+      log.warn("send push to APNS -> no IOS device(s)")
       status
     }
   }

@@ -54,6 +54,7 @@ trait FcmAndApnsNotificationsTestKit
     Seq(
       new FcmAndApnsNotificationsBehavior with FcmMockAndApnsProvider with InternalConfig {
         override def config: Config = internalConfig
+        override def log: Logger = LoggerFactory.getLogger(this.getClass)
       }
     )
 

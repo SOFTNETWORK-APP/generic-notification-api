@@ -52,6 +52,7 @@ trait SMSModeNotificationsTestKit
     Seq(
       new SMSModeNotificationsBehavior with InternalConfig {
         lazy val config: Config = internalConfig
+        override def log: Logger = LoggerFactory.getLogger(this.getClass)
       }
     )
 

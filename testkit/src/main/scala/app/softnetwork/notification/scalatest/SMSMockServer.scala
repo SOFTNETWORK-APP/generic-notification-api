@@ -5,7 +5,6 @@ import akka.actor.typed.ActorSystem
 import app.softnetwork.api.server.scalatest.MockServer
 import app.softnetwork.notification.config.{InternalConfig, SMSSettings}
 import app.softnetwork.persistence.generateUUID
-import com.typesafe.scalalogging.StrictLogging
 import org.rapidoid.buffer.Buf
 import org.rapidoid.http.{AbstractHttpServer, HttpStatus, MediaType}
 import org.rapidoid.net.Server
@@ -15,7 +14,7 @@ import org.rapidoid.net.impl.RapidoidHelper
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-trait SMSMockServer extends AbstractHttpServer with MockServer with SMSSettings with StrictLogging {
+trait SMSMockServer extends AbstractHttpServer with MockServer with SMSSettings {
   _: InternalConfig =>
 
   val name: String = "sms"
@@ -54,7 +53,7 @@ trait SMSMockServer extends AbstractHttpServer with MockServer with SMSSettings 
     Try(listen(serverPort)) match {
       case Success(server) => Some(server)
       case Failure(f) =>
-        logger.error(s"Could not start mock server $name at $serverPort -> ${f.getMessage}")
+        log.error(s"Could not start mock server $name at $serverPort -> ${f.getMessage}")
         None
     }
 

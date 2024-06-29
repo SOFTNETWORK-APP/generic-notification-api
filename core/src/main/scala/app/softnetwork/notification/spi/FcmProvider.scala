@@ -12,20 +12,23 @@ import com.google.firebase.messaging.{
   MulticastMessage
 }
 import com.google.firebase.{FirebaseApp, FirebaseOptions}
-import com.typesafe.scalalogging.StrictLogging
 import app.softnetwork.notification.model.{
   NotificationStatus,
   NotificationStatusResult,
   PushPayload
 }
+import org.slf4j.Logger
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
-trait FcmProvider extends AndroidProvider with PushSettings with StrictLogging {
+trait FcmProvider extends AndroidProvider with PushSettings {
   _: InternalConfig =>
+
+  def log: Logger
+
   final override def pushToAndroid(payload: PushPayload, devices: Seq[String])(implicit
     system: ActorSystem[_]
   ): Seq[NotificationStatusResult] = {
@@ -56,7 +59,7 @@ trait FcmProvider extends AndroidProvider with PushSettings with StrictLogging {
     ) match {
       case Success(value) => value
       case Failure(f) =>
-        logger.info(
+        log.info(
           s"${f.getMessage} -> initializing Firebase Application for $key with $config"
         )
         FirebaseApp.initializeApp(
@@ -89,7 +92,7 @@ trait FcmProvider extends AndroidProvider with PushSettings with StrictLogging {
         else
           devices
 
-      logger.info(
+      log.info(
         s"""FCM -> about to send notification ${payload.title}
            |\tfor ${payload.application}
            |\tvia url ${config.databaseUrl}
@@ -105,10 +108,10 @@ trait FcmProvider extends AndroidProvider with PushSettings with StrictLogging {
         ) match {
           case Success(s) =>
             val results: Seq[NotificationStatusResult] = s
-            logger.info(s"send push to FCM -> ${results.mkString("|")}")
+            log.info(s"send push to FCM -> ${results.mkString("|")}")
             results
           case Failure(f) =>
-            logger.error(s"send push to FCM -> ${f.getMessage}", f)
+            log.error(s"send push to FCM -> ${f.getMessage}", f)
             tokens.map(token =>
               NotificationStatusResult(token, NotificationStatus.Undelivered, Some(f.getMessage))
             )
@@ -119,7 +122,7 @@ trait FcmProvider extends AndroidProvider with PushSettings with StrictLogging {
         status ++ results
       }
     } else {
-      logger.warn("send push to FCM -> no ANDROID device(s)")
+      log.warn("send push to FCM -> no ANDROID device(s)")
       status
     }
   }

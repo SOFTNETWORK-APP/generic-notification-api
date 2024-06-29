@@ -52,6 +52,7 @@ trait ApnsNotificationsTestKit
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>
     Seq(new ApnsNotificationsBehavior with InternalConfig {
       override def config: Config = internalConfig
+      override def log: Logger = LoggerFactory.getLogger(this.getClass)
     })
 
   override def scheduler2NotificationProcessorStream

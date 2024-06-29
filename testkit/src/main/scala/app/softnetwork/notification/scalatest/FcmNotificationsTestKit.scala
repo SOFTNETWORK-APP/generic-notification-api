@@ -33,6 +33,7 @@ trait FcmNotificationsTestKit
     Seq(
       new FcmNotificationsBehavior with FcmMockProvider with InternalConfig {
         override def config: Config = internalConfig
+        override def log: Logger = LoggerFactory.getLogger(this.getClass)
       }
     )
 
