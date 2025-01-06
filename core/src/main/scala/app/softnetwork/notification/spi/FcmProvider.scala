@@ -104,7 +104,7 @@ trait FcmProvider extends AndroidProvider with PushSettings {
 
       val results: Seq[NotificationStatusResult] =
         Try(
-          messaging.sendMulticast(payload)
+          messaging.sendEachForMulticast(payload)
         ) match {
           case Success(s) =>
             val results: Seq[NotificationStatusResult] = s

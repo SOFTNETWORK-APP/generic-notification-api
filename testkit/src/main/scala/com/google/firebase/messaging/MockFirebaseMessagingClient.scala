@@ -1,5 +1,7 @@
 package com.google.firebase.messaging
 
+import app.softnetwork.persistence.generateUUID
+
 import java.util
 
 trait MockFirebaseMessagingClient extends FirebaseMessagingClient {
@@ -7,7 +9,7 @@ trait MockFirebaseMessagingClient extends FirebaseMessagingClient {
 
   def batchResponse: Option[BatchResponse] = None
 
-  override def send(message: Message, dryRun: Boolean): String = messageId.orNull
+  override def send(message: Message, dryRun: Boolean): String = messageId.getOrElse(generateUUID())
 
   override def sendAll(messages: util.List[Message], dryRun: Boolean): BatchResponse =
     batchResponse.orNull
