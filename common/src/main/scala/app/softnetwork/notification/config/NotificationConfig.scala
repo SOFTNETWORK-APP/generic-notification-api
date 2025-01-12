@@ -1,3 +1,3 @@
 package app.softnetwork.notification.config
 
-case class NotificationConfig(eventStreams: EventStreams, akkaNodeRole: String)
+case class NotificationConfig(eventStreams: EventStreams, akkaNodeRole: String, path: String)

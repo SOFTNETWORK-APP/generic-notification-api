@@ -12,6 +12,4 @@ object AllNotificationsPostgresLauncher extends AllNotificationsApi with JdbcSch
 
   override def schemaType: SchemaType = JdbcSchemaTypes.Postgres
 
-  override def apiRoutes: ActorSystem[_] => List[ApiRoute] = _ => List.empty
-
 }

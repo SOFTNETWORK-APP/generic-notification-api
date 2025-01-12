@@ -1,7 +1,12 @@
 package app.softnetwork.notification.handlers
 
+import akka.http.scaladsl.testkit.WSProbe
+import app.softnetwork.api.server.config.ServerSettings
+import app.softnetwork.notification.config.NotificationSettings
+import app.softnetwork.notification.launch.NotificationRoutes
 import org.scalatest.wordspec.AnyWordSpecLike
 import app.softnetwork.notification.message._
+import app.softnetwork.notification.model.Notification
 import app.softnetwork.notification.scalatest.AllNotificationsTestKit
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -10,9 +15,9 @@ import scala.util.{Failure, Success}
 /** Created by smanciot on 14/04/2020.
   */
 class AllNotificationsHandlerSpec
-    extends AllNotificationsHandler
-    with AnyWordSpecLike
-    with AllNotificationsTestKit {
+    extends AnyWordSpecLike
+    with AllNotificationsTestKit
+    with NotificationRoutes[Notification] {
 
   lazy val log: Logger = LoggerFactory getLogger getClass.getName
 
@@ -20,7 +25,7 @@ class AllNotificationsHandlerSpec
 
     "add notification" in {
       val uuid = "add"
-      this ? (uuid, AddNotification(generateMail(uuid))) await {
+      allNotificationsHandler ? (uuid, AddNotification(generateMail(uuid))) await {
         case n: NotificationAdded =>
           n.uuid shouldBe uuid
           assert(
@@ -32,13 +37,13 @@ class AllNotificationsHandlerSpec
 
     "remove notification" in {
       val uuid = "remove"
-      this ? (uuid, AddNotification(generateMail(uuid))) await {
+      allNotificationsHandler ? (uuid, AddNotification(generateMail(uuid))) await {
         case n: NotificationAdded =>
           n.uuid shouldBe uuid
           assert(
             probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey"
           )
-          this ? (uuid, RemoveNotification(uuid)) await {
+          allNotificationsHandler ? (uuid, RemoveNotification(uuid)) await {
             case _: NotificationRemoved.type => succeed
             case _                           => fail()
           }
@@ -48,7 +53,7 @@ class AllNotificationsHandlerSpec
 
     "send notification" in {
       val uuid = "send"
-      this ? (uuid, SendNotification(generateMail(uuid))) await {
+      allNotificationsHandler ? (uuid, SendNotification(generateMail(uuid))) await {
         case n: NotificationSent => n.uuid shouldBe uuid
         case _                   => fail()
       }
@@ -56,14 +61,14 @@ class AllNotificationsHandlerSpec
 
     "resend notification" in {
       val uuid = "resend"
-      this ? (uuid, SendNotification(generateMail(uuid))) await {
+      allNotificationsHandler ? (uuid, SendNotification(generateMail(uuid))) await {
         case n: NotificationSent =>
           n.uuid shouldBe uuid
-          this ? (uuid, ResendNotification(uuid)) await {
+          allNotificationsHandler ? (uuid, ResendNotification(uuid)) await {
             case n: NotificationSent => n.uuid shouldBe uuid
             case _                   => fail()
           }
-          this ? ("fake", ResendNotification(uuid)) await {
+          allNotificationsHandler ? ("fake", ResendNotification(uuid)) await {
             case NotificationNotFound => succeed
             case _                    => fail()
           }
@@ -73,10 +78,10 @@ class AllNotificationsHandlerSpec
 
     "retrieve notification status" in {
       val uuid = "status"
-      this ? (uuid, SendNotification(generateMail(uuid))) await {
+      allNotificationsHandler ? (uuid, SendNotification(generateMail(uuid))) await {
         case n: NotificationSent =>
           n.uuid shouldBe uuid
-          this ? (uuid, GetNotificationStatus(uuid)) await {
+          allNotificationsHandler ? (uuid, GetNotificationStatus(uuid)) await {
             case n: NotificationSent => n.uuid shouldBe uuid
             case _                   => fail()
           }
@@ -86,10 +91,10 @@ class AllNotificationsHandlerSpec
 
     "trigger notification" in {
       val uuid = "trigger"
-      this ? (uuid, SendNotification(generateMail(uuid))) await {
+      allNotificationsHandler ? (uuid, SendNotification(generateMail(uuid))) await {
         case n: NotificationSent =>
           n.uuid shouldBe uuid
-          this ? (uuid, GetNotificationStatus(uuid)) await {
+          allNotificationsHandler ? (uuid, GetNotificationStatus(uuid)) await {
             case n: NotificationSent =>
               n.uuid shouldBe uuid
               succeed
@@ -171,5 +176,31 @@ class AllNotificationsHandlerSpec
       }
     }
 
+    val clientId = "client"
+    val wsPath = s"/${ServerSettings.RootPath}/${NotificationSettings.NotificationConfig.path}"
+    lazy val wsClient: WSProbe = WSProbe()
+
+    "connect to ws server" in {
+      WS(s"$wsPath/connect/$clientId", wsClient.flow) ~> routes ~> check {
+        isWebSocketUpgrade shouldEqual true
+        wsClient.sendMessage("hello")
+      }
+    }
+
+    "send message to ws server" in {
+      val ws = generateWs(clientId)
+      client.sendWs(ws) complete () match {
+        case Success(result) =>
+          assert(result.exists(r => r.recipient == clientId && r.status.isSent))
+          wsClient.expectMessage(ws.message)
+        case Failure(_) => fail()
+      }
+      wsClient.sendCompletion()
+      client.sendWs(ws) complete () match {
+        case Success(result) =>
+          assert(result.exists(r => r.recipient == clientId && r.status.isRejected))
+        case Failure(_) => fail()
+      }
+    }
   }
 }

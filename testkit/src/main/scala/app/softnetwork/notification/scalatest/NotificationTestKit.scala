@@ -16,7 +16,8 @@ import app.softnetwork.notification.model.{
   Notification,
   Platform,
   Push,
-  SMS
+  SMS,
+  Ws
 }
 import app.softnetwork.scheduler.scalatest.SchedulerTestKit
 import com.typesafe.config.Config
@@ -84,6 +85,13 @@ trait NotificationTestKit[T <: Notification]
       .withMessage(message)
       .withDevices(devices)
       .withApplication("mock")
+
+  protected def generateWs(uuid: String): Ws =
+    Ws.defaultInstance
+      .withUuid(uuid)
+      .withSubject(subject)
+      .withMessage(message)
+      .withTo(Seq(uuid))
 
   val iosDevice: BasicDevice = BasicDevice(generateRandomDeviceToken, Platform.IOS)
 

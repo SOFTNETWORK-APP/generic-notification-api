@@ -27,6 +27,7 @@ message NotificationRecordedEvent {
         app.softnetwork.notification.model.Mail mail = 1;
         app.softnetwork.notification.model.SMS sms = 2;
         app.softnetwork.notification.model.Push push = 3;
+        app.softnetwork.notification.model.Ws ws = 4;
     }
 }
 
@@ -45,6 +46,7 @@ message ExternalEntityToNotificationEvent{
         app.softnetwork.notification.message.AddSMSCommandEvent addSMS = 2;
         app.softnetwork.notification.message.AddPushCommandEvent addPush = 3;
         app.softnetwork.notification.message.RemoveNotificationCommandEvent removeNotification = 4;
+        app.softnetwork.notification.message.AddWsCommandEvent addWs = 5;
     }
 }
 
@@ -64,6 +66,12 @@ message AddPushCommandEvent{
     option (scalapb.message).extends = "ProtobufEvent";
     option (scalapb.message).extends = "AddNotificationCommandEvent";
     required app.softnetwork.notification.model.Push notification = 1;
+}
+
+message AddWsCommandEvent{
+    option (scalapb.message).extends = "ProtobufEvent";
+    option (scalapb.message).extends = "AddNotificationCommandEvent";
+    required app.softnetwork.notification.model.Ws notification = 1;
 }
 
 message RemoveNotificationCommandEvent{

@@ -2,7 +2,7 @@ package app.softnetwork.notification.api
 
 import akka.actor.typed.ActorSystem
 import app.softnetwork.notification.handlers.AllNotificationsHandler
-import app.softnetwork.notification.launch.NotificationApplication
+import app.softnetwork.notification.launch.{NotificationApplication, NotificationRoutes}
 import app.softnetwork.notification.model.Notification
 import app.softnetwork.notification.persistence.query.{
   NotificationCommandProcessorStream,
@@ -17,7 +17,9 @@ import app.softnetwork.persistence.schema.SchemaProvider
 import app.softnetwork.scheduler.config.SchedulerSettings
 import com.typesafe.config.Config
 
-trait AllNotificationsApi extends NotificationApplication[Notification] { _: SchemaProvider =>
+trait AllNotificationsApi
+    extends NotificationApplication[Notification]
+    with NotificationRoutes[Notification] { _: SchemaProvider =>
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Notification]] =
     _ => Seq(AllNotificationsBehavior)

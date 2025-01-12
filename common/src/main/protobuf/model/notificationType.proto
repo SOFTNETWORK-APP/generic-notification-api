@@ -14,4 +14,5 @@ enum NotificationType {
     MAIL_TYPE = 1;
     SMS_TYPE = 2;
     PUSH_TYPE = 3;
+    WS_TYPE = 4;
 }

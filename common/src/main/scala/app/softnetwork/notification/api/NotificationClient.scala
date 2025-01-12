@@ -3,7 +3,7 @@ package app.softnetwork.notification.api
 import akka.actor.typed.ActorSystem
 import akka.grpc.GrpcClientSettings
 import app.softnetwork.api.server.client.{GrpcClient, GrpcClientFactory}
-import app.softnetwork.notification.model.{Mail, NotificationStatusResult, Push, SMS}
+import app.softnetwork.notification.model.{Mail, NotificationStatusResult, Push, SMS, Ws}
 
 import scala.concurrent.Future
 
@@ -26,6 +26,10 @@ trait NotificationClient extends GrpcClient {
     grpcClient.addPush(AddPushRequest(Some(push))) map (_.succeeded)
   }
 
+  def addWs(ws: Ws): Future[Boolean] = {
+    grpcClient.addWs(AddWsRequest(Some(ws))) map (_.succeeded)
+  }
+
   def removeNotification(uuid: String): Future[Boolean] = {
     grpcClient.removeNotification(RemoveNotificationRequest(uuid)) map (_.succeeded)
   }
@@ -40,6 +44,10 @@ trait NotificationClient extends GrpcClient {
 
   def sendPush(push: Push): Future[Seq[NotificationStatusResult]] = {
     grpcClient.sendPush(SendPushRequest(Some(push))) map (_.results)
+  }
+
+  def sendWs(ws: Ws): Future[Seq[NotificationStatusResult]] = {
+    grpcClient.sendWs(SendWsRequest(Some(ws))) map (_.results)
   }
 
   def getNotificationStatus(uuid: String): Future[Seq[NotificationStatusResult]] = {

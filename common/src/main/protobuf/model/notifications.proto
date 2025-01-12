@@ -138,6 +138,25 @@ message Push{
     optional string application = 24;
 }
 
+message Ws{
+    option (scalapb.message).extends = "ProtobufDomainObject";
+    option (scalapb.message).extends = "Notification";
+    required string uuid = 1;
+    required google.protobuf.Timestamp createdDate = 2 [(scalapb.field).type = "java.time.Instant"];
+    required google.protobuf.Timestamp lastUpdated = 3 [(scalapb.field).type = "java.time.Instant"];
+    required From from = 4;
+    repeated string to = 5;
+    required string subject = 8;
+    required string message = 9;
+    required int32 maxTries = 13 [default = 1];
+    required int32 nbTries = 14 [default = 0];
+    optional google.protobuf.Timestamp deferred = 15 [(scalapb.field).type = "java.time.Instant"];
+    optional string ackUuid = 16;
+    required NotificationStatus status = 17 [default = Pending];
+    repeated NotificationStatusResult results = 18;
+    required NotificationType type = 19 [default = WS_TYPE];
+}
+
 message PushPayload{
     option (scalapb.message).extends = "ProtobufDomainObject";
     required string application = 1;

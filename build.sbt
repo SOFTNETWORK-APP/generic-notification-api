@@ -2,7 +2,7 @@ ThisBuild / organization := "app.softnetwork"
 
 name := "notification"
 
-ThisBuild / version := "0.7.0"
+ThisBuild / version := "0.8.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "2.12.18"
 
@@ -24,7 +24,9 @@ val scalatest = Seq(
 
 ThisBuild / libraryDependencies ++= Seq(
   "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1"
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1",
+  "org.apache.commons" % "commons-lang3" % "3.15.0",
+  "org.slf4j" % "slf4j-api" % Versions.slf4j,
 ) ++ scalatest
 
 Test / parallelExecution := false

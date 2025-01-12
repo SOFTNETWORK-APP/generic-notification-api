@@ -9,5 +9,6 @@ libraryDependencies ++= Seq(
   "app.softnetwork.api" %% "generic-server-api-testkit" % Versions.genericPersistence,
   "com.github.kirviq" % "dumbster" % "1.7.1",
   "org.rapidoid" % "rapidoid-http-server" % "5.5.5",
-  "org.scalatest" %% "scalatest" % Versions.scalatest
+  "org.scalatest" %% "scalatest" % Versions.scalatest,
+  "com.typesafe.akka" %% "akka-stream-testkit" % Versions.akka % Test
 )

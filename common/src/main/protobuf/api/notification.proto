@@ -14,10 +14,12 @@ service NotificationServiceApi {
     rpc AddMail (AddMailRequest) returns (AddNotificationResponse) {}
     rpc AddSMS (AddSMSRequest) returns (AddNotificationResponse) {}
     rpc AddPush (AddPushRequest) returns (AddNotificationResponse) {}
+    rpc AddWs (AddWsRequest) returns (AddNotificationResponse) {}
     rpc RemoveNotification (RemoveNotificationRequest) returns (RemoveNotificationResponse) {}
     rpc SendMail (SendMailRequest) returns (SendNotificationResponse) {}
     rpc SendSMS (SendSMSRequest) returns (SendNotificationResponse) {}
     rpc SendPush (SendPushRequest) returns (SendNotificationResponse) {}
+    rpc SendWs (SendWsRequest) returns (SendNotificationResponse) {}
     rpc GetNotificationStatus (GetNotificationStatusRequest) returns (GetNotificationStatusResponse) {}
 }
 
@@ -31,6 +33,10 @@ message AddSMSRequest{
 
 message AddPushRequest{
     app.softnetwork.notification.model.Push push = 1;
+}
+
+message AddWsRequest{
+    app.softnetwork.notification.model.Ws ws = 1;
 }
 
 message AddNotificationResponse{
@@ -55,6 +61,10 @@ message SendSMSRequest{
 
 message SendPushRequest{
     app.softnetwork.notification.model.Push push = 1;
+}
+
+message SendWsRequest{
+    app.softnetwork.notification.model.Ws ws = 1;
 }
 
 message SendNotificationResponse{

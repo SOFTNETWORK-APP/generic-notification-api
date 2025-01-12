@@ -33,7 +33,11 @@ trait NotificationServer extends NotificationServiceApi {
     addNotification(in.push)
   }
 
-  protected def addNotification(maybe: Option[Notification]): Future[AddNotificationResponse] = {
+  override def addWs(in: AddWsRequest): Future[AddNotificationResponse] = {
+    addNotification(in.ws)
+  }
+
+  private def addNotification(maybe: Option[Notification]): Future[AddNotificationResponse] = {
     maybe match {
       case Some(notification) =>
         ?(notification.uuid, AddNotification(notification)) map {
@@ -63,6 +67,10 @@ trait NotificationServer extends NotificationServiceApi {
 
   override def sendPush(in: SendPushRequest): Future[SendNotificationResponse] = {
     sendNotification(in.push)
+  }
+
+  override def sendWs(in: SendWsRequest): Future[SendNotificationResponse] = {
+    sendNotification(in.ws)
   }
 
   protected def sendNotification(maybe: Option[Notification]): Future[SendNotificationResponse] = {

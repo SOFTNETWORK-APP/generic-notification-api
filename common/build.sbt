@@ -18,7 +18,8 @@ libraryDependencies ++= Seq(
     ExclusionRule(organization = "com.google.auth", name = "google-auth-library-oauth2-http")
     /*, ExclusionRule(organization = "org.apache.commons", name = "commons-lang3")*/,
     ExclusionRule(organization = "io.netty"),
-    ExclusionRule(organization = "io.grpc")
+    ExclusionRule(organization = "io.grpc"),
+    ExclusionRule(organization = "org.slf4j"),
   ),
   "com.eatthepath" % "pushy" % "0.15.1"
 )

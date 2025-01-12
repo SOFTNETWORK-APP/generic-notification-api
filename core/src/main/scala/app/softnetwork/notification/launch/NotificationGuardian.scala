@@ -9,7 +9,7 @@ import app.softnetwork.notification.persistence.query.{
   NotificationCommandProcessorStream,
   Scheduler2NotificationProcessorStream
 }
-import app.softnetwork.notification.persistence.typed.NotificationBehavior
+import app.softnetwork.notification.persistence.typed.{NotificationBehavior, WsClientsBehavior}
 import app.softnetwork.persistence.launch.{PersistenceGuardian, PersistentEntity}
 import app.softnetwork.persistence.query.EventProcessorStream
 import app.softnetwork.persistence.schema.SchemaProvider
@@ -24,7 +24,9 @@ trait NotificationGuardian[T <: Notification] extends PersistenceGuardian {
   def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[T]] = _ => Seq.empty
 
   def notificationEntities: ActorSystem[_] => Seq[PersistentEntity[_, _, _, _]] = sys =>
-    notificationBehaviors(sys).map(entity2PersistentEntity)
+    notificationBehaviors(sys).map(entity2PersistentEntity) :+ entity2PersistentEntity(
+      WsClientsBehavior
+    )
 
   /** initialize all entities
     */

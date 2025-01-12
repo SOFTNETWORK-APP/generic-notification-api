@@ -1,21 +1,29 @@
 package app.softnetwork.notification
 
+import akka.actor.{ActorRef, ActorSystem => ClassicSystem}
 import akka.actor.typed.ActorSystem
-import app.softnetwork.notification.model.Notification
+import akka.http.scaladsl.model.ws.TextMessage
+import app.softnetwork.concurrent.Completion
+import app.softnetwork.notification.handlers.WsClientsDao
 import app.softnetwork.notification.model.{
   Mail,
+  Notification,
   NotificationAck,
   NotificationStatus,
   NotificationStatusResult,
   Platform,
   Push,
   PushPayload,
-  SMS
+  SMS,
+  Ws
 }
+import app.softnetwork.persistence.typed._
 
 import java.time.Instant
-import java.util.Date
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
+import scala.util.{Failure, Success}
 
 package object spi {
 
@@ -132,11 +140,94 @@ package object spi {
     }
   }
 
-  trait MailAndSMSAndFcmAndIosProvider
+  trait WsProvider extends Completion {
+
+    private val wsClientsDao: WsClientsDao = WsClientsDao
+
+    def sendWs(ws: Ws)(implicit system: ActorSystem[_]): NotificationAck = {
+      implicit val ec: ExecutionContext = system.executionContext
+      val classicSystem: ClassicSystem = system
+      val skipped = ws.results
+        .filter(result => result.status.isSent || result.status.isDelivered)
+        .map(_.recipient)
+      val clients = ws.to.filter(clientId => !skipped.contains(clientId))
+      val results: Seq[Future[NotificationStatusResult]] = {
+        for (clientId <- clients) yield {
+          WsClients.lookupKeyValue(clientId) match {
+            case Some(actorRef) =>
+              actorRef ! TextMessage.Strict(ws.message)
+              Future.successful(
+                NotificationStatusResult.defaultInstance
+                  .withUuid(ws.uuid)
+                  .withRecipient(clientId)
+                  .withStatus(NotificationStatus.Sent)
+              )
+            case None =>
+              wsClientsDao.lookupKeyValue(clientId) flatMap {
+                case Some(ref) =>
+                  classicSystem
+                    .actorSelection(ref)
+                    .resolveOne(FiniteDuration(5, "seconds"))
+                    .map(actorRef => {
+                      actorRef ! TextMessage.Strict(ws.message)
+                      NotificationStatusResult.defaultInstance
+                        .withUuid(ws.uuid)
+                        .withRecipient(clientId)
+                        .withStatus(NotificationStatus.Sent)
+                    })
+                    .recover { case e: Throwable =>
+                      wsClientsDao.removeKeyValue(clientId)
+                      Console.err.println(
+                        s"Error while sending notification to client $clientId: ${e.getMessage}"
+                      )
+                      NotificationStatusResult.defaultInstance
+                        .withUuid(ws.uuid)
+                        .withRecipient(clientId)
+                        .withStatus(NotificationStatus.Rejected)
+                        .withError(e.getMessage)
+                    }
+                case None =>
+                  val error = s"ActorRef for client $clientId not found"
+                  Console.err.println(error)
+                  Future.successful(
+                    NotificationStatusResult.defaultInstance
+                      .withUuid(ws.uuid)
+                      .withRecipient(clientId)
+                      .withStatus(NotificationStatus.Rejected)
+                      .withError(error)
+                  )
+              }
+          }
+        }
+      }
+      Future.sequence(results).flatMap(results => Future.successful(results)) complete () match {
+        case Success(s) =>
+          val existingResults =
+            ws.results.filterNot(result => s.exists(_.recipient == result.recipient))
+          ackClient(ws.withResults(existingResults ++ s))
+        case Failure(f) =>
+          Console.err.println(f.getMessage)
+          ackClient(ws)
+      }
+    }
+
+    def ackClient(notification: Ws)(implicit system: ActorSystem[_]): NotificationAck =
+      NotificationAck(Some(s"${notification.uuid}-ack"), notification.results, Instant.now())
+  }
+
+  object WsClients {
+    var clients: Map[String, ActorRef] = Map.empty
+    def addKeyValue(key: String, value: ActorRef): Unit = clients += key -> value
+    def removeKeyValue(key: String): Unit = clients -= key
+    def lookupKeyValue(key: String): Option[ActorRef] = clients.get(key)
+  }
+
+  trait MailAndSMSAndFcmAndIosAndWsProvider
       extends NotificationProvider
       with MailProvider
       with SMSProvider
-      with AndroidAndIosProvider {
+      with AndroidAndIosProvider
+      with WsProvider {
     override type N = Notification
 
     override def send(
@@ -145,6 +236,7 @@ package object spi {
       case mail: Mail => sendMail(mail)
       case sms: SMS   => sendSMS(sms)
       case push: Push => sendPush(push)
+      case ws: Ws     => sendWs(ws)
       case _          => NotificationAck(notification.ackUuid, notification.results, Instant.now())
     }
 
@@ -153,6 +245,7 @@ package object spi {
         case mail: Mail => ackMail(mail)
         case sms: SMS   => ackSMS(sms)
         case push: Push => ackPush(push)
+        case ws: Ws     => ackClient(ws)
         case _ => NotificationAck(notification.ackUuid, notification.results, Instant.now())
       }
   }

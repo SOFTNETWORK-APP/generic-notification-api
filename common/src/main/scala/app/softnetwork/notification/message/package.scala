@@ -96,6 +96,7 @@ package object message {
         case r: NotificationRecordedEvent.Wrapped.Mail => Some(r.value)
         case r: NotificationRecordedEvent.Wrapped.Sms  => Some(r.value)
         case r: NotificationRecordedEvent.Wrapped.Push => Some(r.value)
+        case r: NotificationRecordedEvent.Wrapped.Ws   => Some(r.value)
         case _                                         => None
       }
   }
@@ -112,6 +113,8 @@ package object message {
           Some(AddNotification(r.value.notification))
         case r: ExternalEntityToNotificationEvent.Wrapped.RemoveNotification =>
           Some(RemoveNotification(r.value.uuid))
+        case r: ExternalEntityToNotificationEvent.Wrapped.AddWs =>
+          Some(AddNotification(r.value.notification))
         case _ => None
       }
   }

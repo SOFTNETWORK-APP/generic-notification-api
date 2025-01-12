@@ -96,6 +96,7 @@ trait NotificationBehavior[T <: Notification]
           case n: Mail => Some(NotificationRecordedEvent.Wrapped.Mail(n))
           case n: SMS  => Some(NotificationRecordedEvent.Wrapped.Sms(n))
           case n: Push => Some(NotificationRecordedEvent.Wrapped.Push(n))
+          case n: Ws   => Some(NotificationRecordedEvent.Wrapped.Ws(n))
           case _       => None
         }) match {
           case Some(event) =>

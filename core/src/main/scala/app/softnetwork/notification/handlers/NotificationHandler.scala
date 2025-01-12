@@ -5,6 +5,7 @@ import app.softnetwork.persistence.typed.scaladsl.EntityPattern
 import app.softnetwork.persistence.typed.CommandTypeKey
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.persistence.typed._
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.reflect.ClassTag
 
@@ -23,6 +24,10 @@ trait AllNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
 }
 
 trait AllNotificationsHandler extends NotificationHandler with AllNotificationsTypeKey
+
+object AllNotificationsHandler extends AllNotificationsHandler {
+  override def log: Logger = LoggerFactory.getLogger(this.getClass)
+}
 
 trait ApnsNotificationsTypeKey extends CommandTypeKey[NotificationCommand] {
   override def TypeKey(implicit
