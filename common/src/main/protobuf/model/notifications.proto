@@ -155,6 +155,7 @@ message Ws{
     required NotificationStatus status = 17 [default = Pending];
     repeated NotificationStatusResult results = 18;
     required NotificationType type = 19 [default = WS_TYPE];
+    optional string channel = 20;
 }
 
 message PushPayload{

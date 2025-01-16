@@ -147,18 +147,28 @@ package object spi {
     def sendWs(ws: Ws)(implicit system: ActorSystem[_]): NotificationAck = {
       implicit val ec: ExecutionContext = system.executionContext
       val classicSystem: ClassicSystem = system
-      val skipped = ws.results
+      val updatedWs =
+        ws.channel match {
+          case Some(channel) =>
+            val clients = WsChannels.lookupClients(channel) match {
+              case Some(clients) if clients.nonEmpty => clients // ++ ws.to
+              case _                                 => ws.to
+            }
+            ws.withTo(clients.toSeq)
+          case None => ws
+        }
+      val skipped = updatedWs.results
         .filter(result => result.status.isSent || result.status.isDelivered)
         .map(_.recipient)
-      val clients = ws.to.filter(clientId => !skipped.contains(clientId))
+      val clients = updatedWs.to.filter(clientId => !skipped.contains(clientId))
       val results: Seq[Future[NotificationStatusResult]] = {
         for (clientId <- clients) yield {
-          WsClients.lookupKeyValue(clientId) match {
+          WsClients.lookup(clientId) match {
             case Some(actorRef) =>
-              actorRef ! TextMessage.Strict(ws.message)
+              actorRef ! TextMessage.Strict(updatedWs.message)
               Future.successful(
                 NotificationStatusResult.defaultInstance
-                  .withUuid(ws.uuid)
+                  .withUuid(updatedWs.uuid)
                   .withRecipient(clientId)
                   .withStatus(NotificationStatus.Sent)
               )
@@ -216,10 +226,30 @@ package object spi {
   }
 
   object WsClients {
-    var clients: Map[String, ActorRef] = Map.empty
-    def addKeyValue(key: String, value: ActorRef): Unit = clients += key -> value
-    def removeKeyValue(key: String): Unit = clients -= key
-    def lookupKeyValue(key: String): Option[ActorRef] = clients.get(key)
+    private[this] var clients: Map[String, ActorRef] = Map.empty
+    def add(client: String, actorRef: ActorRef): Unit = clients += client -> actorRef
+    def remove(client: String): Unit = clients -= client
+    def lookup(client: String): Option[ActorRef] = clients.get(client)
+  }
+
+  object WsChannels {
+    private[this] var channels: Map[String, Set[String]] = Map.empty
+    def addSession(channel: String, session: String): Unit =
+      channels += channel -> channels.get(channel).map(_ + session).getOrElse(Set(session))
+    def removeSession(channel: String, session: String): Unit =
+      channels += channel -> channels.get(channel).map(_ - session).getOrElse(Set.empty)
+    def lookupClients(channel: String): Option[Set[String]] = channels
+      .get(channel)
+      .map(sessions => sessions.flatMap(session => WsSessions.lookupClients(session)).flatten)
+  }
+
+  object WsSessions {
+    private[this] var sessions: Map[String, Set[String]] = Map.empty
+    def addClient(session: String, client: String): Unit =
+      sessions += session -> sessions.get(session).map(_ + client).getOrElse(Set(client))
+    def removeClient(session: String, client: String): Unit =
+      sessions += session -> sessions.get(session).map(_ - client).getOrElse(Set.empty)
+    def lookupClients(session: String): Option[Set[String]] = sessions.get(session)
   }
 
   trait MailAndSMSAndFcmAndIosAndWsProvider

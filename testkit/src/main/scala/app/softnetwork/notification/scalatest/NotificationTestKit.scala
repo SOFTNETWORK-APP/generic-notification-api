@@ -86,12 +86,13 @@ trait NotificationTestKit[T <: Notification]
       .withDevices(devices)
       .withApplication("mock")
 
-  protected def generateWs(uuid: String): Ws =
+  protected def generateWs(uuid: String, channel: Option[String] = None): Ws =
     Ws.defaultInstance
       .withUuid(uuid)
       .withSubject(subject)
       .withMessage(message)
       .withTo(Seq(uuid))
+      .copy(channel = channel)
 
   val iosDevice: BasicDevice = BasicDevice(generateRandomDeviceToken, Platform.IOS)
 
@@ -104,7 +105,7 @@ trait NotificationTestKit[T <: Notification]
   lazy val client: NotificationClient = NotificationClient(asystem)
 
   override def entities: ActorSystem[_] => Seq[PersistentEntity[_, _, _, _]] = sys =>
-    schedulerEntities(sys) ++ notificationEntities(sys)
+    schedulerEntities(sys) ++ sessionEntities(sys) ++ notificationEntities(sys)
 
   override def eventProcessorStreams: ActorSystem[_] => Seq[EventProcessorStream[_]] = sys =>
     schedulerEventProcessorStreams(sys) ++

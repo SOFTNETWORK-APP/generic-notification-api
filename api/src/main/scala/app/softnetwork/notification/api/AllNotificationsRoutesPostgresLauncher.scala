@@ -1,12 +1,15 @@
 package app.softnetwork.notification.api
 
-import akka.actor.typed.ActorSystem
-import app.softnetwork.api.server.ApiRoute
 import app.softnetwork.persistence.jdbc.schema.{JdbcSchemaProvider, JdbcSchemaTypes}
 import app.softnetwork.persistence.schema.SchemaType
+import app.softnetwork.session.api.SessionApi
 import org.slf4j.{Logger, LoggerFactory}
+import org.softnetwork.session.model.Session
 
-object AllNotificationsPostgresLauncher extends AllNotificationsApi with JdbcSchemaProvider {
+object AllNotificationsRoutesPostgresLauncher
+    extends AllNotificationsRoutesApi[Session]
+    with SessionApi
+    with JdbcSchemaProvider {
 
   lazy val log: Logger = LoggerFactory getLogger getClass.getName
 

@@ -1,7 +1,6 @@
 package app.softnetwork.notification.scalatest
 
 import akka.actor.typed.ActorSystem
-import app.softnetwork.api.server.ApiRoutes
 import app.softnetwork.notification.api.{
   AllNotificationsServer,
   NotificationGrpcServerTestKit,
@@ -25,8 +24,11 @@ import com.typesafe.config.Config
 import org.scalatest.Suite
 import org.slf4j.{Logger, LoggerFactory}
 
-trait AllNotificationsTestKit extends NotificationApiRoutesTestKit[Notification] with ApnsToken {
-  _: Suite with ApiRoutes =>
+trait AllNotificationsTestKit
+    extends NotificationGrpcServerTestKit[Notification]
+    with NotificationTestKit[Notification]
+    with ApnsToken {
+  _: Suite =>
 
   lazy val apnsPort: Int = availablePort
 
@@ -34,7 +36,7 @@ trait AllNotificationsTestKit extends NotificationApiRoutesTestKit[Notification]
 
   lazy val smtpPort: Int = availablePort
 
-  lazy val allNotificationsHandler: AllNotificationsHandler.type = AllNotificationsHandler
+  lazy val allNotificationsHandler: AllNotificationsHandler = AllNotificationsHandler
 
   override lazy val additionalConfig: String = notificationGrpcConfig +
     s"""

@@ -10,13 +10,15 @@ import app.softnetwork.notification.persistence.query.{
   Scheduler2NotificationProcessorStream
 }
 import app.softnetwork.notification.persistence.typed.{NotificationBehavior, WsClientsBehavior}
-import app.softnetwork.persistence.launch.{PersistenceGuardian, PersistentEntity}
+import app.softnetwork.persistence.launch.PersistentEntity
 import app.softnetwork.persistence.query.EventProcessorStream
 import app.softnetwork.persistence.schema.SchemaProvider
+import app.softnetwork.session.CsrfCheckHeader
+import app.softnetwork.session.launch.SessionGuardian
 
 import scala.language.implicitConversions
 
-trait NotificationGuardian[T <: Notification] extends PersistenceGuardian {
+trait NotificationGuardian[T <: Notification] extends SessionGuardian with CsrfCheckHeader {
   _: SchemaProvider =>
 
   import app.softnetwork.persistence.launch.PersistenceGuardian._
@@ -31,7 +33,7 @@ trait NotificationGuardian[T <: Notification] extends PersistenceGuardian {
   /** initialize all entities
     */
   override def entities: ActorSystem[_] => Seq[PersistentEntity[_, _, _, _]] = sys =>
-    notificationEntities(sys)
+    sessionEntities(sys) ++ notificationEntities(sys)
 
   def scheduler2NotificationProcessorStream
     : ActorSystem[_] => Option[Scheduler2NotificationProcessorStream] = _ => None

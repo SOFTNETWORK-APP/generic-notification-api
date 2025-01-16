@@ -1,8 +1,8 @@
 package app.softnetwork.notification.api
 
 import akka.actor.typed.ActorSystem
+import app.softnetwork.api.server.ApiRoutes
 import app.softnetwork.notification.handlers.AllNotificationsHandler
-import app.softnetwork.notification.launch.{NotificationApplication, NotificationRoutes}
 import app.softnetwork.notification.model.Notification
 import app.softnetwork.notification.persistence.query.{
   NotificationCommandProcessorStream,
@@ -15,11 +15,11 @@ import app.softnetwork.notification.persistence.typed.{
 import app.softnetwork.persistence.jdbc.query.{JdbcJournalProvider, JdbcOffsetProvider}
 import app.softnetwork.persistence.schema.SchemaProvider
 import app.softnetwork.scheduler.config.SchedulerSettings
+import app.softnetwork.session.model.{SessionData, SessionDataDecorator}
 import com.typesafe.config.Config
 
-trait AllNotificationsApi
-    extends NotificationApplication[Notification]
-    with NotificationRoutes[Notification] { _: SchemaProvider =>
+trait AllNotificationsApi[SD <: SessionData with SessionDataDecorator[SD]]
+    extends NotificationApi[SD, Notification] { _: ApiRoutes with SchemaProvider =>
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Notification]] =
     _ => Seq(AllNotificationsBehavior)

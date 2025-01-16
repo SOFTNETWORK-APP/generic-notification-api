@@ -1,12 +1,7 @@
 package app.softnetwork.notification.handlers
 
-import akka.http.scaladsl.testkit.WSProbe
-import app.softnetwork.api.server.config.ServerSettings
-import app.softnetwork.notification.config.NotificationSettings
-import app.softnetwork.notification.launch.NotificationRoutes
 import org.scalatest.wordspec.AnyWordSpecLike
 import app.softnetwork.notification.message._
-import app.softnetwork.notification.model.Notification
 import app.softnetwork.notification.scalatest.AllNotificationsTestKit
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -14,10 +9,7 @@ import scala.util.{Failure, Success}
 
 /** Created by smanciot on 14/04/2020.
   */
-class AllNotificationsHandlerSpec
-    extends AnyWordSpecLike
-    with AllNotificationsTestKit
-    with NotificationRoutes[Notification] {
+class AllNotificationsHandlerSpec extends AnyWordSpecLike with AllNotificationsTestKit {
 
   lazy val log: Logger = LoggerFactory getLogger getClass.getName
 
@@ -172,33 +164,6 @@ class AllNotificationsHandlerSpec
         case Success(result) =>
           assert(result.exists(r => r.recipient == androidDevice.regId && r.status.isSent))
           assert(result.exists(r => r.recipient == iosDevice.regId && r.status.isSent))
-        case Failure(_) => fail()
-      }
-    }
-
-    val clientId = "client"
-    val wsPath = s"/${ServerSettings.RootPath}/${NotificationSettings.NotificationConfig.path}"
-    lazy val wsClient: WSProbe = WSProbe()
-
-    "connect to ws server" in {
-      WS(s"$wsPath/connect/$clientId", wsClient.flow) ~> routes ~> check {
-        isWebSocketUpgrade shouldEqual true
-        wsClient.sendMessage("hello")
-      }
-    }
-
-    "send message to ws server" in {
-      val ws = generateWs(clientId)
-      client.sendWs(ws) complete () match {
-        case Success(result) =>
-          assert(result.exists(r => r.recipient == clientId && r.status.isSent))
-          wsClient.expectMessage(ws.message)
-        case Failure(_) => fail()
-      }
-      wsClient.sendCompletion()
-      client.sendWs(ws) complete () match {
-        case Success(result) =>
-          assert(result.exists(r => r.recipient == clientId && r.status.isRejected))
         case Failure(_) => fail()
       }
     }
