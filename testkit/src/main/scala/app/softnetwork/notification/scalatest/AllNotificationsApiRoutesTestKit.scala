@@ -8,4 +8,6 @@ import org.scalatest.Suite
 
 trait AllNotificationsApiRoutesTestKit[SD <: SessionData with SessionDataDecorator[SD]]
     extends NotificationApiRoutesTestKit[SD, Notification]
-    with AllNotificationsTestKit { _: Suite with ApiRoutes with SessionMaterials[SD] => }
+    with AllNotificationsTestKit {
+  _: Suite with ApiRoutes with SessionMaterials[SD] with WsClientTestKit =>
+}
