@@ -28,7 +28,7 @@ trait AllNotificationsTestKit
     extends NotificationGrpcServerTestKit[Notification]
     with NotificationTestKit[Notification]
     with ApnsToken {
-  _: Suite with WsClientTestKit =>
+  _: Suite =>
 
   lazy val apnsPort: Int = availablePort
 

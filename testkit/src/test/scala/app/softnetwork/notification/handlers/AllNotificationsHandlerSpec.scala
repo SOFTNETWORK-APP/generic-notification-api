@@ -2,17 +2,14 @@ package app.softnetwork.notification.handlers
 
 import org.scalatest.wordspec.AnyWordSpecLike
 import app.softnetwork.notification.message._
-import app.softnetwork.notification.scalatest.{AllNotificationsTestKit, WsClientTestKit}
+import app.softnetwork.notification.scalatest.AllNotificationsTestKit
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.{Failure, Success}
 
 /** Created by smanciot on 14/04/2020.
   */
-class AllNotificationsHandlerSpec
-    extends AnyWordSpecLike
-    with AllNotificationsTestKit
-    with WsClientTestKit {
+class AllNotificationsHandlerSpec extends AnyWordSpecLike with AllNotificationsTestKit {
 
   lazy val log: Logger = LoggerFactory getLogger getClass.getName
 
