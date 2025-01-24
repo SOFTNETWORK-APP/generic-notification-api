@@ -147,67 +147,71 @@ package object spi {
     def sendWs(ws: Ws)(implicit system: ActorSystem[_]): NotificationAck = {
       implicit val ec: ExecutionContext = system.executionContext
       val classicSystem: ClassicSystem = system
-      val updatedWs =
-        ws.channel match {
-          case Some(channel) =>
-            val clients = WsChannels.lookupClients(channel) match {
-              case Some(clients) if clients.nonEmpty => clients // ++ ws.to
-              case _                                 => ws.to
-            }
-            ws.withTo(clients.toSeq)
-          case None => ws
-        }
-      val skipped = updatedWs.results
+      val skipped = ws.results
         .filter(result => result.status.isSent || result.status.isDelivered)
         .map(_.recipient)
-      val clients = updatedWs.to.filter(clientId => !skipped.contains(clientId))
+      val recipients = ws.recipients().filter(recipient => !skipped.contains(recipient))
       val results: Seq[Future[NotificationStatusResult]] = {
-        for (clientId <- clients) yield {
-          WsClients.lookup(clientId) match {
-            case Some(actorRef) =>
-              actorRef ! TextMessage.Strict(updatedWs.message)
-              Future.successful(
-                NotificationStatusResult.defaultInstance
-                  .withUuid(updatedWs.uuid)
-                  .withRecipient(clientId)
-                  .withStatus(NotificationStatus.Sent)
-              )
-            case None =>
-              wsClientsDao.lookupKeyValue(clientId) flatMap {
-                case Some(ref) =>
-                  classicSystem
-                    .actorSelection(ref)
-                    .resolveOne(FiniteDuration(5, "seconds"))
-                    .map(actorRef => {
-                      actorRef ! TextMessage.Strict(ws.message)
+        if (recipients.nonEmpty) {
+          for (recipient <- recipients) yield {
+            WsClients.lookup(recipient) match {
+              case Some(actorRef) =>
+                actorRef ! TextMessage.Strict(ws.message)
+                Future.successful(
+                  NotificationStatusResult.defaultInstance
+                    .withUuid(ws.uuid)
+                    .withRecipient(recipient)
+                    .withStatus(NotificationStatus.Sent)
+                )
+              case None =>
+                wsClientsDao.lookupKeyValue(recipient) flatMap {
+                  case Some(ref) =>
+                    classicSystem
+                      .actorSelection(ref)
+                      .resolveOne(FiniteDuration(5, "seconds"))
+                      .map(actorRef => {
+                        actorRef ! TextMessage.Strict(ws.message)
+                        NotificationStatusResult.defaultInstance
+                          .withUuid(ws.uuid)
+                          .withRecipient(recipient)
+                          .withStatus(NotificationStatus.Sent)
+                      })
+                      .recover { case e: Throwable =>
+                        wsClientsDao.removeKeyValue(recipient)
+                        Console.err.println(
+                          s"Error while sending notification to client $recipient: ${e.getMessage}"
+                        )
+                        NotificationStatusResult.defaultInstance
+                          .withUuid(ws.uuid)
+                          .withRecipient(recipient)
+                          .withStatus(NotificationStatus.Rejected)
+                          .withError(e.getMessage)
+                      }
+                  case None =>
+                    val error = s"ActorRef for client $recipient not found"
+                    Console.err.println(error)
+                    Future.successful(
                       NotificationStatusResult.defaultInstance
                         .withUuid(ws.uuid)
-                        .withRecipient(clientId)
-                        .withStatus(NotificationStatus.Sent)
-                    })
-                    .recover { case e: Throwable =>
-                      wsClientsDao.removeKeyValue(clientId)
-                      Console.err.println(
-                        s"Error while sending notification to client $clientId: ${e.getMessage}"
-                      )
-                      NotificationStatusResult.defaultInstance
-                        .withUuid(ws.uuid)
-                        .withRecipient(clientId)
+                        .withRecipient(recipient)
                         .withStatus(NotificationStatus.Rejected)
-                        .withError(e.getMessage)
-                    }
-                case None =>
-                  val error = s"ActorRef for client $clientId not found"
-                  Console.err.println(error)
-                  Future.successful(
-                    NotificationStatusResult.defaultInstance
-                      .withUuid(ws.uuid)
-                      .withRecipient(clientId)
-                      .withStatus(NotificationStatus.Rejected)
-                      .withError(error)
-                  )
-              }
+                        .withError(error)
+                    )
+                }
+            }
           }
+        } else {
+          val error = s"No recipient found for notification ${ws.uuid}"
+          Console.err.println(error)
+          Seq(
+            Future.successful(
+              NotificationStatusResult.defaultInstance
+                .withUuid(ws.uuid)
+                .withRecipient("__unknown__")
+                .withStatus(NotificationStatus.Rejected)
+                .withError(error)
+            )
+          )
         }
       }
       Future.sequence(results).flatMap(results => Future.successful(results)) complete () match {
@@ -234,10 +238,14 @@ package object spi {
 
   object WsChannels {
     private[this] var channels: Map[String, Set[String]] = Map.empty
-    def addSession(channel: String, session: String): Unit =
+    def addSession(channel: String, session: String): Unit = {
+      Console.out.println(s"Adding session $session to channel $channel")
       channels += channel -> channels.get(channel).map(_ + session).getOrElse(Set(session))
-    def removeSession(channel: String, session: String): Unit =
+    }
+    def removeSession(channel: String, session: String): Unit = {
+      Console.out.println(s"Removing session $session from channel $channel")
       channels += channel -> channels.get(channel).map(_ - session).getOrElse(Set.empty)
+    }
     def lookupClients(channel: String): Option[Set[String]] = channels
       .get(channel)
       .map(sessions => sessions.flatMap(session => WsSessions.lookupClients(session)).flatten)

@@ -1,5 +1,6 @@
 package app.softnetwork.notification.model
 
+import app.softnetwork.notification.spi.WsChannels
 import app.softnetwork.persistence.model.State
 
 import java.time.Instant
@@ -25,9 +26,9 @@ trait Notification extends State with NotificationDecorator {
 
   def results: Seq[NotificationStatusResult]
 
-  def removeOnSuccess: Option[Boolean] = None
+  def removeOnSuccess(): Option[Boolean] = None
 
-  def removeAfterMaxTries: Option[Boolean] = None
+  def removeAfterMaxTries(): Option[Boolean] = None
 }
 
 trait NotificationDecorator { _: Notification =>
@@ -56,6 +57,15 @@ trait NotificationDecorator { _: Notification =>
         )
       )
       .withLastUpdated(ack.date)
+
+  def recipients(): Seq[String] = to
+
+  def recipientsAsString(): String =
+    if (recipients().isEmpty) {
+      "__unknown__"
+    } else {
+      recipients().mkString(",")
+    }
 }
 
 trait NotificationAckDecorator { _: NotificationAck =>
@@ -79,4 +89,12 @@ object NotificationAckDecorator {
       NotificationStatus.UnknownNotificationStatus
     }
   }
+}
+
+trait WsDecorator extends Notification { self: Ws =>
+  override def recipients(): Seq[String] =
+    self.channel match {
+      case Some(channel) => WsChannels.lookupClients(channel).getOrElse(self.to).toSeq
+      case None          => self.to
+    }
 }

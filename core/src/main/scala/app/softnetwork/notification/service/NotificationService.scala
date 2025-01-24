@@ -21,8 +21,6 @@ import de.heikoseeberger.akkahttpjson4s.Json4sSupport
 import org.json4s.jackson.Serialization
 import org.json4s.{jackson, Formats}
 
-import scala.concurrent.ExecutionContext
-
 trait NotificationService[SD <: SessionData with SessionDataDecorator[SD]]
     extends Directives
     with DefaultComplete
@@ -114,10 +112,14 @@ trait NotificationService[SD <: SessionData with SessionDataDecorator[SD]]
         WsSessions.addClient(sessionId, clientId) // add client to session
         WsClients.add(clientId, actorRef) // add actor to client
         channel match {
-          case Some(ch) => WsChannels.addSession(ch, sessionId) // add session to channel
-          case _        =>
+          case Some(ch) =>
+            WsChannels.addSession(ch, sessionId) // add session to channel
+            Console.out.println(
+              s"Client $clientId connected to channel $channel with session $sessionId"
+            )
+          case _ =>
+            Console.out.println(s"Client $clientId connected with session $sessionId")
         }
-        Console.out.println(s"Client $clientId connected")
         actorRef
       }
 

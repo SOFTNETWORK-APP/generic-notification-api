@@ -140,7 +140,7 @@ message Push{
 
 message Ws{
     option (scalapb.message).extends = "ProtobufDomainObject";
-    option (scalapb.message).extends = "Notification";
+    option (scalapb.message).extends = "WsDecorator";
     required string uuid = 1;
     required google.protobuf.Timestamp createdDate = 2 [(scalapb.field).type = "java.time.Instant"];
     required google.protobuf.Timestamp lastUpdated = 3 [(scalapb.field).type = "java.time.Instant"];

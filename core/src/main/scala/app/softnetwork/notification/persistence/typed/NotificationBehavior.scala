@@ -327,6 +327,10 @@ trait NotificationBehavior[T <: Notification]
         Some(
           NotificationRecordedEvent.Wrapped.Push(n.copyWithAck(notificationAck).asInstanceOf[Push])
         )
+      case n: Ws =>
+        Some(
+          NotificationRecordedEvent.Wrapped.Ws(n.copyWithAck(notificationAck).asInstanceOf[Ws])
+        )
       case _ => None
     }) match {
       case Some(event) =>
@@ -380,7 +384,7 @@ trait NotificationBehavior[T <: Notification]
                 persistenceId,
                 entityId,
                 status.name,
-                to.mkString(", ")
+                recipientsAsString()
               )
               Some((send(notification), 1))
             }
@@ -391,11 +395,11 @@ trait NotificationBehavior[T <: Notification]
           Some((NotificationAck(notification.ackUuid, notification.results, Instant.now()), 1))
         } else {
           log.info(
-            "Sending {}#{} in {} status to {} recipients",
+            s"Sending {}#{} in {} status to {} recipients with $nbTries tries",
             persistenceId,
             entityId,
             status.name,
-            to.mkString(", ")
+            recipientsAsString()
           )
           Some((send(notification), 1))
         }
@@ -432,6 +436,12 @@ trait NotificationBehavior[T <: Notification]
               NotificationRecordedEvent.Wrapped.Push(updatedNotification.asInstanceOf[Push])
             )
           )
+        case _: Ws =>
+          Some(
+            NotificationRecordedEvent(
+              NotificationRecordedEvent.Wrapped.Ws(updatedNotification.asInstanceOf[Ws])
+            )
+          )
         case _ => None
       }
 
@@ -439,7 +449,7 @@ trait NotificationBehavior[T <: Notification]
       List(event).flatten ++ {
         if (
           (updatedNotification.status.isSent || updatedNotification.status.isDelivered)
-          && updatedNotification.removeOnSuccess.getOrElse(false)
+          && updatedNotification.removeOnSuccess().getOrElse(false)
         ) {
           List(NotificationRemovedEvent(entityId))
         } else if (
@@ -447,7 +457,7 @@ trait NotificationBehavior[T <: Notification]
           && !updatedNotification.status.isDelivered
           && updatedNotification.maxTries > 0
           && updatedNotification.nbTries > updatedNotification.maxTries
-          && updatedNotification.removeAfterMaxTries.getOrElse(false)
+          && updatedNotification.removeAfterMaxTries().getOrElse(false)
         ) {
           List(NotificationRemovedEvent(entityId))
         } else {
