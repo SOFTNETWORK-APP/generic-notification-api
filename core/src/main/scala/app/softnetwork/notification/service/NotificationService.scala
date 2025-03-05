@@ -58,7 +58,8 @@ trait NotificationService[SD <: SessionData with SessionDataDecorator[SD]]
         requiredSession(sc, gt) { session =>
           post {
             WsChannels.addSession(channel, session.id)
-            val channels =
+            complete(HttpResponse(StatusCodes.OK))
+            /*val channels =
               session.get("channels").getOrElse("").split(",").filter(_.nonEmpty).toSet + channel
             var updatedSession = session
             updatedSession += ("channels" -> channels.mkString(","))
@@ -67,10 +68,11 @@ trait NotificationService[SD <: SessionData with SessionDataDecorator[SD]]
               setNewCsrfToken(checkHeader) {
                 complete(HttpResponse(StatusCodes.OK))
               }
-            }
+            }*/
           } ~ delete {
             WsChannels.removeSession(channel, session.id)
-            val channels =
+            complete(HttpResponse(StatusCodes.OK))
+            /*val channels =
               session.get("channels").getOrElse("").split(",").filter(_.nonEmpty).toSet - channel
             var updatedSession = session
             updatedSession += ("channels" -> channels.mkString(","))
@@ -79,7 +81,7 @@ trait NotificationService[SD <: SessionData with SessionDataDecorator[SD]]
               setNewCsrfToken(checkHeader) {
                 complete(HttpResponse(StatusCodes.OK))
               }
-            }
+            }*/
           }
         }
       }
