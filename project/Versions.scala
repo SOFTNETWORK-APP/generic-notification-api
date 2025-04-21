@@ -4,9 +4,9 @@ object Versions {
 
   val slf4j = "1.7.36"
 
-  val genericPersistence = "0.6.2.1"
+  val genericPersistence = "0.7-SNAPSHOT"
 
-  val scheduler = "0.6.3"
+  val scheduler = "0.7-SNAPSHOT"
 
   val scalatest = "3.2.16"
 }

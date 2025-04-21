@@ -38,13 +38,15 @@ trait AllNotificationsTestKit
 
   lazy val allNotificationsHandler: AllNotificationsHandler = AllNotificationsHandler
 
-  override lazy val additionalConfig: String = notificationGrpcConfig +
+  lazy val additionalNotificationConfig: String = notificationGrpcConfig +
     s"""
        |notification.mail.host = $hostname
        |notification.mail.port = $smtpPort
        |notification.push.mock.apns.port = $apnsPort
        |notification.sms.mode.base-url = "http://$interface:$smsPort"
        |""".stripMargin
+
+  override lazy val additionalConfig: String = additionalNotificationConfig
 
   override def beforeAll(): Unit = {
     super.beforeAll()
