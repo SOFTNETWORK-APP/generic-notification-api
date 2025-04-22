@@ -98,9 +98,8 @@ trait NotificationTestKit[T <: Notification]
 
   val androidDevice: BasicDevice = BasicDevice("test-token-android", Platform.ANDROID)
 
-  val probe: TestProbe[Schedule4NotificationTriggered] =
+  lazy val probe: TestProbe[Schedule4NotificationTriggered] =
     createTestProbe[Schedule4NotificationTriggered]()
-  asystem.eventStream.tell(Subscribe(probe.ref))
 
   lazy val client: NotificationClient = NotificationClient(asystem)
 
@@ -110,4 +109,14 @@ trait NotificationTestKit[T <: Notification]
   override def eventProcessorStreams: ActorSystem[_] => Seq[EventProcessorStream[_]] = sys =>
     schedulerEventProcessorStreams(sys) ++
     notificationEventProcessorStreams(sys)
+
+  def subscribeNotificationProbes(): Unit = {
+    subscribeProbe(probe)
+  }
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    subscribeNotificationProbes()
+  }
+
 }
