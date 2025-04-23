@@ -2,7 +2,7 @@ ThisBuild / organization := "app.softnetwork"
 
 name := "notification"
 
-ThisBuild / version := "0.8.0-SNAPSHOT"
+ThisBuild / version := "0.8.0"
 
 ThisBuild / scalaVersion := "2.12.18"
 
