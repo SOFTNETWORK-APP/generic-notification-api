@@ -138,7 +138,7 @@ class SimpleMailNotificationsHandlerSpec
 
     "add mail" in {
       val uuid = "mail"
-      assert(client.addMail(generateMail(uuid)) complete ())
+      assert(client.addMail(generateMail(uuid)).complete())
       assert(probe.receiveMessage().schedule.uuid == s"MailNotification#$uuid#NotificationTimerKey")
     }
 

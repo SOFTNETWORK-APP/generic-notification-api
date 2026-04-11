@@ -1,14 +1,14 @@
 package app.softnetwork.notification.config
 
-import configs.Configs
+import configs.ConfigReader
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.language.{implicitConversions, reflectiveCalls}
 
 trait PushSettings extends NotificationSettings { _: InternalConfig =>
 
   lazy val DefaultConfig: PushConfig =
-    Configs[PushConfig].get(config, "notification.push").toEither match {
+    ConfigReader[PushConfig].read(config, "notification.push").toEither match {
       case Left(configError) =>
         Console.err.println(s"Something went wrong with the provided arguments $configError")
         throw configError.configException
@@ -19,7 +19,14 @@ trait PushSettings extends NotificationSettings { _: InternalConfig =>
     .getStringList("notification.push.apps")
     .asScala
     .toList
-    .map(app => app -> Configs[PushConfig].get(config, s"notification.push.$app").value)
+    .map(app =>
+      app -> (ConfigReader[PushConfig].read(config, s"notification.push.$app").toEither match {
+        case Left(configError) =>
+          Console.err.println(s"Something went wrong with the provided arguments $configError")
+          throw configError.configException
+        case Right(r) => r
+      })
+    )
     .toMap
 }
 

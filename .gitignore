@@ -4,3 +4,5 @@ sbt.json
 target
 .metals
 *.log
+actions-runner
+api/src/main/resources/logback.xml

@@ -1,6 +1,6 @@
 package com.google.firebase.messaging
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 import java.util
 

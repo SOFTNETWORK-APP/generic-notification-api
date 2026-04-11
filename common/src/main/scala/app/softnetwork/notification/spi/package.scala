@@ -214,7 +214,7 @@ package object spi {
           )
         }
       }
-      Future.sequence(results).flatMap(results => Future.successful(results)) complete () match {
+      Future.sequence(results).flatMap(results => Future.successful(results)).complete() match {
         case Success(s) =>
           val existingResults =
             ws.results.filterNot(result => s.exists(_.recipient == result.recipient))

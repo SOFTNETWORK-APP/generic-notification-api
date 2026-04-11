@@ -2,11 +2,13 @@ object Versions {
 
   val akka = "2.6.20"
 
-  val slf4j = "1.7.36"
+  val slf4j = "2.0.7"
 
-  val genericPersistence = "0.7.3"
+  val logback = "1.4.14"
 
-  val scheduler = "0.7.3"
+  val genericPersistence = "0.8.1"
+
+  val scheduler = "0.8.0"
 
   val scalatest = "3.2.16"
 }

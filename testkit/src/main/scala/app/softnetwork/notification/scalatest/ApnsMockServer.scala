@@ -52,7 +52,7 @@ trait ApnsMockServer extends PushSettings with MockServer {
   protected override def start(): Boolean = {
     maybeServer match {
       case Some(server) =>
-        toScala(server.start(serverPort)) complete () match {
+        toScala(server.start(serverPort)).complete() match {
           case Success(value) => Option(value.toInt).isDefined
           case Failure(f) =>
             log.error(f.getMessage, f)

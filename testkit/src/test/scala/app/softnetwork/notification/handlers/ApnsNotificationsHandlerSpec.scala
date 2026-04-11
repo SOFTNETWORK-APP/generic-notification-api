@@ -158,7 +158,7 @@ class ApnsNotificationsHandlerSpec
 
     "add push" in {
       val uuid = "push"
-      assert(client.addPush(generatePush(uuid, iosDevice)) complete ())
+      assert(client.addPush(generatePush(uuid, iosDevice)).complete())
       assert(probe.receiveMessage().schedule.uuid == s"IosNotification#$uuid#NotificationTimerKey")
     }
   }

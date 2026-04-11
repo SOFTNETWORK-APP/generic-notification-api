@@ -151,7 +151,7 @@ class FcmAndApnsNotificationsHandlerSpec
 
     "add push" in {
       val uuid = "push"
-      assert(client.addPush(generatePush(uuid, iosDevice, androidDevice)) complete ())
+      assert(client.addPush(generatePush(uuid, iosDevice, androidDevice)).complete())
       assert(
         probe
           .receiveMessage()

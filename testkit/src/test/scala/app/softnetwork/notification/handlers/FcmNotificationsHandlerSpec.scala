@@ -164,7 +164,7 @@ class FcmNotificationsHandlerSpec
 
     "add push" in {
       val uuid = "push"
-      assert(client.addPush(generatePush(uuid, androidDevice)) complete ())
+      assert(client.addPush(generatePush(uuid, androidDevice)).complete())
       assert(
         probe.receiveMessage().schedule.uuid == s"AndroidNotification#$uuid#NotificationTimerKey"
       )

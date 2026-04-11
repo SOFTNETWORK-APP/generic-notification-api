@@ -34,14 +34,14 @@ trait NotificationServiceSpec[SD <: SessionData with SessionDataDecorator[SD]]
 
     "send message to client" in {
       val ws = generateWs(clientId)
-      client.sendWs(ws) complete () match {
+      client.sendWs(ws).complete() match {
         case Success(result) =>
           wsClient match {
             case Some(cli) =>
               assert(result.exists(r => r.recipient == clientId && r.status.isSent))
               cli.expectMessage(ws.message)
               cli.sendCompletion()
-              client.sendWs(ws) complete () match {
+              client.sendWs(ws).complete() match {
                 case Success(result) =>
                   assert(result.exists(r => r.recipient == clientId && r.status.isRejected))
                 case Failure(_) => fail()
@@ -60,7 +60,7 @@ trait NotificationServiceSpec[SD <: SessionData with SessionDataDecorator[SD]]
 
     "send message to channel" in {
       val ws = generateWs(clientId, Some(channel)).withTo(Seq.empty)
-      client.sendWs(ws) complete () match {
+      client.sendWs(ws).complete() match {
         case Success(result) =>
           wsClient match {
             case Some(cli) =>
