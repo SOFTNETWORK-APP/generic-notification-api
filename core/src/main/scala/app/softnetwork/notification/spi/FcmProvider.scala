@@ -20,7 +20,7 @@ import app.softnetwork.notification.model.{
 import org.slf4j.Logger
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
@@ -155,7 +155,7 @@ object FcmProvider {
   implicit def toNotificationResults(
     response: BatchResponse
   )(implicit tokens: Seq[String]): Seq[NotificationStatusResult] = {
-    for ((r, i) <- response.getResponses.asScala.zipWithIndex)
+    for ((r, i) <- response.getResponses.asScala.toSeq.zipWithIndex)
       yield NotificationStatusResult(
         tokens(i),
         if (r.isSuccessful)

@@ -131,13 +131,15 @@ trait ApnsProvider extends IosProvider with PushSettings with Completion {
       )
 
       val results =
-        Future.sequence(for (to <- tos) yield {
-          toScala(
-            client.sendNotification(
-              new SimpleApnsPushNotification(to, config.topic, payload)
+        Future
+          .sequence(for (to <- tos) yield {
+            toScala(
+              client.sendNotification(
+                new SimpleApnsPushNotification(to, config.topic, payload)
+              )
             )
-          )
-        }) complete () match {
+          })
+          .complete() match {
           case Success(responses) =>
             for (response <- responses) yield {
               val result: NotificationStatusResult = response

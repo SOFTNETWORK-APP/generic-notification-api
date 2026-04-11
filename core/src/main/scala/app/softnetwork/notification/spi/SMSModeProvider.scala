@@ -85,7 +85,11 @@ trait SMSModeProvider extends SMSProvider with SMSSettings { _: InternalConfig =
             case responseCode if responseCode == 200 || responseCode == 201 =>
               Try {
                 val br = new BufferedReader(new InputStreamReader(connection.getInputStream))
-                Stream.continually(br.readLine()).takeWhile(_ != null).mkString("")
+                try {
+                  Iterator.continually(br.readLine()).takeWhile(_ != null).mkString("")
+                } finally {
+                  br.close()
+                }
               } match {
                 case Success(responseData) =>
                   log.info(responseData)
@@ -221,7 +225,11 @@ trait SMSModeProvider extends SMSProvider with SMSSettings { _: InternalConfig =
           case responseCode if responseCode == 200 || responseCode == 201 =>
             Try {
               val br = new BufferedReader(new InputStreamReader(connection.getInputStream))
-              Stream.continually(br.readLine()).takeWhile(_ != null).mkString("")
+              try {
+                Iterator.continually(br.readLine()).takeWhile(_ != null).mkString("")
+              } finally {
+                br.close()
+              }
             } match {
               case Success(responseData) =>
                 log.info(responseData)

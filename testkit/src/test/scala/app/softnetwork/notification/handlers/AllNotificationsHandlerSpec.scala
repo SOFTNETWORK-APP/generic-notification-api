@@ -100,14 +100,14 @@ class AllNotificationsHandlerSpec extends AnyWordSpecLike with AllNotificationsT
 
     "add mail using client" in {
       val uuid = "mail"
-      assert(client.addMail(generateMail(uuid)) complete ())
+      assert(client.addMail(generateMail(uuid)).complete())
       assert(probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey")
     }
 
     "send mail using client" in {
       val uuid = "mail2"
       val mail = generateMail(uuid)
-      client.sendMail(mail) complete () match {
+      client.sendMail(mail).complete() match {
         case Success(result) =>
           assert(result.exists(r => r.recipient == mail.to.head && r.status.isSent))
         case Failure(_) => fail()
@@ -115,12 +115,12 @@ class AllNotificationsHandlerSpec extends AnyWordSpecLike with AllNotificationsT
     }
 
     "remove notification using client" in {
-      assert(client.removeNotification("mail") complete ())
+      assert(client.removeNotification("mail").complete())
     }
 
     "add sms using client" in {
       val uuid = "sms"
-      assert(client.addSMS(generateSMS(uuid)) complete ())
+      assert(client.addSMS(generateSMS(uuid)).complete())
       assert(
         probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey"
       ) // pending
@@ -132,7 +132,7 @@ class AllNotificationsHandlerSpec extends AnyWordSpecLike with AllNotificationsT
     "send sms using client" in {
       val uuid = "sms2"
       val sms = generateSMS(uuid)
-      client.sendSMS(sms) complete () match {
+      client.sendSMS(sms).complete() match {
         case Success(result) =>
           assert(result.exists(r => r.recipient == sms.to.head && r.status.isPending))
           assert(
@@ -144,12 +144,12 @@ class AllNotificationsHandlerSpec extends AnyWordSpecLike with AllNotificationsT
 
     "add push using client" in {
       val uuid = "push"
-      assert(client.addPush(generatePush(uuid, androidDevice, iosDevice)) complete ())
+      assert(client.addPush(generatePush(uuid, androidDevice, iosDevice)).complete())
       assert(probe.receiveMessage().schedule.uuid == s"Notification#$uuid#NotificationTimerKey")
     }
 
     "retrieve push notification status using client" in {
-      client.getNotificationStatus("push") complete () match {
+      client.getNotificationStatus("push").complete() match {
         case Success(result) =>
           assert(result.exists(r => r.recipient == androidDevice.regId && r.status.isSent))
           assert(result.exists(r => r.recipient == iosDevice.regId)) // FIXME && r.status.isSent
@@ -160,7 +160,7 @@ class AllNotificationsHandlerSpec extends AnyWordSpecLike with AllNotificationsT
     "send push using client" in {
       val uuid = "push2"
       val push = generatePush(uuid, androidDevice, iosDevice)
-      client.sendPush(push) complete () match {
+      client.sendPush(push).complete() match {
         case Success(result) =>
           assert(result.exists(r => r.recipient == androidDevice.regId && r.status.isSent))
           assert(result.exists(r => r.recipient == iosDevice.regId && r.status.isSent))
