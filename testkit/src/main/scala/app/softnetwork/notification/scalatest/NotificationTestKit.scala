@@ -97,7 +97,7 @@ trait NotificationTestKit[T <: Notification]
   }
 
   protected def shutdownApnsMockServer(): Unit = {
-    apnsMockServer.map(_.shutdown()).getOrElse(Future.successful(Done)) complete () match {
+    apnsMockServer.map(_.shutdown()).getOrElse(Future.successful(Done)).complete() match {
       case Success(_) => // do nothing
       case Failure(f) => log.error("Failed to shutdown APNs mock server", f)
     }
@@ -124,7 +124,7 @@ trait NotificationTestKit[T <: Notification]
   }
 
   protected def shutdownSmsMockServer(): Unit = {
-    smsMockServer.map(_.shutdown()).getOrElse(Future.successful(Done)) complete () match {
+    smsMockServer.map(_.shutdown()).getOrElse(Future.successful(Done)).complete() match {
       case Success(_) => // do nothing
       case Failure(f) => log.error("Failed to shutdown SMS mock server", f)
     }
@@ -151,7 +151,7 @@ trait NotificationTestKit[T <: Notification]
   }
 
   protected def shutdownSmtpMockServer(): Unit = {
-    smtpMockServer.map(_.shutdown()).getOrElse(Future.successful(Done)) complete () match {
+    smtpMockServer.map(_.shutdown()).getOrElse(Future.successful(Done)).complete() match {
       case Success(_) => // do nothing
       case Failure(f) => log.error("Failed to shutdown SMTP mock server", f)
     }
