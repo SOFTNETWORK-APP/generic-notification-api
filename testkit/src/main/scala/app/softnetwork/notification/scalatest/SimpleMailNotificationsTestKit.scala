@@ -27,26 +27,16 @@ trait SimpleMailNotificationsTestKit
     extends NotificationGrpcServerTestKit[Mail]
     with NotificationTestKit[Mail] { _: Suite =>
 
-  lazy val smtpPort: Int = availablePort
-
-  override lazy val additionalConfig: String = notificationGrpcConfig +
-    s"""
-       |notification.mail.host = $hostname
-       |notification.mail.port = $smtpPort
-       |""".stripMargin
+  override lazy val additionalConfig: String = notificationGrpcConfig + smtpConfig
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    assert(
-      new SmtpMockServer with InternalConfig {
-        lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = asystem
+    initSmtpMockServer(coordinatedShutdown = false)
+  }
 
-        override def serverPort: Int = smtpPort
-
-        override lazy val config: Config = internalConfig
-      }.init()
-    )
+  override def afterAll(): Unit = {
+    shutdownSmtpMockServer()
+    super.afterAll()
   }
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Mail]] = _ =>

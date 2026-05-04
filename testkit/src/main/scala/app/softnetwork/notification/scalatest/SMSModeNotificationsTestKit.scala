@@ -27,25 +27,16 @@ trait SMSModeNotificationsTestKit
     extends NotificationGrpcServerTestKit[SMS]
     with NotificationTestKit[SMS] { _: Suite =>
 
-  lazy val smsPort: Int = availablePort
-
-  override lazy val additionalConfig: String = notificationGrpcConfig +
-    s"""
-       |notification.sms.mode.base-url = "http://$interface:$smsPort"
-       |""".stripMargin
+  override lazy val additionalConfig: String = notificationGrpcConfig + smsConfig
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    assert(
-      new SMSMockServer with InternalConfig {
-        lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = asystem
+    initSmsMockServer(coordinatedShutdown = false)
+  }
 
-        override def serverPort: Int = smsPort
-
-        override def config: Config = internalConfig
-      }.init()
-    )
+  override def afterAll(): Unit = {
+    shutdownSmsMockServer()
+    super.afterAll()
   }
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[SMS]] = _ =>

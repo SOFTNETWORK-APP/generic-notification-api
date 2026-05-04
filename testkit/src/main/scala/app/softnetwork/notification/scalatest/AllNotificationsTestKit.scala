@@ -30,56 +30,20 @@ trait AllNotificationsTestKit
     with ApnsToken {
   _: Suite =>
 
-  lazy val apnsPort: Int = availablePort
-
-  lazy val smsPort: Int = availablePort
-
-  lazy val smtpPort: Int = availablePort
-
   lazy val allNotificationsHandler: AllNotificationsHandler = AllNotificationsHandler
 
-  lazy val additionalNotificationConfig: String = notificationGrpcConfig +
-    s"""
-       |notification.mail.host = $hostname
-       |notification.mail.port = $smtpPort
-       |notification.push.mock.apns.port = $apnsPort
-       |notification.sms.mode.base-url = "http://$interface:$smsPort"
-       |""".stripMargin
+  lazy val additionalNotificationConfig: String = notificationGrpcConfig + allMockServersConfig
 
   override lazy val additionalConfig: String = additionalNotificationConfig
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    assert(
-      new ApnsMockServer with InternalConfig {
-        lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = asystem
+    initMockServers(coordinatedShutdown = false)
+  }
 
-        override def serverPort: Int = apnsPort
-
-        override lazy val config: Config = internalConfig
-      }.init()
-    )
-    assert(
-      new SMSMockServer with InternalConfig {
-        lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = asystem
-
-        override def serverPort: Int = smsPort
-
-        override def config: Config = internalConfig
-      }.init()
-    )
-    assert(
-      new SmtpMockServer with InternalConfig {
-        lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = asystem
-
-        override def serverPort: Int = smtpPort
-
-        override lazy val config: Config = internalConfig
-      }.init()
-    )
+  override def afterAll(): Unit = {
+    shutdownMockServers()
+    super.afterAll()
   }
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Notification]] =

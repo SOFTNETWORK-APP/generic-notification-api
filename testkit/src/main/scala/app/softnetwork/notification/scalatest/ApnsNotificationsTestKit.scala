@@ -25,28 +25,18 @@ import org.slf4j.{Logger, LoggerFactory}
 
 trait ApnsNotificationsTestKit
     extends NotificationGrpcServerTestKit[Push]
-    with NotificationTestKit[Push]
-    with ApnsToken { _: Suite =>
+    with NotificationTestKit[Push] { _: Suite =>
 
-  lazy val apnsPort: Int = availablePort
-
-  override lazy val additionalConfig: String = notificationGrpcConfig +
-    s"""
-      |notification.push.mock.apns.port = $apnsPort
-      |""".stripMargin
+  override lazy val additionalConfig: String = notificationGrpcConfig + apnsConfig
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    assert(
-      new ApnsMockServer with InternalConfig {
-        lazy val log: Logger = LoggerFactory getLogger getClass.getName
-        override implicit def system: ActorSystem[_] = asystem
+    initApnsMockServer(coordinatedShutdown = false)
+  }
 
-        override def serverPort: Int = apnsPort
-
-        override lazy val config: Config = internalConfig
-      }.init()
-    )
+  override def afterAll(): Unit = {
+    shutdownApnsMockServer()
+    super.afterAll()
   }
 
   override def notificationBehaviors: ActorSystem[_] => Seq[NotificationBehavior[Push]] = _ =>

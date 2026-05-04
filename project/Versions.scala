@@ -6,7 +6,7 @@ object Versions {
 
   val logback = "1.4.14"
 
-  val genericPersistence = "0.8.1"
+  val genericPersistence = "0.8.5"
 
   val scheduler = "0.8.0"
 
