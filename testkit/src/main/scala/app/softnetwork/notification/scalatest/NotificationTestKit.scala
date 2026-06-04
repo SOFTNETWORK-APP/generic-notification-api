@@ -130,8 +130,10 @@ trait NotificationTestKit[T <: Notification]
     }
   }
 
-  protected var smtpMockServer: Option[SmtpMockServer] = None
+  private var smtpMockServer: Option[SmtpMockServer] = None
 
+  protected def receivedEmails: Seq[com.dumbster.smtp.SmtpMessage] =
+    smtpMockServer.map(_.received).getOrElse(Seq.empty)
   protected def initSmtpMockServer(coordinatedShutdown: Boolean): Unit = {
     val server = new SmtpMockServer with InternalConfig {
       lazy val log: Logger = LoggerFactory getLogger getClass.getName
