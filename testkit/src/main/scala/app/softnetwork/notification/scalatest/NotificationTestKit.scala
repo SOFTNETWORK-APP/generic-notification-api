@@ -130,7 +130,7 @@ trait NotificationTestKit[T <: Notification]
     }
   }
 
-  private var smtpMockServer: Option[SmtpMockServer] = None
+  protected var smtpMockServer: Option[SmtpMockServer] = None
 
   protected def initSmtpMockServer(coordinatedShutdown: Boolean): Unit = {
     val server = new SmtpMockServer with InternalConfig {
