@@ -4,9 +4,10 @@ import akka.Done
 import akka.actor.typed.ActorSystem
 import app.softnetwork.api.server.scalatest.MockServer
 import app.softnetwork.notification.config.{InternalConfig, MailSettings}
-import com.dumbster.smtp.SimpleSmtpServer
+import com.dumbster.smtp.{SimpleSmtpServer, SmtpMessage}
 
 import scala.concurrent.Future
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 trait SmtpMockServer extends MockServer with MailSettings {
@@ -40,4 +41,8 @@ trait SmtpMockServer extends MockServer with MailSettings {
     }
     Future.successful(Done)
   }
+
+  /** Mails received by this mock SMTP server since startup. */
+  def received: Seq[SmtpMessage] =
+    maybeServer.map(_.getReceivedEmails.asScala.toSeq).getOrElse(Seq.empty)
 }
