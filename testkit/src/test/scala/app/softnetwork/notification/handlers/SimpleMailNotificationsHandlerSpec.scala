@@ -3,6 +3,10 @@ package app.softnetwork.notification.handlers
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.model.Attachment
 import app.softnetwork.notification.scalatest.SimpleMailNotificationsTestKit
+import app.softnetwork.persistence.audit.AuditLog
+import ch.qos.logback.classic.{Logger => LogbackLogger}
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.slf4j.{Logger, LoggerFactory}
 
@@ -140,6 +144,34 @@ class SimpleMailNotificationsHandlerSpec
       val uuid = "mail"
       assert(client.addMail(generateMail(uuid)).complete())
       assert(probe.receiveMessage().schedule.uuid == s"MailNotification#$uuid#NotificationTimerKey")
+    }
+
+    "emit a notification_sent audit line carrying the correlation id (Story 13.7)" in {
+      val cid = "notif-corr-13-7"
+      val auditLogger = LoggerFactory.getLogger(AuditLog.LoggerName).asInstanceOf[LogbackLogger]
+      val appender = new ListAppender[ILoggingEvent]()
+      appender.start()
+      auditLogger.addAppender(appender)
+      try {
+        val uuid = "auditedSend"
+        this ? (uuid, SendNotification(generateMail(uuid).withCorrelationId(cid))) await {
+          case n: NotificationSent => n.uuid shouldBe uuid
+          case _                   => fail()
+        }
+        // the emission runs in the behavior's thenRun BEFORE the reply, so it is captured by now
+        val sentLine =
+          appender.list.toArray.toList.collect { case e: ILoggingEvent => e }.find { e =>
+            val fields = e.getArgumentArray.map(_.toString).toSet
+            fields.contains("event_type=notification_sent") && fields.contains(
+              s"correlation_id=$cid"
+            )
+          }
+        assert(sentLine.isDefined, "expected a notification_sent audit line carrying the cid")
+        sentLine.get.getArgumentArray.map(_.toString) should contain("service=notification")
+      } finally {
+        auditLogger.detachAppender(appender)
+        appender.stop()
+      }
     }
 
   }

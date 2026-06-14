@@ -6,9 +6,9 @@ object Versions {
 
   val logback = "1.4.14"
 
-  val genericPersistence = "0.8.5"
+  val genericPersistence = "0.9-SNAPSHOT"
 
-  val scheduler = "0.8.0"
+  val scheduler = "0.8-SNAPSHOT"
 
   val scalatest = "3.2.16"
 }
