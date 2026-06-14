@@ -26,6 +26,12 @@ trait Notification extends State with NotificationDecorator {
 
   def results: Seq[NotificationStatusResult]
 
+  /** Story 13.7 — cross-service correlation id, set by the producer (e.g. license-server
+    * mailNotification) from the originating flow; read at send time to emit the audit line. Backed
+    * by the `optional string correlation_id` proto field on each notification message.
+    */
+  def correlationId: Option[String]
+
   def removeOnSuccess(): Option[Boolean] = None
 
   def removeAfterMaxTries(): Option[Boolean] = None
@@ -66,6 +72,8 @@ trait NotificationDecorator { _: Notification =>
     } else {
       recipients().mkString(",")
     }
+
+  def withCorrelationId(correlationId: String): Notification with NotificationDecorator
 }
 
 trait NotificationAckDecorator { _: NotificationAck =>

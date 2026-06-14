@@ -93,6 +93,10 @@ message Mail{
     repeated NotificationStatusResult results = 18;
     required NotificationType type = 19 [default = MAIL_TYPE];
     repeated Attachment attachments = 20;
+    // Story 13.7 — cross-service correlation id, set by the producer (e.g. license-server
+    // mailNotification) from the originating checkout/issuance flow. Read at send time to emit the
+    // notification_sent / notification_failed audit line. ScalaPB → correlationId: Option[String].
+    optional string correlation_id = 21;
 }
 
 message SMS{
@@ -112,6 +116,8 @@ message SMS{
     required NotificationStatus status = 17 [default = Pending];
     repeated NotificationStatusResult results = 18;
     required NotificationType type = 19 [default = SMS_TYPE];
+    // Story 13.7 — cross-service correlation id (see Mail.correlation_id).
+    optional string correlation_id = 20;
 }
 
 message Push{
@@ -136,6 +142,8 @@ message Push{
     required int32 badge = 22 [default = 0];
     optional string sound = 23;
     optional string application = 24;
+    // Story 13.7 — cross-service correlation id (see Mail.correlation_id).
+    optional string correlation_id = 25;
 }
 
 message Ws{
@@ -156,6 +164,8 @@ message Ws{
     repeated NotificationStatusResult results = 18;
     required NotificationType type = 19 [default = WS_TYPE];
     optional string channel = 20;
+    // Story 13.7 — cross-service correlation id (see Mail.correlation_id).
+    optional string correlation_id = 21;
 }
 
 message PushPayload{

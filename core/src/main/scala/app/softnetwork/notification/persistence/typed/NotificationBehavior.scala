@@ -12,6 +12,7 @@ import app.softnetwork.scheduler.message.SchedulerEvents.{
 }
 import app.softnetwork.scheduler.message.{AddSchedule, RemoveSchedule}
 import app.softnetwork.scheduler.model.Schedule
+import app.softnetwork.persistence.audit.AuditLog
 import app.softnetwork.persistence.now
 import app.softnetwork.persistence.typed._
 import app.softnetwork.notification.message._
@@ -44,6 +45,11 @@ trait NotificationBehavior[T <: Notification]
   private[this] val notificationTimerKey: String = "NotificationTimerKey"
 
   private[this] val delay = 1
+
+  /** Story 13.7 — structured audit trail. service = "notification"; correlationId is threaded as
+    * data on the notification (proto field, exposed on the Notification trait), never via MDC.
+    */
+  private[this] lazy val audit: AuditLog = AuditLog("notification")
 
   /** Set event tags, which will be used in persistence query
     *
@@ -469,18 +475,30 @@ trait NotificationBehavior[T <: Notification]
       )
     Effect
       .persist(events)
-      .thenRun(_ =>
-        {
+      .thenRun(_ => {
+        // Story 13.7 — emit the terminal audit line, but only when an actual send/ack happened this
+        // round (skip deferred / already-sent no-ops, and the non-terminal Pending outcome). The
+        // correlation id rides the notification (proto field on the Notification trait); the channel
+        // is its NotificationType.
+        if (maybeAckWithNumberOfRetries.isDefined) {
+          val cid = updatedNotification.correlationId.getOrElse("-")
+          val channel = updatedNotification.`type`.name
           updatedNotification.status match {
-            case Rejected    => NotificationRejected(entityId, updatedNotification.results)
-            case Undelivered => NotificationUndelivered(entityId, updatedNotification.results)
-            case Sent        => NotificationSent(entityId, updatedNotification.results)
-            case Delivered   => NotificationDelivered(entityId, updatedNotification.results)
-            case _           => NotificationPending(entityId, updatedNotification.results)
+            case Sent | Delivered =>
+              audit.event(cid, "notification_sent", "channel" -> channel)
+            case Undelivered | Rejected =>
+              audit.event(cid, "notification_failed", "channel" -> channel)
+            case _ => // still pending — no terminal audit line yet
           }
         }
-        ~> replyTo
-      )
+        (updatedNotification.status match {
+          case Rejected    => NotificationRejected(entityId, updatedNotification.results)
+          case Undelivered => NotificationUndelivered(entityId, updatedNotification.results)
+          case Sent        => NotificationSent(entityId, updatedNotification.results)
+          case Delivered   => NotificationDelivered(entityId, updatedNotification.results)
+          case _           => NotificationPending(entityId, updatedNotification.results)
+        }) ~> replyTo
+      })
   }
 
 }
