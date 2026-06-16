@@ -9,10 +9,12 @@ import app.softnetwork.notification.model.NotificationStatusResult
   */
 package object message {
 
-  sealed trait NotificationCommand extends EntityCommand
+  sealed trait NotificationCommand extends EntityCommand with AuditableCommand {
+    override type T = NotificationCommand
+  }
 
   @SerialVersionUID(0L)
-  case object ScheduleNotification extends NotificationCommand with AllEntities
+  case class ScheduleNotification() extends NotificationCommand with AllEntities
 
   @SerialVersionUID(0L)
   case class AddNotification[T <: Notification](notification: T) extends NotificationCommand {
@@ -33,7 +35,9 @@ package object message {
   @SerialVersionUID(0L)
   case class GetNotificationStatus(id: String) extends NotificationCommand
 
-  case class TriggerSchedule4Notification(schedule: Schedule) extends NotificationCommand {
+  case class TriggerSchedule4Notification(schedule: Schedule)
+      extends NotificationCommand
+      with AuditableCommand {
     override val id: String = schedule.entityId
   }
 

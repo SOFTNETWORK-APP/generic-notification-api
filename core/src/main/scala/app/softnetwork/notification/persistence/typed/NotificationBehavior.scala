@@ -3,6 +3,7 @@ package app.softnetwork.notification.persistence.typed
 import akka.actor.typed.scaladsl.{ActorContext, TimerScheduler}
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.persistence.typed.scaladsl.Effect
+import app.softnetwork.notification.audit.NotificationAuditLog._
 import app.softnetwork.notification.config.NotificationSettings
 import org.slf4j.Logger
 import app.softnetwork.scheduler.message.SchedulerEvents.{
@@ -12,7 +13,6 @@ import app.softnetwork.scheduler.message.SchedulerEvents.{
 }
 import app.softnetwork.scheduler.message.{AddSchedule, RemoveSchedule}
 import app.softnetwork.scheduler.model.Schedule
-import app.softnetwork.persistence.audit.AuditLog
 import app.softnetwork.persistence.now
 import app.softnetwork.persistence.typed._
 import app.softnetwork.notification.message._
@@ -45,11 +45,6 @@ trait NotificationBehavior[T <: Notification]
   private[this] val notificationTimerKey: String = "NotificationTimerKey"
 
   private[this] val delay = 1
-
-  /** Story 13.7 — structured audit trail. service = "notification"; correlationId is threaded as
-    * data on the notification (proto field, exposed on the Notification trait), never via MDC.
-    */
-  private[this] lazy val audit: AuditLog = AuditLog("notification")
 
   /** Set event tags, which will be used in persistence query
     *
@@ -120,7 +115,8 @@ trait NotificationBehavior[T <: Notification]
                           delay,
                           Some(true),
                           Some(now()),
-                          None
+                          None,
+                          correlationId = notification.correlationId.orElse(cmd.correlationId)
                         )
                       )
                     )
@@ -151,12 +147,24 @@ trait NotificationBehavior[T <: Notification]
           )
           .thenRun(_ => { NotificationRemoved ~> replyTo }) //.thenStop()
 
-      case cmd: SendNotification[T] => sendNotification(entityId, cmd.notification, replyTo)
+      case cmd: SendNotification[T] =>
+        sendNotification(
+          entityId,
+          cmd.notification,
+          cmd.notification.correlationId.orElse(cmd.correlationId),
+          replyTo
+        )
 
-      case _: ResendNotification =>
+      case cmd: ResendNotification =>
         state match {
-          case Some(notification) => sendNotification(entityId, notification, replyTo)
-          case _                  => Effect.none.thenRun(_ => NotificationNotFound ~> replyTo)
+          case Some(notification) =>
+            sendNotification(
+              entityId,
+              notification,
+              notification.correlationId.orElse(cmd.correlationId),
+              replyTo
+            )
+          case _ => Effect.none.thenRun(_ => NotificationNotFound ~> replyTo)
         }
 
       case _: GetNotificationStatus =>
@@ -188,15 +196,26 @@ trait NotificationBehavior[T <: Notification]
       case cmd: TriggerSchedule4Notification =>
         import cmd.schedule._
         if (key == notificationTimerKey) {
-          context.self ! ScheduleNotification
+          val trigger = ScheduleNotification()
+          // `import cmd.schedule._` shadows the bare `correlationId` with the schedule's; fall back
+          // to the synthetic cid stamped on the command by Scheduler2NotificationProcessorStream so
+          // it is not dropped (qualify cmd.correlationId explicitly to avoid the shadowing).
+          cmd.schedule.correlationId.orElse(cmd.correlationId).foreach(trigger.withCorrelationId)
+          context.self ! trigger
           Effect.none.thenRun(_ => Schedule4NotificationTriggered(cmd.schedule) ~> replyTo)
         } else {
           Effect.none.thenRun(_ => Schedule4NotificationNotTriggered ~> replyTo)
         }
 
-      case ScheduleNotification =>
+      case cmd: ScheduleNotification =>
         state match {
-          case Some(notification) => sendNotification(entityId, notification, replyTo)
+          case Some(notification) =>
+            sendNotification(
+              entityId,
+              notification,
+              notification.correlationId.orElse(cmd.correlationId),
+              replyTo
+            )
           case _ => // should never be the case
             Effect
               .persist(
@@ -279,7 +298,8 @@ trait NotificationBehavior[T <: Notification]
               delay,
               Some(true),
               Some(now()),
-              None
+              None,
+              correlationId = correlationId
             )
           )
         )
@@ -361,6 +381,7 @@ trait NotificationBehavior[T <: Notification]
   private[this] def sendNotification(
     entityId: String,
     notification: T,
+    cid: Option[String],
     replyTo: Option[ActorRef[NotificationCommandResult]]
   )(implicit
     log: Logger,
@@ -419,7 +440,8 @@ trait NotificationBehavior[T <: Notification]
           notification
             .withNbTries(nbTries)
             .copyWithAck(notificationAck)
-        case _ => notification
+            .withCorrelationId(cid.getOrElse("-"))
+        case _ => notification.withCorrelationId(cid.getOrElse("-"))
       }
 
     val event: Option[NotificationRecordedEvent] =
@@ -483,6 +505,12 @@ trait NotificationBehavior[T <: Notification]
         if (maybeAckWithNumberOfRetries.isDefined) {
           val cid = updatedNotification.correlationId.getOrElse("-")
           val channel = updatedNotification.`type`.name
+          // Story 13.7 AC3 — the audit field catalog lists a `template` field for these lines, but a
+          // generic notification carries no template identifier at this layer: the Notification/Mail
+          // model (subject/message/richMessage) has no template/mustache field, and the producer
+          // (license-server) consumes the mustache name during rendering and never propagates it onto
+          // the Mail. The template attribution is therefore owned by the producer's own
+          // `notification_enqueued` audit line; `template` is N/A here, so only `channel` is emitted.
           updatedNotification.status match {
             case Sent | Delivered =>
               audit.event(cid, "notification_sent", "channel" -> channel)

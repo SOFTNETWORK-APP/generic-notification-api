@@ -35,11 +35,16 @@ class SimpleMailNotificationsHandlerSpec
 
     "add notification" in {
       val uuid = "add"
-      this ? (uuid, AddNotification(generateMail(uuid))) await {
+      val cid = s"cid-$uuid"
+      this ? (uuid, AddNotification(generateMail(uuid).withCorrelationId(cid))) await {
         case n: NotificationAdded =>
           n.uuid shouldBe uuid
+          val message = probe.receiveMessage()
           assert(
-            probe.receiveMessage().schedule.uuid == s"MailNotification#$uuid#NotificationTimerKey"
+            message.schedule.uuid == s"MailNotification#$uuid#NotificationTimerKey"
+          )
+          assert(
+            message.schedule.correlationId.getOrElse("") == cid
           )
         case _ => fail()
       }
@@ -47,11 +52,18 @@ class SimpleMailNotificationsHandlerSpec
 
     "add notification with attachment(s)" in {
       val uuid = "addWithAttachments"
-      this ? (uuid, AddNotification(generateMail(uuid, Seq(attachment)))) await {
+      val cid = s"cid-$uuid"
+      this ? (uuid, AddNotification(
+        generateMail(uuid, Seq(attachment)).withCorrelationId(cid)
+      )) await {
         case n: NotificationAdded =>
           n.uuid shouldBe uuid
+          val message = probe.receiveMessage()
           assert(
-            probe.receiveMessage().schedule.uuid == s"MailNotification#$uuid#NotificationTimerKey"
+            message.schedule.uuid == s"MailNotification#$uuid#NotificationTimerKey"
+          )
+          assert(
+            message.schedule.correlationId.getOrElse("") == cid
           )
         case _ => fail()
       }
@@ -59,11 +71,16 @@ class SimpleMailNotificationsHandlerSpec
 
     "remove notification" in {
       val uuid = "remove"
-      this ? (uuid, AddNotification(generateMail(uuid))) await {
+      val cid = s"cid-$uuid"
+      this ? (uuid, AddNotification(generateMail(uuid).withCorrelationId(cid))) await {
         case n: NotificationAdded =>
           n.uuid shouldBe uuid
+          val message = probe.receiveMessage()
           assert(
-            probe.receiveMessage().schedule.uuid == s"MailNotification#$uuid#NotificationTimerKey"
+            message.schedule.uuid == s"MailNotification#$uuid#NotificationTimerKey"
+          )
+          assert(
+            message.schedule.correlationId.getOrElse("") == cid
           )
           this ? (uuid, RemoveNotification(uuid)) await {
             case _: NotificationRemoved.type => succeed
@@ -75,7 +92,8 @@ class SimpleMailNotificationsHandlerSpec
 
     "send notification" in {
       val uuid = "send"
-      this ? (uuid, SendNotification(generateMail(uuid))) await {
+      val cid = s"cid-$uuid"
+      this ? (uuid, SendNotification(generateMail(uuid).withCorrelationId(cid))) await {
         case n: NotificationSent =>
           assert(n.uuid == uuid)
         case _ => fail()
@@ -84,7 +102,10 @@ class SimpleMailNotificationsHandlerSpec
 
     "send notification with attachment(s)" in {
       val uuid = "sendWithAttachments"
-      this ? (uuid, SendNotification(generateMail(uuid, Seq(attachment)))) await {
+      val cid = s"cid-$uuid"
+      this ? (uuid, SendNotification(
+        generateMail(uuid, Seq(attachment)).withCorrelationId(cid)
+      )) await {
         case n: NotificationSent =>
           n.uuid shouldBe uuid
         case _ => fail()
@@ -93,7 +114,8 @@ class SimpleMailNotificationsHandlerSpec
 
     "resend notification" in {
       val uuid = "resend"
-      this ? (uuid, SendNotification(generateMail(uuid))) await {
+      val cid = s"cid-$uuid"
+      this ? (uuid, SendNotification(generateMail(uuid).withCorrelationId(cid))) await {
         case n: NotificationSent =>
           n.uuid shouldBe uuid
           this ? (uuid, ResendNotification(uuid)) await {
@@ -111,7 +133,8 @@ class SimpleMailNotificationsHandlerSpec
 
     "retrieve notification status" in {
       val uuid = "status"
-      this ? (uuid, SendNotification(generateMail(uuid))) await {
+      val cid = s"cid-$uuid"
+      this ? (uuid, SendNotification(generateMail(uuid).withCorrelationId(cid))) await {
         case n: NotificationSent =>
           n.uuid shouldBe uuid
           this ? (uuid, GetNotificationStatus(uuid)) await {
@@ -125,7 +148,8 @@ class SimpleMailNotificationsHandlerSpec
 
     "trigger notification" in {
       val uuid = "trigger"
-      this ? (uuid, SendNotification(generateMail(uuid))) await {
+      val cid = s"cid-$uuid"
+      this ? (uuid, SendNotification(generateMail(uuid).withCorrelationId(cid))) await {
         case n: NotificationSent =>
           n.uuid shouldBe uuid
           this ? (uuid, GetNotificationStatus(uuid)) await {
@@ -133,7 +157,7 @@ class SimpleMailNotificationsHandlerSpec
               assert(n.uuid == uuid)
               succeed
             case _ =>
-              probe.expectMessageType[Schedule4NotificationTriggered]
+              assert(probe.receiveMessage().schedule.correlationId.contains(uuid))
               succeed
           }
         case _ => fail()
@@ -142,8 +166,15 @@ class SimpleMailNotificationsHandlerSpec
 
     "add mail" in {
       val uuid = "mail"
-      assert(client.addMail(generateMail(uuid)).complete())
-      assert(probe.receiveMessage().schedule.uuid == s"MailNotification#$uuid#NotificationTimerKey")
+      val cid = s"cid-$uuid"
+      assert(client.addMail(generateMail(uuid).withCorrelationId(cid)).complete())
+      val message = probe.receiveMessage()
+      assert(
+        message.schedule.uuid == s"MailNotification#$uuid#NotificationTimerKey"
+      )
+      assert(
+        message.schedule.correlationId.getOrElse("") == cid
+      )
     }
 
     "emit a notification_sent audit line carrying the correlation id (Story 13.7)" in {
