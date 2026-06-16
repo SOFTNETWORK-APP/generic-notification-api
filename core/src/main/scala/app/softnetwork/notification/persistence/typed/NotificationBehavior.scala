@@ -197,7 +197,10 @@ trait NotificationBehavior[T <: Notification]
         import cmd.schedule._
         if (key == notificationTimerKey) {
           val trigger = ScheduleNotification()
-          correlationId.foreach(trigger.withCorrelationId)
+          // `import cmd.schedule._` shadows the bare `correlationId` with the schedule's; fall back
+          // to the synthetic cid stamped on the command by Scheduler2NotificationProcessorStream so
+          // it is not dropped (qualify cmd.correlationId explicitly to avoid the shadowing).
+          cmd.schedule.correlationId.orElse(cmd.correlationId).foreach(trigger.withCorrelationId)
           context.self ! trigger
           Effect.none.thenRun(_ => Schedule4NotificationTriggered(cmd.schedule) ~> replyTo)
         } else {
@@ -502,6 +505,12 @@ trait NotificationBehavior[T <: Notification]
         if (maybeAckWithNumberOfRetries.isDefined) {
           val cid = updatedNotification.correlationId.getOrElse("-")
           val channel = updatedNotification.`type`.name
+          // Story 13.7 AC3 — the audit field catalog lists a `template` field for these lines, but a
+          // generic notification carries no template identifier at this layer: the Notification/Mail
+          // model (subject/message/richMessage) has no template/mustache field, and the producer
+          // (license-server) consumes the mustache name during rendering and never propagates it onto
+          // the Mail. The template attribution is therefore owned by the producer's own
+          // `notification_enqueued` audit line; `template` is N/A here, so only `channel` is emitted.
           updatedNotification.status match {
             case Sent | Delivered =>
               audit.event(cid, "notification_sent", "channel" -> channel)

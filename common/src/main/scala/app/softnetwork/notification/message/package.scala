@@ -9,7 +9,9 @@ import app.softnetwork.notification.model.NotificationStatusResult
   */
 package object message {
 
-  sealed trait NotificationCommand extends EntityCommand with AuditableCommand
+  sealed trait NotificationCommand extends EntityCommand with AuditableCommand {
+    override type T = NotificationCommand
+  }
 
   @SerialVersionUID(0L)
   case class ScheduleNotification() extends NotificationCommand with AllEntities
