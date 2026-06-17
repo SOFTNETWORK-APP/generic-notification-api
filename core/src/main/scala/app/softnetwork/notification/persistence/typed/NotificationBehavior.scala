@@ -18,6 +18,7 @@ import app.softnetwork.persistence.typed._
 import app.softnetwork.notification.message._
 import app.softnetwork.notification.model._
 import app.softnetwork.notification.spi.NotificationProvider
+import app.softnetwork.notification.metrics.NotificationMetrics
 import app.softnetwork.scheduler.config.SchedulerSettings
 import app.softnetwork.notification.model.NotificationStatus._
 
@@ -514,8 +515,13 @@ trait NotificationBehavior[T <: Notification]
           updatedNotification.status match {
             case Sent | Delivered =>
               audit.event(cid, "notification_sent", "channel" -> channel)
+              // Story 13.9 — terminal-send metric. `template` is empty here: this layer has no
+              // bounded template identifier (see the note above) and a raw subject would explode
+              // the series cardinality; the producer owns template attribution on the enqueue side.
+              NotificationMetrics.notification(channel, "", "sent")
             case Undelivered | Rejected =>
               audit.event(cid, "notification_failed", "channel" -> channel)
+              NotificationMetrics.notification(channel, "", "failed")
             case _ => // still pending — no terminal audit line yet
           }
         }
