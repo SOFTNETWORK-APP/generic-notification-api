@@ -11,4 +11,6 @@ object Versions {
   val scheduler = "0.8-SNAPSHOT"
 
   val scalatest = "3.2.16"
+
+  val prometheus = "1.7.0"
 }

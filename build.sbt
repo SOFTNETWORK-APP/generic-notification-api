@@ -76,6 +76,15 @@ lazy val common = project.in(file("common"))
   )
   .enablePlugins(AkkaGrpcPlugin)
 
+// Story 13.9 — dependency-light metrics module (only the Prometheus client). Kept separate from
+// common so downstream consumers can depend on notification metrics without the full common stack.
+lazy val metrics = project.in(file("metrics"))
+  .configs(IntegrationTest)
+  .settings(
+    Defaults.itSettings,
+    moduleSettings
+  )
+
 lazy val core = project.in(file("core"))
   .configs(IntegrationTest)
   .settings(
@@ -85,7 +94,8 @@ lazy val core = project.in(file("core"))
   )
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(
-    common % "compile->compile;test->test;it->it"
+    common % "compile->compile;test->test;it->it",
+    metrics
   )
 
 lazy val testkit = project.in(file("testkit"))
@@ -111,7 +121,7 @@ lazy val api = project.in(file("api"))
   )
 
 lazy val root = project.in(file("."))
-  .aggregate(common, core, testkit, api)
+  .aggregate(common, metrics, core, testkit, api)
   .configs(IntegrationTest)
   .settings(
     Defaults.itSettings,
