@@ -16,14 +16,15 @@ import io.prometheus.metrics.core.metrics.Counter
   * exposition, so the exposed series is `notification_total`.
   *
   * Labels:
-  *   - `service`  — always `"notification"`.
-  *   - `channel`  — the `NotificationType` name (e.g. `MAIL_TYPE`, `SMS_TYPE`), matching the Story
+  *   - `service` — always `"notification"`.
+  *   - `channel` — the `NotificationType` name (e.g. `MAIL_TYPE`, `SMS_TYPE`), matching the Story
   *     13.7 audit `channel` field.
-  *   - `template` — a BOUNDED template identifier, or empty when none is available at the call site.
-  *     Never pass an unbounded free-text value (e.g. a raw subject): it would explode the series
-  *     cardinality. The terminal send path (NotificationBehavior) has no template identifier and
-  *     passes an empty value; the producer that enqueues the notification owns template attribution.
-  *   - `outcome`  — one of `enqueued` | `sent` | `failed` | `retried`.
+  *   - `template` — a BOUNDED template identifier, or empty when none is available at the call
+  *     site. Never pass an unbounded free-text value (e.g. a raw subject): it would explode the
+  *     series cardinality. The terminal send path (NotificationBehavior) has no template identifier
+  *     and passes an empty value; the producer that enqueues the notification owns template
+  *     attribution.
+  *   - `outcome` — one of `enqueued` | `sent` | `failed` | `retried`.
   */
 object NotificationMetrics {
 
